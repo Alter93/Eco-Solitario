@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Eco Solitario · Alter Motion V3</title>
+<style>
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c1017;color:#eef;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+#stage{position:fixed;inset:0;overflow:hidden;touch-action:none;background:linear-gradient(#161b25 0 76%,#10141b 76%)}
+#floor{position:absolute;left:0;right:0;bottom:0;height:84px;background:#292f39;border-top:3px solid #747c8a}
+#p{position:absolute;left:0;top:0;width:96px;height:128px;image-rendering:pixelated;transform-origin:50% 100%;will-change:transform}
+#shadow{position:absolute;width:50px;height:8px;border-radius:50%;background:#0008;filter:blur(2px)}
+#hud{position:absolute;z-index:5;left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));padding:10px 12px;border:1px solid #4a5260;border-radius:8px;background:#080b10d9;font-size:11px;line-height:1.55}
+#hud b{font-size:14px} #status{color:#71e4dd}
+#note{position:absolute;right:max(14px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));font-size:10px;color:#9299a7;text-align:right}
+#joy{position:absolute;z-index:5;left:max(18px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));width:126px;height:126px;border:2px solid #6c7482;border-radius:50%;background:#080b10ba}
+#stick{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px;border-radius:50%;background:#d2d6dfaa;will-change:transform}
+</style>
+</head>
+<body>
+<div id="stage">
+ <div id="hud"><b>ALTER MOTION V3</b><br><span id="status">IDLE</span><br>FRAME CLEAN: ON<br>GHOSTING: OFF<br>WORLD: OFF</div>
+ <div id="note">Eco Solitario<br>Alter only</div>
+ <div id="shadow"></div>
+ <canvas id="p" width="96" height="128"></canvas>
+ <div id="floor"></div>
+ <div id="joy"><div id="stick"></div></div>
+</div>
+<script>
+'use strict';
+const stage=document.querySelector('#stage');
+const p=document.querySelector('#p');
+const ctx=p.getContext('2d',{alpha:true,desynchronized:true});
+const joy=document.querySelector('#joy'),stick=document.querySelector('#stick'),shadow=document.querySelector('#shadow'),status=document.querySelector('#status');
+ctx.imageSmoothingEnabled=false;
+
+const img=new Image();
+let ready=false,lastFrame=-1;
+img.onload=()=>{ready=true;draw(0)};
+img.src='./alter_walk_clean_v3.png';
+
+const FW=96,FH=128,STEP=1/120,STRIDE=122;
+let x=120,px=120,vx=0,axis=0,face=1,gait=0,ptr=null,last=null,acc=0;
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function approach(v,t,d){return v<t?Math.min(v+d,t):v>t?Math.max(v-d,t):t}
+function groundY(){return stage.clientHeight-84-FH}
+
+function draw(f){
+  if(!ready||f===lastFrame)return;
+  ctx.clearRect(0,0,FW,FH);
+  ctx.drawImage(img,f*FW,0,FW,FH,0,0,FW,FH);
+  lastFrame=f;
+}
+function simulate(dt){
+  px=x;
+  const target=axis*230;
+  const reversing=axis&&vx&&Math.sign(axis)!==Math.sign(vx);
+  vx=approach(vx,target,(axis?(reversing?2200:1450):2100)*dt);
+  if(!axis&&Math.abs(vx)<.35)vx=0;
+  if(Math.abs(vx)>8)face=Math.sign(vx);
+
+  const before=x;
+  x+=vx*dt;
+  x=clamp(x,22,Math.max(22,stage.clientWidth-FW-22));
+  if(x===22||x===stage.clientWidth-FW-22)vx=0;
+
+  if(Math.abs(vx)>2) gait=(gait+Math.abs(x-before)/STRIDE)%1;
+  else gait=0;
+}
+function render(a){
+  const rx=px+(x-px)*a;
+  const y=groundY();
+
+  // Continuous body transport at display refresh rate.
+  p.style.transform=`translate3d(${rx.toFixed(3)}px,${y}px,0) scaleX(${face})`;
+  shadow.style.transform=`translate3d(${(rx+23).toFixed(3)}px,${y+FH-4}px,0)`;
+
+  const moving=Math.abs(vx)>2;
+  if(moving){
+    const f=Math.floor(gait*6)%6;
+    draw(f);
+    status.textContent='WALK · '+Math.round(Math.abs(vx));
+  }else{
+    draw(0);
+    status.textContent='IDLE';
+  }
+}
+function loop(t){
+  requestAnimationFrame(loop);
+  if(last===null)last=t;
+  acc+=Math.min(Math.max((t-last)/1000,0),.08);last=t;
+  while(acc>=STEP){simulate(STEP);acc-=STEP}
+  render(acc/STEP);
+}
+
+function moveJoy(e){
+ const r=joy.getBoundingClientRect();
+ const dx=clamp(e.clientX-(r.left+r.width/2),-43,43);
+ stick.style.transform=`translate3d(${dx}px,0,0)`;
+ const raw=dx/43,d=.11;
+ axis=Math.abs(raw)<=d?0:Math.sign(raw)*(Math.abs(raw)-d)/(1-d);
+}
+joy.onpointerdown=e=>{e.preventDefault();ptr=e.pointerId;joy.setPointerCapture(ptr);moveJoy(e)}
+joy.onpointermove=e=>{if(e.pointerId===ptr){e.preventDefault();moveJoy(e)}}
+function rel(e){if(e.pointerId===ptr){ptr=null;axis=0;stick.style.transform='translate3d(0,0,0)'}}
+joy.onpointerup=rel;joy.onpointercancel=rel;joy.onlostpointercapture=rel;
+window.onblur=()=>{axis=0;stick.style.transform='translate3d(0,0,0)'};
+requestAnimationFrame(loop);
+</script>
+</body></html>
