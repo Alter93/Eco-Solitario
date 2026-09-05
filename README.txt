@@ -1,29 +1,31 @@
-ECO SOLITARIO v0.9.1 — PHYSICS & ANIMATIONS
+ECO SOLITARIO v0.9.2 — TRUE ANIMATION
 
-QUESTA BUILD CAMBIA IL MOVIMENTO DEL PERSONAGGIO.
+OBIETTIVO DI QUESTA BUILD:
+Alter non usa più la stessa immagine inclinata per ogni azione.
+Il nuovo alter_true_sheet.png contiene pose visivamente differenti.
 
-ALTER
-- Ridimensionato per essere proporzionato al mondo.
-- IDLE con cambio frame.
-- CORSA con sequenza di frame.
-- SALTO fisico con velocità verticale.
-- CADUTA distinta dal salto.
-- ATTERRAGGIO con stato dedicato.
-- SPARO con frame, lampo di volata e proiettile reale.
-- MAZZA con stato dedicato ed effetto hit.
-- Stato DANNO già predisposto.
-- Direzione destra/sinistra con flip del personaggio.
+ANIMAZIONI:
+- IDLE: 3 frame
+- WALK: 4 frame
+- RUN: 5 frame
+- JUMP: 2 frame
+- FALL: 2 frame
+- LAND: 3 frame
+- SHOOT: 5 frame
+- BAT: 4 frame
+- DAMAGE: 3 frame
 
-FISICA
-- Gravità reale.
-- Velocità verticale.
-- Collisioni con piattaforme.
-- Atterraggio sulle piattaforme dall'alto.
-- Prime piattaforme a diverse altezze.
-- Camera/world scroll dopo il centro dello schermo.
-- Parallasse conservato.
+MOTORE:
+- gravità e salto reali
+- caduta / atterraggio
+- collisioni piattaforme
+- sparo + proiettile
+- mazza + hit effect
+- flip destra/sinistra
+- fix importante dei fondali: i layer non vengono più spostati fuori dallo schermo; scorre solo la texture.
+- parallasse mantenuto
 
-NEXT
-v0.9.2: sprite art veramente frame-by-frame ridisegnata (gambe, braccia, zaino, codino), collisioni laterali e nemico con danno reale.
+NEXT:
+v0.9.3 — collisioni laterali, nemico attivo, danno, hitbox e camera/world level.
 
 STAY ON THE AIR.
