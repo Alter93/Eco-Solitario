@@ -1,57 +1,320 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8">
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#080b10"><link rel="manifest" href="manifest.json">
-<title>Eco Solitario v0.9.6 — Alter Perfect Motion</title>
+<title>Eco Solitario · Alter Motion Lab v0.9.7b</title>
 <style>
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07090d;font-family:"Courier New",monospace;color:#f1dfb9}
-#rotate{display:none;position:fixed;inset:0;z-index:100;background:#080b10;align-items:center;justify-content:center;text-align:center;font-size:20px}
-#game{position:fixed;inset:0;overflow:hidden;touch-action:none;background:#16142a}
-.layer{position:absolute;inset:0;background-repeat:repeat-x;background-position:center bottom;will-change:background-position}
-#far{background-image:url('layer_far.png');background-size:auto 100%;filter:saturate(1.15) brightness(.93)}
-#mid{background-image:url('layer_mid.png');background-size:auto 100%}
-#fore{background-image:url('layer_fore.png');background-size:auto 100%;z-index:18;pointer-events:none}
-.haze{position:absolute;inset:0;background:radial-gradient(circle at 74% 39%,rgba(255,133,55,.15),transparent 26%),linear-gradient(transparent 48%,rgba(7,8,13,.38));pointer-events:none}
-
-.platform{position:absolute;z-index:7;height:30px;background:linear-gradient(#69543f 0 5px,#272728 5px 100%);border-top:3px solid #96734d;box-shadow:0 8px 14px #0009}
-.platform:after{content:"";position:absolute;left:0;right:0;top:-11px;height:13px;background:repeating-linear-gradient(110deg,#315a36 0 5px,transparent 5px 15px)}
-#plat0{left:-4%;bottom:15%;width:62%}#plat1{left:64%;bottom:23%;width:43%}#plat2{left:39%;bottom:37%;width:17%}#plat3{left:17%;bottom:49%;width:14%}
-.crate{position:absolute;z-index:8;width:46px;height:41px;background:#67462e;border:5px solid #30231c;box-shadow:inset 0 0 0 2px #987047}
-
-#player{position:absolute;left:0;top:0;z-index:12;width:96px;height:128px;
-image-rendering:pixelated;image-rendering:crisp-edges;transform-origin:50% 100%;
-filter:drop-shadow(0 7px 5px #000b);will-change:transform;backface-visibility:hidden;
-contain:layout paint style;isolation:isolate;pointer-events:none}
-#player.damage{filter:brightness(1.7) saturate(.4) drop-shadow(0 7px 5px #000b)}
-#shadow{position:absolute;left:0;top:0;z-index:9;width:50px;height:11px;border-radius:50%;background:#0007;filter:blur(2px);will-change:transform}
-.projectile{position:absolute;z-index:16;width:19px;height:5px;background:#ffd078;box-shadow:0 0 10px #ffae41;border-radius:3px}
-.muzzle{position:absolute;z-index:16;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,#fff 0 15%,#ffc15a 25%,#ff7c30 42%,transparent 70%)}
-.hitfx{position:absolute;z-index:17;width:58px;height:58px;border:4px solid #ffe2a0;border-radius:50%;opacity:.9}
-
-#hud{position:absolute;z-index:30;left:2%;top:3%;padding:8px 12px;background:#05080eea;border:2px solid #725947;min-width:250px}
-.title{font-size:19px;font-weight:bold;letter-spacing:2px}.red{color:#e65347}.cyan{color:#52d9df}
-#obj{position:absolute;z-index:30;right:3%;top:3%;padding:9px 14px;background:#05080eea;border-left:3px solid #dc974e;min-width:280px}
-#radioBox{position:absolute;z-index:31;right:3%;top:18%;width:355px;padding:11px;background:#03080ef0;border:1px solid #2794a3;display:none}
-.wave{height:14px;margin-top:7px;background:repeating-linear-gradient(90deg,#43dbe2 0 2px,transparent 2px 7px)}
-#joy{position:absolute;z-index:40;left:3%;bottom:4%;width:118px;height:118px;border:3px solid #8888;border-radius:50%;background:#070b11aa}
-.stick{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#bbb9;will-change:transform}
-.btn{position:absolute;z-index:40;border-radius:50%;background:#070b11d8;border:3px solid #8888;color:white;font-weight:bold;display:grid;place-items:center;touch-action:none}
-#jump{right:4%;bottom:19%;width:82px;height:82px}#radio{right:14%;bottom:20%;width:64px;height:64px}
-#shoot{right:12%;bottom:5%;width:76px;height:76px}#hit{right:3%;bottom:4%;width:74px;height:74px}
-#tag{position:absolute;z-index:30;left:2%;bottom:1.8%;font-size:11px;letter-spacing:1px;color:#ddd}#ver{color:#53d8df}
-@media(orientation:portrait){#rotate{display:flex}#game{display:none}}
-</style></head><body>
-<div id="rotate">📻 RUOTA L’iPHONE<br><br><small>STAY ON THE AIR.</small></div>
-<div id="game">
-<div id="far" class="layer"></div><div id="mid" class="layer"></div><div class="haze"></div>
-<div id="plat0" class="platform"></div><div id="plat1" class="platform"></div><div id="plat2" class="platform"></div><div id="plat3" class="platform"></div>
-<div class="crate" style="left:45%;bottom:18%"></div><div class="crate" style="left:75%;bottom:26%"></div>
-<div id="shadow"></div><canvas id="player" width="96" height="128" aria-label="Alter"></canvas><div id="fore" class="layer"></div>
-<div id="hud"><div class="title">ECO SOLITARIO</div>VITA <span class="red">♥♥♥♥♥</span> &nbsp; MUNIZIONI <span id="ammo">12/12</span></div>
-<div id="obj"><span class="red">OBIETTIVO:</span><br>SEGUI LA FREQUENZA <span class="cyan">47.3 FM</span></div>
-<div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">Segnali deboli...</span><div class="wave"></div></div>
-<div id="joy"><div class="stick" id="stick"></div></div>
-<button id="radio" class="btn">📻</button><button id="jump" class="btn">SALTO</button><button id="shoot" class="btn">SPARO</button><button id="hit" class="btn">MAZZA</button>
-<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.6 ALTER PERFECT MOTION</span></div>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0d12;color:#eee;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+#stage{position:fixed;inset:0;overflow:hidden;touch-action:none;background:
+radial-gradient(circle at 50% 38%,rgba(255,255,255,.045),transparent 34%),
+linear-gradient(#151923 0 72%,#11141b 72% 100%)}
+#ground{position:absolute;left:0;right:0;bottom:0;height:92px;background:
+linear-gradient(#737985 0 4px,#292d36 4px 100%);
+box-shadow:0 -12px 40px rgba(0,0,0,.45)}
+#ground:after{content:"";position:absolute;left:0;right:0;top:18px;height:1px;background:#3d424e}
+#player{position:absolute;left:0;top:0;width:96px;height:128px;image-rendering:pixelated;
+transform-origin:50% 100%;filter:drop-shadow(0 8px 5px #0009);will-change:transform}
+#shadow{position:absolute;left:0;top:0;width:52px;height:10px;border-radius:50%;background:#0009;filter:blur(2px)}
+#hud{position:absolute;left:env(safe-area-inset-left,12px);top:env(safe-area-inset-top,12px);padding:10px 12px;
+background:#07090dcc;border:1px solid #444b59;border-radius:9px;font-size:12px;line-height:1.55}
+#hud b{font-size:14px}
+#state{color:#68e0e5} #speed{color:#ffd57a}
+#reset{margin-top:7px;border:1px solid #555b68;background:#151922;color:#fff;padding:6px 9px;border-radius:6px}
+#joy{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));
+width:124px;height:124px;border-radius:50%;border:2px solid #69707f;background:#07090db5}
+#stick{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px;border-radius:50%;background:#c8ccd6aa;will-change:transform}
+.btn{position:absolute;border-radius:50%;border:2px solid #69707f;background:#07090dd8;color:#fff;font-weight:700;
+display:grid;place-items:center;touch-action:none}
+#jump{right:max(20px,env(safe-area-inset-right));bottom:118px;width:82px;height:82px}
+#shoot{right:116px;bottom:max(18px,env(safe-area-inset-bottom));width:72px;height:72px}
+#bat{right:max(20px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:72px;height:72px}
+#damage{right:204px;bottom:max(24px,env(safe-area-inset-bottom));width:58px;height:58px;font-size:11px}
+#caption{position:absolute;right:16px;top:14px;font-size:11px;color:#8c93a3;text-align:right}
+@media(max-width:700px) and (orientation:portrait){
+  #caption{display:none}
+  #hud{font-size:11px}
+  #damage{right:190px}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="hud"><b>ALTER MOTION LAB</b><br>STATO <span id="state">IDLE</span><br>VELOCITÀ <span id="speed">0</span><br><button id="reset">RESET</button></div>
+  <div id="caption">Eco Solitario v0.9.7b<br>solo Alter · nessun mondo</div>
+  <div id="shadow"></div>
+  <canvas id="player" width="96" height="128"></canvas>
+  <div id="ground"></div>
+  <div id="joy"><div id="stick"></div></div>
+  <button class="btn" id="jump">SALTO</button>
+  <button class="btn" id="shoot">SPARO</button>
+  <button class="btn" id="bat">MAZZA</button>
+  <button class="btn" id="damage">DANNO</button>
 </div>
-<script src="game.js?v=096"></script></body></html>
+
+<script>
+
+'use strict';
+
+const stage = document.getElementById('stage');
+const player = document.getElementById('player');
+const ctx = player.getContext('2d', {alpha:true, desynchronized:true});
+ctx.imageSmoothingEnabled = false;
+
+const shadow = document.getElementById('shadow');
+const joy = document.getElementById('joy');
+const stick = document.getElementById('stick');
+const stateLabel = document.getElementById('state');
+const speedLabel = document.getElementById('speed');
+
+const W = 96, H = 128, CELL = 96, FRAME_COUNT = 54;
+const GRAV = 1650;
+const WALK_SPEED = 150;
+const RUN_SPEED = 255;
+const JUMP_SPEED = -650;
+const STEP = 1 / 120;
+const STOP_EPSILON = 0.35;
+const FACE_EPSILON = 7;
+const JOY_RADIUS = 42;
+const JOY_DEADZONE = 0.12;
+
+const anim = {
+  idle:   {frames:[0]},
+  walk:   {frames:[6,7,8,9,10,11], stride:116},
+  run:    {frames:[12,13,14,15,16,17,18,19], stride:156},
+  jump:   {frames:[20,21,22,23], fps:14, once:true},
+  air:    {frames:[24,25,26,27], fps:12},
+  fall:   {frames:[28,29,30,31], fps:11},
+  land:   {frames:[32,33,34,35,36,37], fps:16, once:true},
+  shoot:  {frames:[38,39,40,41,42,43], fps:18, once:true},
+  bat:    {frames:[44,45,46,47,48,49], fps:16, once:true},
+  damage: {frames:[50,51,52,53], fps:12, once:true}
+};
+
+const sprite = new Image();
+let spriteReady = false;
+let lastFrame = -1;
+sprite.onload = () => { spriteReady = true; drawFrame(0); };
+sprite.crossOrigin = 'anonymous';
+sprite.src = 'https://raw.githubusercontent.com/Alter93/Eco-Solitario/main/alter_master_sheet.png?v=097';
+
+let x=120, y=0, px=120, py=0;
+let vx=0, vy=0, face=1;
+let grounded=true;
+let state='idle', animTime=0, gaitDistance=0, actionLeft=0;
+let inputAxis=0, joyAxis=0, joyPointer=null, jumpQueued=false;
+let last=null, acc=0;
+const keys = new Set();
+
+function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+function approach(cur,target,delta){
+  if(cur<target) return Math.min(cur+delta,target);
+  if(cur>target) return Math.max(cur-delta,target);
+  return target;
+}
+function deadzone(v){
+  const m=Math.abs(v);
+  if(m<=JOY_DEADZONE) return 0;
+  return Math.sign(v)*clamp((m-JOY_DEADZONE)/(1-JOY_DEADZONE),0,1);
+}
+function groundY(){ return stage.clientHeight - 92 - H; }
+
+function drawFrame(frame){
+  frame=clamp(Math.floor(frame),0,FRAME_COUNT-1);
+  if(!spriteReady || frame===lastFrame) return;
+  ctx.clearRect(0,0,W,H);
+  ctx.drawImage(sprite, frame*CELL, 0, CELL, H, 0, 0, W, H);
+  lastFrame=frame;
+}
+
+function setState(next){
+  if(state===next) return;
+  state=next;
+  animTime=0;
+  if(next==='idle') gaitDistance=0;
+}
+
+function startAction(next){
+  if(actionLeft>0) return;
+  setState(next);
+  const a=anim[next];
+  actionLeft=a.frames.length/a.fps + STEP;
+}
+
+function chooseLocomotion(axis){
+  if(!grounded){
+    setState(vy < -150 ? 'jump' : vy < 110 ? 'air' : 'fall');
+    return;
+  }
+  const speed=Math.abs(vx);
+  if(speed < 6) setState('idle');
+  else if(Math.abs(axis) > 0.72 || speed > 205) setState('run');
+  else setState('walk');
+}
+
+function currentAxis(){
+  const k=Number(keys.has('ArrowRight')||keys.has('KeyD')) - Number(keys.has('ArrowLeft')||keys.has('KeyA'));
+  return k || joyAxis;
+}
+
+function frameForState(){
+  const a=anim[state];
+  if(state==='idle') return a.frames[0];
+
+  if(state==='walk' || state==='run'){
+    const phase=(gaitDistance % a.stride)/a.stride;
+    const index=Math.floor(phase*a.frames.length+1e-9)%a.frames.length;
+    return a.frames[index];
+  }
+
+  const n=Math.floor((animTime+1e-9)*a.fps);
+  const index=a.once ? Math.min(n,a.frames.length-1) : n%a.frames.length;
+  return a.frames[index];
+}
+
+function simulate(dt){
+  px=x; py=y;
+  animTime+=dt;
+  actionLeft=Math.max(0,actionLeft-dt);
+
+  const axis=currentAxis();
+  inputAxis=axis;
+
+  if(actionLeft<=0){
+    const maxSpeed = Math.abs(axis) > 0.72 ? RUN_SPEED : WALK_SPEED;
+    const target = axis * maxSpeed;
+    const reversing = axis && vx && Math.sign(axis)!==Math.sign(vx);
+    const accel = axis ? (reversing ? 2600 : 1750) : 2450;
+    vx=approach(vx,target,accel*dt);
+
+    if(!axis && Math.abs(vx)<=STOP_EPSILON) vx=0;
+    if(Math.abs(vx)>FACE_EPSILON) face=Math.sign(vx);
+  } else {
+    vx*=Math.pow(0.12,dt);
+    if(Math.abs(vx)<=STOP_EPSILON) vx=0;
+  }
+
+  if(jumpQueued && grounded && actionLeft<=0){
+    vy=JUMP_SPEED;
+    grounded=false;
+    setState('jump');
+  }
+  jumpQueued=false;
+
+  const beforeX=x;
+  x += vx*dt;
+  y += vy*dt;
+  vy += GRAV*dt;
+
+  const gy=groundY();
+  if(y>=gy){
+    const landed=!grounded && vy>0;
+    y=gy; vy=0; grounded=true;
+    if(landed && actionLeft<=0) startAction('land');
+  } else {
+    grounded=false;
+  }
+
+  const minX=26;
+  const maxX=Math.max(minX,stage.clientWidth-W-26);
+  if(x<minX){x=minX;vx=Math.max(0,vx);}
+  if(x>maxX){x=maxX;vx=Math.min(0,vx);}
+
+  if(actionLeft<=0){
+    chooseLocomotion(axis);
+    if((state==='walk'||state==='run') && grounded){
+      gaitDistance += Math.abs(x-beforeX);
+    }
+  }
+}
+
+function render(alpha){
+  const rx=px+(x-px)*alpha;
+  const ry=py+(y-py)*alpha;
+
+  player.style.transform=`translate3d(${rx.toFixed(3)}px,${ry.toFixed(3)}px,0) scaleX(${face})`;
+  shadow.style.transform=`translate3d(${(rx+22).toFixed(3)}px,${(groundY()+H-5).toFixed(3)}px,0)`;
+  shadow.style.opacity=grounded?'0.55':'0.22';
+
+  drawFrame(frameForState());
+  stateLabel.textContent=state.toUpperCase();
+  speedLabel.textContent=Math.round(Math.abs(vx));
+}
+
+function loop(now){
+  requestAnimationFrame(loop);
+  if(last===null) last=now;
+  acc+=Math.min(Math.max((now-last)/1000,0),0.1);
+  last=now;
+  while(acc+1e-9>=STEP){
+    simulate(STEP);
+    acc=Math.max(0,acc-STEP);
+  }
+  render(acc/STEP);
+}
+
+function resetPosition(){
+  x=Math.max(40,stage.clientWidth*.22);
+  y=groundY();
+  px=x; py=y; vx=vy=0;
+  grounded=true;
+  state='idle'; animTime=0; gaitDistance=0; actionLeft=0;
+  joyAxis=0; inputAxis=0; jumpQueued=false;
+  stick.style.transform='translate3d(0,0,0)';
+}
+
+function moveJoystick(e){
+  const r=joy.getBoundingClientRect();
+  const raw=e.clientX-r.left-r.width/2;
+  const dx=clamp(raw,-JOY_RADIUS,JOY_RADIUS);
+  stick.style.transform=`translate3d(${dx}px,0,0)`;
+  joyAxis=deadzone(dx/JOY_RADIUS);
+}
+
+joy.addEventListener('pointerdown',e=>{
+  if(joyPointer!==null) return;
+  e.preventDefault();
+  joyPointer=e.pointerId;
+  joy.setPointerCapture(e.pointerId);
+  moveJoystick(e);
+});
+joy.addEventListener('pointermove',e=>{
+  if(e.pointerId===joyPointer){e.preventDefault();moveJoystick(e);}
+});
+['pointerup','pointercancel','lostpointercapture'].forEach(type=>{
+  joy.addEventListener(type,e=>{
+    if(e.pointerId===joyPointer){
+      joyPointer=null; joyAxis=0; stick.style.transform='translate3d(0,0,0)';
+    }
+  });
+});
+
+document.getElementById('jump').addEventListener('pointerdown',e=>{e.preventDefault();jumpQueued=true;});
+document.getElementById('shoot').addEventListener('pointerdown',e=>{e.preventDefault();startAction('shoot');});
+document.getElementById('bat').addEventListener('pointerdown',e=>{e.preventDefault();startAction('bat');});
+document.getElementById('damage').addEventListener('pointerdown',e=>{e.preventDefault();startAction('damage');});
+document.getElementById('reset').addEventListener('click',resetPosition);
+
+window.addEventListener('keydown',e=>{
+  if(['ArrowLeft','ArrowRight','KeyA','KeyD','Space','KeyJ','KeyK','KeyH'].includes(e.code)) e.preventDefault();
+  keys.add(e.code);
+  if(!e.repeat){
+    if(e.code==='Space') jumpQueued=true;
+    if(e.code==='KeyJ') startAction('shoot');
+    if(e.code==='KeyK') startAction('bat');
+    if(e.code==='KeyH') startAction('damage');
+  }
+});
+window.addEventListener('keyup',e=>keys.delete(e.code));
+window.addEventListener('blur',()=>{
+  keys.clear(); joyAxis=0; joyPointer=null; stick.style.transform='translate3d(0,0,0)';
+});
+window.addEventListener('resize',resetPosition);
+
+resetPosition();
+requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>
