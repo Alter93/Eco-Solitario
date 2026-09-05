@@ -1,25 +1,22 @@
-ECO SOLITARIO v0.9.5 — ALTER MOTION FIX
+ECO SOLITARIO v0.9.6 — ALTER PERFECT MOTION
 
-Correzioni:
-- rimosso l'errore di sintassi che impediva l'avvio del gioco
-- logica di gioco in game.js, verificabile con node --check game.js
-- riproduzione di tutti i 54 frame, comprese mazza e danno
-- azioni con durata ricavata dalla sequenza completa
-- fase del passo conservata tra camminata e corsa
-- fisica a passo fisso e posizione interpolata per schermi a 30/60/120 Hz
-- joystick con Pointer Events, multitocco e gestione delle interruzioni
-- ripartenza su una piattaforma sicura dopo il ridimensionamento/rotazione
-- proiettili con direzione fissata al momento dello sparo
-- cache offline aggiornata, inclusa la nuova logica game.js
+FOCUS: chiudere il movimento di Alter prima di espandere il mondo.
 
-Comandi desktop: frecce o A/D, spazio salto, J sparo, K mazza, R radio.
-Su telefono: ruotare in orizzontale e usare i comandi sullo schermo.
+FIX PRINCIPALI
+- idle realmente fermo: un solo frame, nessun respiro/oscillazione automatica
+- eliminato il cambio walk/run che poteva produrre salti di posa durante l'accelerazione
+- camminata sincronizzata alla distanza percorsa, non al refresh rate dello schermo
+- joystick orizzontale analogico con dead-zone e accelerazione/decelerazione progressive
+- inversione di marcia più rapida ma senza flip mentre il corpo sta ancora scivolando
+- posizione agganciata ai pixel fisici del display per ridurre micro-jitter su iPhone
+- rendering di Alter su canvas: viene ritagliata una sola cella 96x128 per volta
+- il canvas impedisce che i frame vicini dello sprite sheet compaiano ai bordi durante i transform GPU
+- fisica invariata a passo fisso 120 Hz con rendering interpolato
+- salto, atterraggio, sparo, mazza e radio restano disponibili
+- cache PWA aggiornata a eco-v096-alter-perfect-motion
 
-Verifica automatica: node --test tests/motion.test.cjs
-I test simulano tempo e input; non sostituiscono una prova visiva su iPhone.
-Le immagini originali sono conservate: le differenze disegnate fra le pose
-richiedono un eventuale intervento grafico separato. Il mondo e le piattaforme
-mantengono il comportamento precedente.
+NOTA
+Questa patch non espande ancora il mondo e non aggiunge Dexter a schermo.
+Il prossimo passaggio, dopo la verifica visiva di Alter, sarà camera/world scrolling e poi radio con Dexter.
 
-CACHE: eco-v095-alter-motion-fix
 STAY ON THE AIR.

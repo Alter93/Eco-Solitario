@@ -1,0 +1,27 @@
+ECO SOLITARIO v0.9.6 — ALTER PERFECT MOTION
+
+File da sostituire nella ROOT del repository:
+- game.js
+- index.html
+- sw.js
+- motion.test.cjs
+- README.txt
+
+IMPORTANTE:
+- NON sostituire alter_master_sheet.png.
+- Le immagini e gli asset originali restano invariati.
+- Questa build usa il foglio sprite originale ma ritaglia ogni frame singolarmente su canvas.
+- Il versionamento ?v=096 forza Safari/PWA a non riutilizzare il vecchio game.js.
+
+Verifiche eseguite:
+- node --check game.js
+- node --test motion.test.cjs
+- 13/13 test superati
+
+GitHub:
+Il collegamento ChatGPT riesce a leggere Alter93/Eco-Solitario e vede permessi push,
+ma le API di scrittura dell'integrazione GitHub restituiscono 403
+"Resource not accessible by integration". Per questo i file non sono stati
+pubblicati automaticamente sul branch main.
+
+STAY ON THE AIR.

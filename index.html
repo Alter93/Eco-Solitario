@@ -1,7 +1,7 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#080b10"><link rel="manifest" href="manifest.json">
-<title>Eco Solitario v0.9.5 — Alter Motion Fix</title>
+<title>Eco Solitario v0.9.6 — Alter Perfect Motion</title>
 <style>
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07090d;font-family:"Courier New",monospace;color:#f1dfb9}
@@ -18,12 +18,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07090d;fon
 #plat0{left:-4%;bottom:15%;width:62%}#plat1{left:64%;bottom:23%;width:43%}#plat2{left:39%;bottom:37%;width:17%}#plat3{left:17%;bottom:49%;width:14%}
 .crate{position:absolute;z-index:8;width:46px;height:41px;background:#67462e;border:5px solid #30231c;box-shadow:inset 0 0 0 2px #987047}
 
-#player{position:absolute;left:0;top:0;z-index:12;width:96px;height:128px;overflow:hidden;
-background-image:url('alter_master_sheet.png');background-size:5184px 128px;background-repeat:no-repeat;
-background-position:0 0;image-rendering:pixelated;transform-origin:50% 100%;
-filter:drop-shadow(0 7px 5px #000b);will-change:transform,background-position;transition:filter .08s linear}
+#player{position:absolute;left:0;top:0;z-index:12;width:96px;height:128px;
+image-rendering:pixelated;image-rendering:crisp-edges;transform-origin:50% 100%;
+filter:drop-shadow(0 7px 5px #000b);will-change:transform;backface-visibility:hidden;
+contain:layout paint style;isolation:isolate;pointer-events:none}
 #player.damage{filter:brightness(1.7) saturate(.4) drop-shadow(0 7px 5px #000b)}
-#shadow{position:absolute;left:0;top:0;z-index:9;width:50px;height:11px;border-radius:50%;background:#0007;filter:blur(2px)}
+#shadow{position:absolute;left:0;top:0;z-index:9;width:50px;height:11px;border-radius:50%;background:#0007;filter:blur(2px);will-change:transform}
 .projectile{position:absolute;z-index:16;width:19px;height:5px;background:#ffd078;box-shadow:0 0 10px #ffae41;border-radius:3px}
 .muzzle{position:absolute;z-index:16;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,#fff 0 15%,#ffc15a 25%,#ff7c30 42%,transparent 70%)}
 .hitfx{position:absolute;z-index:17;width:58px;height:58px;border:4px solid #ffe2a0;border-radius:50%;opacity:.9}
@@ -34,7 +34,7 @@ filter:drop-shadow(0 7px 5px #000b);will-change:transform,background-position;tr
 #radioBox{position:absolute;z-index:31;right:3%;top:18%;width:355px;padding:11px;background:#03080ef0;border:1px solid #2794a3;display:none}
 .wave{height:14px;margin-top:7px;background:repeating-linear-gradient(90deg,#43dbe2 0 2px,transparent 2px 7px)}
 #joy{position:absolute;z-index:40;left:3%;bottom:4%;width:118px;height:118px;border:3px solid #8888;border-radius:50%;background:#070b11aa}
-.stick{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#bbb9}
+.stick{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#bbb9;will-change:transform}
 .btn{position:absolute;z-index:40;border-radius:50%;background:#070b11d8;border:3px solid #8888;color:white;font-weight:bold;display:grid;place-items:center;touch-action:none}
 #jump{right:4%;bottom:19%;width:82px;height:82px}#radio{right:14%;bottom:20%;width:64px;height:64px}
 #shoot{right:12%;bottom:5%;width:76px;height:76px}#hit{right:3%;bottom:4%;width:74px;height:74px}
@@ -46,12 +46,12 @@ filter:drop-shadow(0 7px 5px #000b);will-change:transform,background-position;tr
 <div id="far" class="layer"></div><div id="mid" class="layer"></div><div class="haze"></div>
 <div id="plat0" class="platform"></div><div id="plat1" class="platform"></div><div id="plat2" class="platform"></div><div id="plat3" class="platform"></div>
 <div class="crate" style="left:45%;bottom:18%"></div><div class="crate" style="left:75%;bottom:26%"></div>
-<div id="shadow"></div><div id="player"></div><div id="fore" class="layer"></div>
+<div id="shadow"></div><canvas id="player" width="96" height="128" aria-label="Alter"></canvas><div id="fore" class="layer"></div>
 <div id="hud"><div class="title">ECO SOLITARIO</div>VITA <span class="red">♥♥♥♥♥</span> &nbsp; MUNIZIONI <span id="ammo">12/12</span></div>
 <div id="obj"><span class="red">OBIETTIVO:</span><br>SEGUI LA FREQUENZA <span class="cyan">47.3 FM</span></div>
 <div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">Segnali deboli...</span><div class="wave"></div></div>
 <div id="joy"><div class="stick" id="stick"></div></div>
 <button id="radio" class="btn">📻</button><button id="jump" class="btn">SALTO</button><button id="shoot" class="btn">SPARO</button><button id="hit" class="btn">MAZZA</button>
-<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.5 ALTER MOTION FIX</span></div>
+<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.6 ALTER PERFECT MOTION</span></div>
 </div>
-<script src="game.js"></script></body></html>
+<script src="game.js?v=096"></script></body></html>

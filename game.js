@@ -4,12 +4,19 @@ const game = document.querySelector('#game');
 const P = document.querySelector('#player'), SH = document.querySelector('#shadow');
 const F = document.querySelector('#far'), M = document.querySelector('#mid'), R = document.querySelector('#fore');
 const J = document.querySelector('#joy'), S = document.querySelector('#stick');
-const GRAV = 1550, MOVE = 245, JUMP = -650, W = 96, H = 128, CELL = 96;
-const STEP = 1 / 120, FRAME_COUNT = 54;
+
+const GRAV = 1550, MOVE = 245, JUMP = -650;
+const W = 96, H = 128, CELL = 96, FRAME_COUNT = 54;
+const STEP = 1 / 120;
+const WALK_STRIDE = 118;
+const STOP_EPSILON = 0.35;
+const FACE_EPSILON = 10;
+const JOY_RADIUS = 38;
+const JOY_DEADZONE = 0.14;
+
 const anim = {
-  idle: {f: [0, 1, 2, 3, 4, 5], fps: 6},
-  walk: {f: [6, 7, 8, 9, 10, 11], fps: 10},
-  run: {f: [12, 13, 14, 15, 16, 17, 18, 19], fps: 14},
+  idle: {f: [0]},
+  walk: {f: [6, 7, 8, 9, 10, 11], distance: WALK_STRIDE},
   jump: {f: [20, 21, 22, 23], fps: 14, once: true},
   air: {f: [24, 25, 26, 27], fps: 12},
   fall: {f: [28, 29, 30, 31], fps: 11},
@@ -18,80 +25,150 @@ const anim = {
   bat: {f: [44, 45, 46, 47, 48, 49], fps: 16, once: true},
   damage: {f: [50, 51, 52, 53], fps: 12, once: true}
 };
+
 let px = 0, py = 0, vx = 0, vy = 0, face = 1, world = 0, ammo = 12;
 let previousX = 0, previousY = 0, previousWorld = 0;
 let onGround = false, state = 'idle', animTime = 0, actionLeft = 0;
-let joyDir = 0, jumpQueued = false, joyPointer = null;
+let gaitDistance = 0;
+let joyAxis = 0, jumpQueued = false, joyPointer = null;
 let last = null, accumulator = 0, initialized = false, platforms = [];
 const keys = new Set();
 
+const CTX = P && typeof P.getContext === 'function'
+  ? P.getContext('2d', {alpha: true, desynchronized: true})
+  : null;
+
+let spriteReady = false;
+let lastDrawnFrame = -1;
+let pendingFrame = 0;
+const sprite = typeof Image !== 'undefined' ? new Image() : null;
+
+if (CTX) {
+  CTX.imageSmoothingEnabled = false;
+}
+
+if (sprite) {
+  sprite.onload = () => {
+    spriteReady = true;
+    lastDrawnFrame = -1;
+    setFrame(pendingFrame);
+  };
+  sprite.onerror = () => console.warn('Sprite di Alter non disponibile.');
+  sprite.decoding = 'async';
+  sprite.src = './alter_master_sheet.png';
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function approach(current, target, delta) {
+  if (current < target) return Math.min(current + delta, target);
+  if (current > target) return Math.max(current - delta, target);
+  return target;
+}
+
+function snapToDevicePixel(value) {
+  const dpr = Math.max(1, Number(window.devicePixelRatio) || 1);
+  return Math.round(value * dpr) / dpr;
+}
+
+function applyDeadzone(value) {
+  const magnitude = Math.abs(value);
+  if (magnitude <= JOY_DEADZONE) return 0;
+  const normalized = (magnitude - JOY_DEADZONE) / (1 - JOY_DEADZONE);
+  return Math.sign(value) * clamp(normalized, 0, 1);
+}
+
 function setFrame(frame) {
-  frame = Math.max(0, Math.min(FRAME_COUNT - 1, Math.floor(frame)));
-  P.style.backgroundPosition = `${-CELL * frame}px 0px`;
+  frame = clamp(Math.floor(frame), 0, FRAME_COUNT - 1);
+  pendingFrame = frame;
+  if (!CTX || !spriteReady || frame === lastDrawnFrame) return;
+
+  CTX.clearRect(0, 0, W, H);
+  CTX.imageSmoothingEnabled = false;
+
+  // Draw exactly one 96x128 cell into its own canvas.
+  // This completely prevents neighbouring sprite cells from bleeding in on iOS/GPU transforms.
+  CTX.drawImage(sprite, frame * CELL, 0, CELL, H, 0, 0, W, H);
+  lastDrawnFrame = frame;
 }
 
 function setState(next) {
   if (state === next) return;
-  // Preserve the gait phase instead of restarting at every walk/run threshold.
-  const gait = s => s === 'walk' || s === 'run';
-  const phase = gait(state) && gait(next)
-    ? (animTime * anim[state].fps / anim[state].f.length) % 1 : 0;
   state = next;
-  animTime = phase * anim[next].f.length / anim[next].fps;
+  animTime = 0;
+  if (next === 'idle') gaitDistance = 0;
 }
 
 function startAction(next) {
   setState(next);
   animTime = 0;
-  // Keep every frame visible for its full duration, including bat frames 48/49.
-  actionLeft = anim[next].f.length / anim[next].fps;
+  const sequence = anim[next];
+  actionLeft = sequence.f.length / sequence.fps + STEP;
 }
 
 function chooseMovement() {
-  if (!onGround) return setState(vy < -140 ? 'jump' : vy < 100 ? 'air' : 'fall');
-  const speed = Math.abs(vx);
-  if (speed > 175 || (state === 'run' && speed > 150)) setState('run');
-  else if (speed > 22 || (state === 'walk' && speed > 8)) setState('walk');
-  else setState('idle');
+  if (!onGround) {
+    setState(vy < -140 ? 'jump' : vy < 100 ? 'air' : 'fall');
+    return;
+  }
+  setState(Math.abs(vx) > 7 ? 'walk' : 'idle');
+}
+
+function currentInputAxis() {
+  const keyboard =
+    Number(keys.has('ArrowRight') || keys.has('KeyD')) -
+    Number(keys.has('ArrowLeft') || keys.has('KeyA'));
+  return keyboard || joyAxis;
 }
 
 function resetInput() {
   const pointer = joyPointer;
   joyPointer = null;
   if (pointer !== null && J.hasPointerCapture(pointer)) J.releasePointerCapture(pointer);
-  joyDir = 0;
+  joyAxis = 0;
   jumpQueued = false;
   keys.clear();
-  S.style.transform = 'translateX(0px)';
+  S.style.transform = 'translate3d(0px,0,0)';
 }
 
 function layout() {
   resetInput();
   last = null;
   accumulator = 0;
-  // Portrait hides the game. Do not initialize against zero-sized platforms.
+
   if (!game.clientWidth || !game.clientHeight) return;
+
   const bounds = game.getBoundingClientRect();
   platforms = [...document.querySelectorAll('.platform')].map(element => {
     const rect = element.getBoundingClientRect();
     return {x: rect.left - bounds.left, y: rect.top - bounds.top, w: rect.width};
   });
-  // A rotation returns Alter to a safe platform with a fresh simulation clock.
+
   px = game.clientWidth * .18;
   py = platforms[0].y - H;
-  vx = vy = 0;
+  vx = 0;
+  vy = 0;
   onGround = true;
   state = 'idle';
-  animTime = actionLeft = 0;
-  previousX = px; previousY = py; previousWorld = world;
+  animTime = 0;
+  actionLeft = 0;
+  gaitDistance = 0;
+  previousX = px;
+  previousY = py;
+  previousWorld = world;
   initialized = true;
+  setFrame(0);
   render(1);
 }
 
 function collide(oldY) {
   const wasGrounded = onGround;
   onGround = false;
-  const footBefore = oldY + H, footNow = py + H;
+  const footBefore = oldY + H;
+  const footNow = py + H;
+
   for (const platform of platforms) {
     const overlaps = px + W * .68 > platform.x && px + W * .32 < platform.x + platform.w;
     if (overlaps && vy >= 0 && footBefore <= platform.y + .5 && footNow >= platform.y) {
@@ -100,8 +177,13 @@ function collide(oldY) {
       break;
     }
   }
+
   const floor = game.clientHeight * .88;
-  if (py + H >= floor) { py = floor - H; onGround = true; }
+  if (py + H >= floor) {
+    py = floor - H;
+    onGround = true;
+  }
+
   if (onGround) {
     vy = 0;
     if (!wasGrounded && !actionLeft) startAction('land');
@@ -109,72 +191,133 @@ function collide(oldY) {
 }
 
 function simulate(dt) {
-  previousX = px; previousY = py; previousWorld = world;
+  previousX = px;
+  previousY = py;
+  previousWorld = world;
+
   animTime += dt;
   actionLeft = Math.max(0, actionLeft - dt);
-  const keyDir = Number(keys.has('ArrowRight') || keys.has('KeyD'))
-    - Number(keys.has('ArrowLeft') || keys.has('KeyA'));
-  const direction = joyPointer !== null ? joyDir : keyDir;
+
+  const direction = currentInputAxis();
+
   if (!actionLeft) {
     const target = direction * MOVE;
-    const change = Math.min(Math.abs(target - vx), (direction ? 1350 : 1900) * dt);
-    vx += Math.sign(target - vx) * change;
-    // Face the actual motion while decelerating through a direction reversal.
-    if (Math.abs(vx) > 8) face = Math.sign(vx);
-  } else vx *= Math.pow(.18, dt);
+    const reversing = direction && vx && Math.sign(direction) !== Math.sign(vx);
+    const acceleration = direction ? (reversing ? 2450 : 1550) : 2250;
+    vx = approach(vx, target, acceleration * dt);
+
+    if (!direction && Math.abs(vx) <= STOP_EPSILON) vx = 0;
+    if (Math.abs(vx) > FACE_EPSILON) face = Math.sign(vx);
+  } else {
+    vx *= Math.pow(.18, dt);
+    if (Math.abs(vx) <= STOP_EPSILON) vx = 0;
+  }
+
   if (jumpQueued && onGround && !actionLeft) {
     vy = JUMP;
     onGround = false;
     setState('jump');
   }
   jumpQueued = false;
+
+  const oldX = px;
   const oldY = py;
+
   px += vx * dt;
   py += vy * dt;
   vy += GRAV * dt;
-  const min = 65, max = Math.max(min, game.clientWidth * .50);
-  if (px < min) { px = min; vx = Math.max(0, vx); }
-  if (px > max) { world += px - max; px = max; }
+
+  const min = 65;
+  const max = Math.max(min, game.clientWidth * .50);
+
+  if (px < min) {
+    px = min;
+    vx = Math.max(0, vx);
+  }
+
+  if (px > max) {
+    world += px - max;
+    px = max;
+  }
+
   collide(oldY);
-  if (!actionLeft) chooseMovement();
+
+  if (!actionLeft) {
+    chooseMovement();
+    if (state === 'walk' && onGround) {
+      gaitDistance += Math.abs(px - oldX);
+    }
+  }
+}
+
+function frameForState() {
+  const sequence = anim[state];
+
+  if (state === 'idle') return sequence.f[0];
+
+  if (state === 'walk') {
+    const phase = ((gaitDistance % sequence.distance) / sequence.distance);
+    const index = Math.floor(phase * sequence.f.length + 1e-9) % sequence.f.length;
+    return sequence.f[index];
+  }
+
+  const frame = Math.floor((animTime + 1e-9) * sequence.fps);
+  const index = sequence.once
+    ? Math.min(frame, sequence.f.length - 1)
+    : frame % sequence.f.length;
+  return sequence.f[index];
 }
 
 function render(alpha) {
   const x = previousX + (px - previousX) * alpha;
   const y = previousY + (py - previousY) * alpha;
   const scroll = previousWorld + (world - previousWorld) * alpha;
-  P.style.transform = `translate3d(${x}px, ${y}px, 0) scaleX(${face})`;
-  SH.style.transform = `translate3d(${x + W * .24}px, ${y + H - 5}px, 0)`;
+
+  const drawX = snapToDevicePixel(x);
+  const drawY = snapToDevicePixel(y);
+
+  P.style.transform = `translate3d(${drawX}px, ${drawY}px, 0) scaleX(${face})`;
+  SH.style.transform = `translate3d(${snapToDevicePixel(x + W * .24)}px, ${snapToDevicePixel(y + H - 5)}px, 0)`;
   SH.style.opacity = onGround ? '.7' : '.2';
+
   F.style.backgroundPositionX = `${-scroll * .10}px`;
   M.style.backgroundPositionX = `${-scroll * .30}px`;
   R.style.backgroundPositionX = `${-scroll * .66}px`;
-  const sequence = anim[state];
-  const frame = Math.floor((animTime + 1e-9) * sequence.fps);
-  setFrame(sequence.f[sequence.once ? Math.min(frame, sequence.f.length - 1) : frame % sequence.f.length]);
+
+  setFrame(frameForState());
 }
 
 function update(now) {
   requestAnimationFrame(update);
-  if (document.hidden || !game.clientWidth || !game.clientHeight) { last = null; return; }
+
+  if (document.hidden || !game.clientWidth || !game.clientHeight) {
+    last = null;
+    return;
+  }
+
   if (!initialized) layout();
   if (last === null) last = now;
-  // Fixed physics plus interpolated rendering works at 30, 60 and 120 Hz.
+
   accumulator += Math.min(Math.max((now - last) / 1000, 0), .1);
   last = now;
+
   while (accumulator + 1e-9 >= STEP) {
     simulate(STEP);
     accumulator = Math.max(0, accumulator - STEP);
   }
+
   render(accumulator / STEP);
 }
 
 function moveJoystick(event) {
   const rect = J.getBoundingClientRect();
-  const dx = Math.max(-38, Math.min(38, event.clientX - rect.left - rect.width / 2));
-  S.style.transform = `translateX(${dx}px)`;
-  joyDir = Math.abs(dx) > 9 ? Math.sign(dx) : 0;
+  const rawDx = event.clientX - rect.left - rect.width / 2;
+  const dx = clamp(rawDx, -JOY_RADIUS, JOY_RADIUS);
+
+  S.style.transform = `translate3d(${dx}px,0,0)`;
+  joyAxis = applyDeadzone(dx / JOY_RADIUS);
 }
+
 J.addEventListener('pointerdown', event => {
   if (joyPointer !== null) return;
   event.preventDefault();
@@ -182,11 +325,18 @@ J.addEventListener('pointerdown', event => {
   J.setPointerCapture(joyPointer);
   moveJoystick(event);
 });
+
 J.addEventListener('pointermove', event => {
-  if (event.pointerId === joyPointer) { event.preventDefault(); moveJoystick(event); }
+  if (event.pointerId === joyPointer) {
+    event.preventDefault();
+    moveJoystick(event);
+  }
 });
+
 for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-  J.addEventListener(type, event => { if (event.pointerId === joyPointer) resetInput(); });
+  J.addEventListener(type, event => {
+    if (event.pointerId === joyPointer) resetInput();
+  });
 }
 
 function muzzle() {
@@ -197,51 +347,98 @@ function muzzle() {
   game.appendChild(flash);
   setTimeout(() => flash.remove(), 80);
 }
+
 function bullet() {
-  const element = document.createElement('div'), direction = face;
+  const element = document.createElement('div');
+  const direction = face;
+  let x = px + (direction > 0 ? W - 4 : -12);
+  let started = performance.now();
+  let previous = started;
+
   element.className = 'projectile';
-  let x = px + (direction > 0 ? W - 4 : -12), started = performance.now(), previous = started;
-  element.style.left = `${x}px`; element.style.top = `${py + 62}px`;
+  element.style.left = `${x}px`;
+  element.style.top = `${py + 62}px`;
   game.appendChild(element);
+
   function fly(now) {
     x += direction * 760 * Math.min((now - previous) / 1000, .1);
     previous = now;
     element.style.left = `${x}px`;
-    if (now - started < 1200 && x > -30 && x < game.clientWidth + 30) requestAnimationFrame(fly);
-    else element.remove();
+
+    if (now - started < 1200 && x > -30 && x < game.clientWidth + 30) {
+      requestAnimationFrame(fly);
+    } else {
+      element.remove();
+    }
   }
+
   requestAnimationFrame(fly);
 }
+
 function shoot() {
   if (ammo <= 0 || actionLeft) return;
   document.querySelector('#ammo').textContent = `${--ammo}/12`;
-  startAction('shoot'); muzzle(); bullet();
+  startAction('shoot');
+  muzzle();
+  bullet();
 }
+
 function hit() {
   if (actionLeft) return;
   startAction('bat');
+
   const effect = document.createElement('div');
   effect.className = 'hitfx';
   effect.style.left = `${px + (face > 0 ? W - 4 : -46)}px`;
   effect.style.top = `${py + 38}px`;
   game.appendChild(effect);
-  effect.animate([{transform: 'scale(.3)', opacity: 1}, {transform: 'scale(1.3)', opacity: 0}], {duration: 280});
+  effect.animate(
+    [{transform: 'scale(.3)', opacity: 1}, {transform: 'scale(1.3)', opacity: 0}],
+    {duration: 280}
+  );
   setTimeout(() => effect.remove(), 290);
 }
-let radioOpen = false, lineIndex = 0;
-const lines = ['Segnali deboli... ma sei ancora lì?', 'Finché ascolti, non sei solo.', 'Qualcuno trasmette ancora.', 'Alter... resta sulla frequenza.'];
+
+let radioOpen = false;
+let lineIndex = 0;
+const lines = [
+  'Segnali deboli... ma sei ancora lì?',
+  'Finché ascolti, non sei solo.',
+  'Qualcuno trasmette ancora.',
+  'Alter... resta sulla frequenza.'
+];
+
 function radio() {
   radioOpen = !radioOpen;
   document.querySelector('#radioBox').style.display = radioOpen ? 'block' : 'none';
   if (radioOpen) document.querySelector('#line').textContent = lines[lineIndex++ % lines.length];
 }
-const actions = {jump: () => { jumpQueued = true; }, shoot, hit, radio};
+
+const actions = {
+  jump: () => { jumpQueued = true; },
+  shoot,
+  hit,
+  radio
+};
+
 for (const [id, action] of Object.entries(actions)) {
   const button = document.querySelector(`#${id}`);
-  button.addEventListener('pointerdown', event => { event.preventDefault(); action(); });
-  button.addEventListener('click', event => { if (event.detail === 0) action(); });
+  button.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    action();
+  });
+  button.addEventListener('click', event => {
+    if (event.detail === 0) action();
+  });
 }
-const keyboardActions = {Space: actions.jump, KeyJ: shoot, KeyK: hit, KeyR: radio};
+
+const keyboardActions = {
+  Space: actions.jump,
+  KeyJ: shoot,
+  KeyK: hit,
+  KeyR: radio
+};
+
 window.addEventListener('keydown', event => {
   if (['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].includes(event.code) || keyboardActions[event.code]) {
     event.preventDefault();
@@ -249,14 +446,22 @@ window.addEventListener('keydown', event => {
     if (!event.repeat && keyboardActions[event.code]) keyboardActions[event.code]();
   }
 });
+
 window.addEventListener('keyup', event => keys.delete(event.code));
 window.addEventListener('blur', resetInput);
 window.addEventListener('resize', layout);
+
 document.addEventListener('visibilitychange', () => {
-  resetInput(); last = null; accumulator = 0;
+  resetInput();
+  last = null;
+  accumulator = 0;
 });
+
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(error => console.warn('Modalità offline non disponibile:', error));
+  navigator.serviceWorker.register('./sw.js?v=096', {updateViaCache: 'none'})
+    .then(registration => registration.update())
+    .catch(error => console.warn('Modalità offline non disponibile:', error));
 }
+
 layout();
 requestAnimationFrame(update);
