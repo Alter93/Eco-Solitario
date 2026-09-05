@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0a0b10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Eco Solitario — Capitolo I</title>
+<style>
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;touch-action:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07080c;font-family:ui-monospace,Menlo,monospace;color:#fff}
+#game{position:fixed;inset:0;width:100vw;height:100vh;display:block;image-rendering:pixelated}
+#rotate{display:none;position:fixed;inset:0;z-index:20;background:#08090d;color:#eee;align-items:center;justify-content:center;text-align:center;padding:32px}
+#rotate div{max-width:320px}
+#rotate b{color:#e4b06d}
+#ui{position:fixed;inset:0;pointer-events:none}
+#joystick{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:max(22px,env(safe-area-inset-bottom));width:128px;height:128px;border:2px solid #ffffff32;border-radius:50%;background:#05070a80;box-shadow:inset 0 0 24px #0008;pointer-events:auto}
+#stick{position:absolute;left:40px;top:40px;width:48px;height:48px;border-radius:50%;background:#ffffff55;border:2px solid #ffffff40}
+#actions{position:absolute;right:max(16px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:210px;height:160px;pointer-events:auto}
+.btn{position:absolute;border-radius:50%;border:2px solid #ffffff3b;background:#0c1017cc;color:#fff;font:700 11px monospace;box-shadow:0 4px 16px #0008}
+#jump{width:68px;height:68px;right:5px;top:0}
+#shoot{width:62px;height:62px;right:78px;top:74px}
+#melee{width:62px;height:62px;right:4px;top:87px}
+#radio{width:54px;height:54px;right:148px;top:8px}
+#start{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:linear-gradient(#101126,#6a413d 62%,#15161b);padding:24px;text-align:center}
+.card{width:min(540px,92vw);background:#080a0ed9;border:1px solid #9b5947;padding:24px;border-radius:16px;box-shadow:0 20px 60px #0009}
+.card h1{font-size:clamp(34px,8vw,62px);letter-spacing:2px;margin:0;color:#e7c995}
+.card h2{font-size:13px;letter-spacing:4px;color:#d76451;margin:8px 0 18px}
+.card p{color:#c8c8c8;line-height:1.5}
+.card .quote{font-style:italic;color:#f0ddbc}
+#play{pointer-events:auto;border:0;background:#a84239;color:white;padding:14px 22px;border-radius:10px;font:700 15px monospace}
+.small{font-size:11px;color:#8e8e8e}
+@media (orientation:portrait){#rotate{display:flex}#ui{display:none}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="start"><div class="card">
+<h1>ECO SOLITARIO</h1><h2>CAPITOLO I · LA FREQUENZA</h2>
+<p class="quote">“A volte una voce è l’unica cosa che ti tiene vivo.”</p>
+<p>Alter attraversa le rovine seguendo una frequenza che non dovrebbe esistere.</p>
+<button id="play">STAY ON THE AIR 📻</button>
+<p class="small">Pensato per iPhone in orizzontale · audio dopo il primo tocco</p>
+</div></div>
+<div id="rotate"><div>Ruota l’iPhone in <b>orizzontale</b> per entrare nelle rovine.<br><br>📻 Stay on the air.</div></div>
+<div id="ui">
+<div id="joystick"><div id="stick"></div></div>
+<div id="actions">
+<button class="btn" id="radio">📻</button>
+<button class="btn" id="jump">SALTO</button>
+<button class="btn" id="shoot">SPARO</button>
+<button class="btn" id="melee">MAZZA</button>
+</div></div>
+<script>
+const c=document.getElementById('game'),ctx=c.getContext('2d');
+let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio||1,2);
+function resize(){W=innerWidth;H=innerHeight;c.width=W*DPR;c.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',resize);resize();
+
+let started=false,last=0,cam=0,move=0,radioOpen=false,dialogIndex=-1,shake=0,flash=0;
+const world=6200;
+const P={x:120,y:0,vy:0,w:28,h:54,ground:false,dir:1,hp:5,ammo:12,meleeCD:0,shootCD:0,clue:false,radio:false};
+const ground=()=>H*0.73;
+const platforms=[
+[0,0,950],[1030,0,820],[1960,0,900],[3000,0,920],[4100,0,860],[5090,0,1110],
+[400,-74,160],[720,-132,150],[1280,-82,180],[1580,-150,180],[2140,-105,180],[2480,-175,165],
+[3240,-115,180],[3550,-175,170],[4270,-120,180],[4590,-190,170],[5360,-120,190],[5740,-178,180]
+];
+let enemies=[720,1330,1700,2380,3320,3750,4410,5200,5600].map((x,i)=>({x,hp:i===7?4:2,dir:i%2?1:-1,live:true,type:i===7?'brute':'scav'}));
+let bullets=[],particles=[];
+const story=[
+["JACK","...C’è qualcuno?"],
+["DEXTER","Jack, sono tre giorni che parli con quella radio."],
+["JACK","Questa volta ho sentito qualcosa."],
+["DEXTER","Hai sentito il vento."],
+["JACK","No. Ho sentito lui."],
+["ALTER","...Chi siete?"],
+["JACK","Due voci. Una radio. Per ora ti basta."],
+["DEXTER","Continua verso est e cerca di non farti sparare."],
+["ALTER","Molto rassicurante."]
+];
+const clueStory=[
+["ALTER","Un documento... “PROTOCOLLO SOLE — FASE FINALE”."],
+["JACK","Non leggerlo ad alta voce."],
+["DEXTER","Jack, ormai l’ha visto."],
+["ALTER","Che cos’è il Protocollo Sole?"],
+["JACK","Raggiungi la torre. Poi parleremo."]
+];
+const finalStory=[
+["ALTER","La torre è ancora alimentata."],
+["DEXTER","Non dovrebbe esserlo."],
+["JACK","Alter, ascoltami: se senti qualcuno sulla 47.3, NON rispondere."],
+["???","Alter... se mi senti..."],
+["ALTER","Chi sei?"],
+["???","Non fidarti di Jack."],
+["JACK","ALTER, SPEGNI LA RADIO!"],
+["DEXTER","Troppo tardi."]
+];
+
+let queue=[];
+function setDialogue(lines){queue=lines.slice();dialogIndex=0;radioOpen=true}
+function advanceDialogue(){if(!radioOpen)return;dialogIndex++;if(dialogIndex>=queue.length){radioOpen=false;dialogIndex=-1}}
+function hitRect(px,py,pw,ph,x,y,w,h){return px<x+w&&px+pw>x&&py<y+h&&py+ph>y}
+
+function platformY(p){return ground()+p[1]}
+function collidePlatforms(){
+ P.ground=false;
+ for(const p of platforms){
+   const py=platformY(p);
+   if(P.x+P.w>p[0] && P.x<p[0]+p[2] && P.y+P.h>=py && P.y+P.h<=py+30 && P.vy>=0){
+     P.y=py-P.h;P.vy=0;P.ground=true;return;
+   }
+ }
+}
+
+function spawnParticles(x,y,n=8){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*220,vy:(Math.random()-.7)*220,t:.35+Math.random()*.25})}
+function shoot(){if(P.shootCD>0||P.ammo<=0)return;P.shootCD=.28;P.ammo--;bullets.push({x:P.x+(P.dir>0?P.w+4:-10),y:P.y+24,v:P.dir*780,t:1.2});flash=.08}
+function melee(){if(P.meleeCD>0)return;P.meleeCD=.45;const hx=P.x+(P.dir>0?P.w:-55);enemies.forEach(e=>{if(e.live&&hitRect(hx,P.y+4,55,45,e.x,ground()-48,30,48)){e.hp-=2;spawnParticles(e.x,ground()-28);shake=4;if(e.hp<=0)e.live=false}})}
+
+function drawSky(){
+ let gr=ctx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#111329');gr.addColorStop(.58,'#7a473f');gr.addColorStop(1,'#16191f');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+ ctx.fillStyle='#f3a65e';ctx.beginPath();ctx.arc(W*.78,H*.23,Math.max(24,H*.055),0,Math.PI*2);ctx.fill();
+ // far skyline parallax
+ ctx.fillStyle='#26263a';
+ for(let i=0;i<34;i++){let xx=i*120-(cam*.18%120),hh=70+(i*41)%160;ctx.fillRect(xx,ground()-hh,76+(i%3)*18,hh)}
+ ctx.strokeStyle='#372d38';ctx.lineWidth=2;
+ for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(-100,H*.24+i*20);ctx.quadraticCurveTo(W*.45,H*.40+i*10,W+150,H*.20+i*25);ctx.stroke()}
+}
+function drawRubble(){
+ ctx.fillStyle='#3a323a';ctx.fillRect(0,ground(),world,H-ground());
+ ctx.fillStyle='#715448';ctx.fillRect(0,ground(),world,5);
+ for(const p of platforms.slice(1)){let py=platformY(p);ctx.fillStyle='#403741';ctx.fillRect(p[0],py,p[2],Math.max(18,H-py));ctx.fillStyle='#6f584d';ctx.fillRect(p[0],py,p[2],4)}
+ for(let i=180;i<world;i+=250){ctx.strokeStyle='#294033';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(i,ground());ctx.lineTo(i+12,ground()-50-(i%4)*10);ctx.lineTo(i+30,ground()-64-(i%3)*12);ctx.stroke()}
+ // buildings
+ for(let i=480;i<world;i+=740){ctx.fillStyle='#332d34';ctx.fillRect(i,ground()-155,190,155);ctx.fillStyle='#11151a';ctx.fillRect(i+25,ground()-120,38,78);ctx.fillRect(i+105,ground()-100,42,56);ctx.fillStyle='#9c433d';ctx.fillRect(i+155,ground()-142,22,35)}
+ // radio tower
+ const tx=5810;ctx.fillStyle='#292d32';ctx.fillRect(tx+40,ground()-330,18,330);ctx.strokeStyle='#68676b';ctx.lineWidth=3;
+ for(let y=ground()-315;y<ground()-25;y+=40){ctx.beginPath();ctx.moveTo(tx+40,y);ctx.lineTo(tx+58,y+30);ctx.moveTo(tx+58,y);ctx.lineTo(tx+40,y+30);ctx.stroke()}
+ ctx.fillStyle='#e0a35b';ctx.fillRect(tx+47,ground()-340,4,13);
+}
+function alter(x,y,dir){
+ ctx.save();ctx.translate(Math.round(x),Math.round(y));if(dir<0)ctx.scale(-1,1);
+ // backpack
+ ctx.fillStyle='#4d5b4d';ctx.fillRect(-9,12,8,28);ctx.fillStyle='#25292b';ctx.fillRect(-11,17,3,17);
+ // head/hair ponytail
+ ctx.fillStyle='#d0ad89';ctx.fillRect(7,-14,15,15);ctx.fillStyle='#c7ad6c';ctx.fillRect(3,-18,20,7);ctx.fillRect(20,-15,8,5);ctx.fillRect(27,-13,8,4);
+ // hoodie
+ ctx.fillStyle='#902c38';ctx.fillRect(0,2,24,28);ctx.fillStyle='#b63a42';ctx.fillRect(4,4,16,18);
+ // shorts
+ ctx.fillStyle='#d1b88a';ctx.fillRect(2,30,9,13);ctx.fillRect(14,30,9,13);
+ // legs shoes
+ ctx.fillStyle='#d0ad89';ctx.fillRect(3,43,7,7);ctx.fillRect(15,43,7,7);ctx.fillStyle='#e7e7e7';ctx.fillRect(0,49,12,5);ctx.fillRect(14,49,13,5);ctx.fillStyle='#a83232';ctx.fillRect(2,51,8,2);ctx.fillRect(16,51,9,2);
+ // gun
+ ctx.fillStyle='#24272c';ctx.fillRect(22,18,18,5);
+ ctx.restore()
+}
+function bandit(e){
+ const y=ground()-48;ctx.save();ctx.translate(Math.round(e.x),Math.round(y));if(e.dir<0)ctx.scale(-1,1);
+ ctx.fillStyle=e.type==='brute'?'#2a2c30':'#25272d';ctx.fillRect(0,8,e.type==='brute'?34:28,40);ctx.fillStyle='#806653';ctx.fillRect(7,-4,16,14);ctx.fillStyle='#11151a';ctx.fillRect(4,-8,22,7);
+ ctx.fillStyle='#782d30';ctx.fillRect(e.type==='brute'?29:23,20,24,5);ctx.restore()
+}
+function portrait(who,x,y){
+ ctx.fillStyle='#241b19';ctx.fillRect(x,y,68,68);ctx.strokeStyle='#9e6249';ctx.strokeRect(x,y,68,68);
+ if(who==='ALTER'){ctx.fillStyle='#c8aa73';ctx.fillRect(x+19,y+13,31,10);ctx.fillStyle='#d0aa88';ctx.fillRect(x+22,y+21,26,25);ctx.fillStyle='#8e2e39';ctx.fillRect(x+16,y+47,38,20)}
+ else {ctx.fillStyle='#5c4335';ctx.fillRect(x+18,y+13,34,10);ctx.fillStyle='#bb8f72';ctx.fillRect(x+21,y+20,29,27);ctx.fillStyle='#1a1d22';ctx.fillRect(x+13,y+46,43,21)}
+}
+function wrapText(text,x,y,max,lh){let words=text.split(' '),line='';for(const w of words){const test=line+w+' ';if(ctx.measureText(test).width>max){ctx.fillText(line,x,y);line=w+' ';y+=lh}else line=test}ctx.fillText(line,x,y)}
+
+function drawHUD(){
+ ctx.fillStyle='#07090dcc';ctx.fillRect(14,14,255,64);ctx.strokeStyle='#4b4142';ctx.strokeRect(14,14,255,64);
+ ctx.fillStyle='#e7c68f';ctx.font='700 18px monospace';ctx.fillText('ECO SOLITARIO',28,38);
+ ctx.fillStyle='#ddd';ctx.font='12px monospace';ctx.fillText('VITA  '+'♥'.repeat(Math.max(P.hp,0)),28,58);ctx.fillText('MUNIZIONI  '+P.ammo+'/12',137,58);
+ ctx.fillStyle='#07090dcc';ctx.fillRect(W-300,14,286,42);ctx.fillStyle='#ddd';ctx.fillText(P.clue?'OBIETTIVO: TORRE RADIO':'OBIETTIVO: SEGUI LA FREQUENZA',W-285,40);
+ if(radioOpen && dialogIndex>=0){
+   const [who,text]=queue[dialogIndex];
+   const bx=18,by=H-172,bw=W-36,bh=118;
+   ctx.fillStyle='#080a0eea';ctx.fillRect(bx,by,bw,bh);ctx.strokeStyle='#9e5b47';ctx.strokeRect(bx,by,bw,bh);
+   portrait(who,bx+16,by+20);ctx.fillStyle='#d79d61';ctx.font='700 14px monospace';ctx.fillText(who,bx+98,by+38);
+   ctx.fillStyle='#eee';ctx.font='13px monospace';wrapText(text,bx+98,by+63,bw-200,20);
+   ctx.fillStyle='#69b8aa';ctx.fillText('▂▅▃▇▂▆▃▅   47.3 FM',bx+98,by+96);
+   ctx.fillStyle='#777';ctx.font='10px monospace';ctx.fillText('tocca il dialogo per continuare',bx+bw-230,by+100);
+ }
+}
+function draw(){
+ drawSky();ctx.save();ctx.translate(-cam+(Math.random()-.5)*shake,0);drawRubble();
+ enemies.forEach(e=>{if(e.live)bandit(e)});alter(P.x,P.y,P.dir);
+ ctx.fillStyle='#f7d168';bullets.forEach(b=>ctx.fillRect(b.x,b.y,10,3));
+ particles.forEach(p=>{ctx.fillStyle='#dd8b55';ctx.fillRect(p.x,p.y,3,3)});
+ if(!P.clue){ctx.fillStyle='#d8c79f';ctx.fillRect(2700,ground()-85,28,36);ctx.fillStyle='#5a4c3e';for(let i=0;i<4;i++)ctx.fillRect(2706,ground()-77+i*7,16-(i%2)*4,2)}
+ ctx.restore();
+ if(flash>0){ctx.fillStyle='#fff2';ctx.fillRect(0,0,W,H)}
+ drawHUD();
+}
+function update(dt){
+ if(!started||radioOpen)return;
+ P.shootCD=Math.max(0,P.shootCD-dt);P.meleeCD=Math.max(0,P.meleeCD-dt);flash=Math.max(0,flash-dt);shake*=.86;
+ P.x+=move*240*dt;if(move)P.dir=move;P.vy+=1350*dt;P.y+=P.vy*dt;collidePlatforms();
+ if(P.y>H+200){P.x=Math.max(20,P.x-260);P.y=150;P.vy=0;P.hp--}
+ enemies.forEach(e=>{if(!e.live)return;e.x+=e.dir*26*dt;if(Math.abs(P.x-e.x)<28&&Math.abs((P.y+P.h)-(ground()))<80){P.hp--;P.x-=P.dir*40;shake=8}});
+ bullets.forEach(b=>{b.x+=b.v*dt;b.t-=dt;enemies.forEach(e=>{if(e.live&&Math.abs(b.x-e.x)<20&&Math.abs(b.y-(ground()-25))<35){e.hp--;b.t=0;spawnParticles(e.x,ground()-28);shake=3;if(e.hp<=0)e.live=false}})});bullets=bullets.filter(b=>b.t>0&&b.x>0&&b.x<world);
+ particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=420*dt;p.t-=dt});particles=particles.filter(p=>p.t>0);
+ if(P.x>560&&!P.radio){P.radio=true;setDialogue(story)}
+ if(P.x>2570&&!P.clue){P.clue=true;setDialogue(clueStory)}
+ if(P.x>5560&&P.clue){setDialogue(finalStory);P.x=5560}
+ cam+=(P.x-W*.38-cam)*Math.min(1,dt*5);cam=Math.max(0,Math.min(world-W,cam));
+}
+
+let audioCtx=null,master=null;
+function startAudio(){
+ if(audioCtx)return; audioCtx=new (window.AudioContext||window.webkitAudioContext)();master=audioCtx.createGain();master.gain.value=.05;master.connect(audioCtx.destination);
+ const notes=[130.81,155.56,174.61,196.00,233.08];
+ let step=0;
+ setInterval(()=>{if(!audioCtx||audioCtx.state!=='running')return;let o=audioCtx.createOscillator(),gn=audioCtx.createGain();o.type='triangle';o.frequency.value=notes[step++%notes.length]/2;gn.gain.setValueAtTime(.13,audioCtx.currentTime);gn.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.9);o.connect(gn);gn.connect(master);o.start();o.stop(audioCtx.currentTime+.95)},900);
+}
+document.getElementById('play').onclick=()=>{started=true;document.getElementById('start').style.display='none';startAudio();P.y=ground()-P.h}
+function button(id,fn){const b=document.getElementById(id);b.onpointerdown=e=>{e.preventDefault();fn()}}
+button('jump',()=>{if(P.ground&&!radioOpen){P.vy=-560;P.ground=false}});button('shoot',()=>{if(!radioOpen)shoot()});button('melee',()=>{if(!radioOpen)melee()});button('radio',()=>{if(radioOpen)advanceDialogue();else if(P.radio)setDialogue([["JACK","Siamo ancora qui."],["DEXTER","Più o meno. Continua a muoverti."]])});
+c.onpointerdown=e=>{if(radioOpen)advanceDialogue()};
+
+const joy=document.getElementById('joystick'),stick=document.getElementById('stick');let jid=null;
+function joyMove(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,m=Math.min(40,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);stick.style.transform=`translate(${Math.cos(a)*m}px,${Math.sin(a)*m}px)`;move=Math.abs(dx)>10?Math.sign(dx):0}
+joy.onpointerdown=e=>{jid=e.pointerId;joy.setPointerCapture(jid);joyMove(e)};joy.onpointermove=e=>{if(e.pointerId===jid)joyMove(e)};joy.onpointerup=joy.onpointercancel=()=>{jid=null;move=0;stick.style.transform='translate(0,0)'};
+
+function loop(ms){const dt=Math.min(.032,(ms-last)/1000||0);last=ms;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body></html>
