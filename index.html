@@ -1,8 +1,10 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#080b10"><link rel="manifest" href="manifest.json"><title>Eco Solitario v0.9 — Alter Alive</title>
+<meta name="theme-color" content="#080b10"><link rel="manifest" href="manifest.json">
+<title>Eco Solitario v0.9.1 — Physics & Animations</title>
 <style>
-*{box-sizing:border-box;-webkit-user-select:none;user-select:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07090d;font-family:"Courier New",monospace;color:#f1dfb9}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07090d;font-family:"Courier New",monospace;color:#f1dfb9}
 #rotate{display:none;position:fixed;inset:0;z-index:100;background:#080b10;align-items:center;justify-content:center;text-align:center;font-size:20px}
 #game{position:fixed;inset:0;overflow:hidden;touch-action:none;background:#16142a}
 .layer{position:absolute;inset:-3%;background-repeat:repeat-x;background-position:center bottom;will-change:transform}
@@ -10,42 +12,208 @@
 #mid{background-image:url('layer_mid.png');background-size:auto 106%}
 #fore{background-image:url('layer_fore.png');background-size:auto 106%;z-index:18;pointer-events:none}
 .haze{position:absolute;inset:0;background:radial-gradient(circle at 74% 39%,rgba(255,133,55,.15),transparent 26%),linear-gradient(transparent 48%,rgba(7,8,13,.42));pointer-events:none}
-.platform{position:absolute;z-index:7;height:28px;background:linear-gradient(#6e5942 0 5px,#2b2929 5px 100%);border-top:3px solid #9b7950;box-shadow:0 7px 12px #0008}
-.platform:after{content:"";position:absolute;left:0;right:0;top:-10px;height:12px;background:repeating-linear-gradient(110deg,#315a36 0 5px,transparent 5px 16px)}
-#p1{left:-5%;bottom:17%;width:66%}#p2{left:69%;bottom:24%;width:38%}#p3{left:48%;bottom:39%;width:18%}
-.crate{position:absolute;z-index:8;width:48px;height:43px;background:#68472d;border:5px solid #32251d;box-shadow:inset 0 0 0 2px #9a7147}
-#player{position:absolute;z-index:12;left:20%;bottom:19.5%;width:160px;height:190px;background-image:url('alter_alive_sheet.png');background-size:1920px 190px;background-repeat:no-repeat;image-rendering:pixelated;transform-origin:50% 100%;filter:drop-shadow(0 8px 6px #000a)}
-#player.idle{animation:idle .9s steps(2) infinite}#player.run{animation:run .48s steps(6) infinite}
-@keyframes idle{from{background-position:0 0}to{background-position:-320px 0}}@keyframes run{from{background-position:-320px 0}to{background-position:-1280px 0}}
-#hud{position:absolute;z-index:30;left:2%;top:3%;padding:9px 13px;background:#05080eea;border:2px solid #725947;min-width:260px}.title{font-size:20px;font-weight:bold;letter-spacing:2px}.red{color:#e65347}.cyan{color:#52d9df}
-#obj{position:absolute;z-index:30;right:3%;top:3%;padding:10px 15px;background:#05080eea;border-left:3px solid #dc974e;min-width:290px}
-#radioBox{position:absolute;z-index:31;right:3%;top:18%;width:355px;padding:11px;background:#03080ef0;border:1px solid #2794a3;display:none}.wave{height:14px;margin-top:7px;background:repeating-linear-gradient(90deg,#43dbe2 0 2px,transparent 2px 7px)}
-#joy{position:absolute;z-index:40;left:3%;bottom:4%;width:122px;height:122px;border:3px solid #8888;border-radius:50%;background:#070b11aa}.stick{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px;border-radius:50%;background:#bbb9}
+
+.platform{position:absolute;z-index:7;height:30px;background:linear-gradient(#69543f 0 5px,#272728 5px 100%);border-top:3px solid #96734d;box-shadow:0 8px 14px #0009}
+.platform:after{content:"";position:absolute;left:0;right:0;top:-11px;height:13px;background:repeating-linear-gradient(110deg,#315a36 0 5px,transparent 5px 15px)}
+#plat0{left:-4%;bottom:15%;width:62%}
+#plat1{left:64%;bottom:23%;width:43%}
+#plat2{left:39%;bottom:37%;width:17%}
+#plat3{left:17%;bottom:49%;width:14%}
+
+.crate{position:absolute;z-index:8;width:46px;height:41px;background:#67462e;border:5px solid #30231c;box-shadow:inset 0 0 0 2px #987047}
+#player{position:absolute;z-index:12;width:112px;height:134px;background-image:url('alter_alive_sheet.png');background-size:1344px 133px;background-repeat:no-repeat;image-rendering:pixelated;transform-origin:50% 100%;filter:drop-shadow(0 7px 6px #000b)}
+#player.faceL{transform:scaleX(-1)}
+#player.damage{filter:brightness(1.8) saturate(.3) drop-shadow(0 7px 6px #000b)}
+#shadow{position:absolute;z-index:9;width:56px;height:12px;border-radius:50%;background:#0007;filter:blur(2px);pointer-events:none}
+.projectile{position:absolute;z-index:16;width:19px;height:5px;background:#ffd078;box-shadow:0 0 10px #ffae41;border-radius:3px}
+.muzzle{position:absolute;z-index:16;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle,#fff 0 15%,#ffc15a 25%,#ff7c30 42%,transparent 70%);pointer-events:none}
+.hitfx{position:absolute;z-index:17;width:60px;height:60px;border:4px solid #ffe2a0;border-radius:50%;opacity:.9;pointer-events:none}
+
+#hud{position:absolute;z-index:30;left:2%;top:3%;padding:8px 12px;background:#05080eea;border:2px solid #725947;min-width:250px}
+.title{font-size:19px;font-weight:bold;letter-spacing:2px}.red{color:#e65347}.cyan{color:#52d9df}
+#obj{position:absolute;z-index:30;right:3%;top:3%;padding:9px 14px;background:#05080eea;border-left:3px solid #dc974e;min-width:280px}
+#radioBox{position:absolute;z-index:31;right:3%;top:18%;width:355px;padding:11px;background:#03080ef0;border:1px solid #2794a3;display:none}
+.wave{height:14px;margin-top:7px;background:repeating-linear-gradient(90deg,#43dbe2 0 2px,transparent 2px 7px)}
+
+#joy{position:absolute;z-index:40;left:3%;bottom:4%;width:118px;height:118px;border:3px solid #8888;border-radius:50%;background:#070b11aa}
+.stick{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#bbb9}
 .btn{position:absolute;z-index:40;border-radius:50%;background:#070b11d8;border:3px solid #8888;color:white;font-weight:bold;display:grid;place-items:center;touch-action:none}
-#jump{right:4%;bottom:19%;width:84px;height:84px}#radio{right:14%;bottom:20%;width:66px;height:66px}#shoot{right:12%;bottom:5%;width:78px;height:78px}#hit{right:3%;bottom:4%;width:76px;height:76px}
-#tag{position:absolute;z-index:30;left:2%;bottom:1.8%;font-size:11px;letter-spacing:1px;color:#ddd}#ver{color:#53d8df}
-@media(orientation:portrait){#rotate{display:flex}#game{display:none}}</style></head><body>
-<div id="rotate">📻 RUOTA L’iPHONE<br><br><small>STAY ON THE AIR.</small></div><div id="game">
-<div id="far" class="layer"></div><div id="mid" class="layer"></div><div class="haze"></div>
-<div id="p1" class="platform"></div><div id="p2" class="platform"></div><div id="p3" class="platform"></div>
-<div class="crate" style="left:42%;bottom:20%"></div><div class="crate" style="left:76%;bottom:27%"></div>
-<div id="player" class="idle"></div><div id="fore" class="layer"></div>
-<div id="hud"><div class="title">ECO SOLITARIO</div>VITA <span class="red">♥♥♥♥♥</span> &nbsp; MUNIZIONI <span id="ammo">12/12</span></div>
-<div id="obj"><span class="red">OBIETTIVO:</span><br>SEGUI LA FREQUENZA <span class="cyan">47.3 FM</span></div>
-<div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">Segnali deboli...</span><div class="wave"></div></div>
-<div id="joy"><div class="stick" id="stick"></div></div><button id="radio" class="btn">📻</button><button id="jump" class="btn">SALTO</button><button id="shoot" class="btn">SPARO</button><button id="hit" class="btn">MAZZA</button>
-<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9 ALTER ALIVE</span></div></div>
+#jump{right:4%;bottom:19%;width:82px;height:82px}#radio{right:14%;bottom:20%;width:64px;height:64px}
+#shoot{right:12%;bottom:5%;width:76px;height:76px}#hit{right:3%;bottom:4%;width:74px;height:74px}
+#tag{position:absolute;z-index:30;left:2%;bottom:1.8%;font-size:11px;letter-spacing:1px;color:#ddd}
+#ver{color:#53d8df}
+@media(orientation:portrait){#rotate{display:flex}#game{display:none}}
+</style></head><body>
+<div id="rotate">📻 RUOTA L’iPHONE<br><br><small>STAY ON THE AIR.</small></div>
+<div id="game">
+  <div id="far" class="layer"></div><div id="mid" class="layer"></div><div class="haze"></div>
+
+  <div id="plat0" class="platform"></div>
+  <div id="plat1" class="platform"></div>
+  <div id="plat2" class="platform"></div>
+  <div id="plat3" class="platform"></div>
+
+  <div class="crate" style="left:45%;bottom:18%"></div>
+  <div class="crate" style="left:75%;bottom:26%"></div>
+
+  <div id="shadow"></div><div id="player"></div><div id="fore" class="layer"></div>
+
+  <div id="hud"><div class="title">ECO SOLITARIO</div>VITA <span class="red" id="life">♥♥♥♥♥</span> &nbsp; MUNIZIONI <span id="ammo">12/12</span></div>
+  <div id="obj"><span class="red">OBIETTIVO:</span><br>SEGUI LA FREQUENZA <span class="cyan">47.3 FM</span></div>
+  <div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">Segnali deboli...</span><div class="wave"></div></div>
+
+  <div id="joy"><div class="stick" id="stick"></div></div>
+  <button id="radio" class="btn">📻</button><button id="jump" class="btn">SALTO</button>
+  <button id="shoot" class="btn">SPARO</button><button id="hit" class="btn">MAZZA</button>
+
+  <div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.1 PHYSICS & ANIMATIONS</span></div>
+</div>
+
 <script>
-const P=document.querySelector('#player'),F=document.querySelector('#far'),M=document.querySelector('#mid'),R=document.querySelector('#fore'),J=document.querySelector('#joy'),S=document.querySelector('#stick');
-let dir=0,world=0,x=20,ammo=12,busy=false,ro=false,li=0;
-function loop(){if(dir&&!busy){world+=dir*1.1;x=Math.max(12,Math.min(52,x+dir*.09));P.className='run'}else if(!busy)P.className='idle';P.style.left=x+'%';P.style.scale=dir<0?'-1 1':'1 1';F.style.transform=`translateX(${-world*.10}px)`;M.style.transform=`translateX(${-world*.32}px)`;R.style.transform=`translateX(${-world*.72}px)`;requestAnimationFrame(loop)}loop();
-function move(e){let r=J.getBoundingClientRect(),t=e.touches[0],dx=Math.max(-40,Math.min(40,t.clientX-r.left-r.width/2));S.style.transform=`translateX(${dx}px)`;dir=Math.abs(dx)>9?Math.sign(dx):0}
-J.addEventListener('touchstart',e=>{e.preventDefault();move(e)},{passive:false});J.addEventListener('touchmove',e=>{e.preventDefault();move(e)},{passive:false});J.addEventListener('touchend',()=>{dir=0;S.style.transform='translateX(0)'});
-function state(cell,dur,anim){busy=true;P.style.animation='none';P.style.backgroundPosition=(-160*cell)+'px 0';if(anim)anim();setTimeout(()=>{P.style.animation='';busy=false},dur)}
-document.querySelector('#jump').ontouchstart=()=>state(8,650,()=>P.animate([{bottom:'19.5%'},{bottom:'45%'},{bottom:'19.5%'}],{duration:650,easing:'cubic-bezier(.2,.7,.25,1)'}));
-document.querySelector('#shoot').ontouchstart=()=>{if(ammo){ammo--;document.querySelector('#ammo').textContent=ammo+'/12';state(9,220,()=>P.animate([{filter:'brightness(2)'},{filter:'brightness(1)'}],{duration:120}))}};
-document.querySelector('#hit').ontouchstart=()=>state(10,330,()=>P.animate([{rotate:'0deg'},{rotate:'-10deg'},{rotate:'0deg'}],{duration:300}));
-let lines=["Segnali deboli... ma sei ancora lì?","Finché ascolti, non sei solo.","Qualcuno trasmette ancora.","Alter... resta sulla frequenza."];
-document.querySelector('#radio').ontouchstart=()=>{ro=!ro;document.querySelector('#radioBox').style.display=ro?'block':'none';if(ro)document.querySelector('#line').textContent=lines[li++%lines.length]};
+const game=document.querySelector('#game'), P=document.querySelector('#player'), SH=document.querySelector('#shadow');
+const F=document.querySelector('#far'), M=document.querySelector('#mid'), R=document.querySelector('#fore');
+const J=document.querySelector('#joy'), S=document.querySelector('#stick');
+const ammoEl=document.querySelector('#ammo');
+
+let px=180, py=0, vx=0, vy=0, face=1, onGround=false, state='idle', stateUntil=0;
+let world=0, ammo=12, radioOpen=false, radioLine=0, last=performance.now();
+let joyDir=0, jumpQueued=false;
+const GRAV=1550, MOVE=260, JUMP=-660, W=112, H=134;
+
+const frameMap={
+  idle:[0,1], run:[2,3,4,5,6,7], jump:[8], fall:[8], land:[1],
+  shoot:[9], bat:[10], damage:[11]
+};
+let frameTick=0, frameIndex=0;
+
+function platforms(){
+  const gr=game.getBoundingClientRect();
+  return [...document.querySelectorAll('.platform')].map(el=>{
+    const r=el.getBoundingClientRect();
+    return {x:r.left-gr.left, y:r.top-gr.top, w:r.width, h:r.height};
+  });
+}
+function placePlayer(){
+  P.style.left=px+'px'; P.style.top=py+'px';
+  P.classList.toggle('faceL',face<0);
+  SH.style.left=(px+W*.25)+'px';
+  SH.style.top=(py+H-5)+'px';
+  SH.style.opacity=onGround?'.7':'.25';
+}
+function setFrame(cell){
+  P.style.backgroundPosition=(-112*cell)+'px 0';
+}
+function setState(s,ms=0){
+  if(state!==s){state=s;frameIndex=0;frameTick=0;}
+  if(ms) stateUntil=performance.now()+ms;
+}
+function animate(dt, now){
+  if(stateUntil && now>stateUntil){stateUntil=0; if(!onGround) setState(vy<0?'jump':'fall'); else setState(Math.abs(vx)>10?'run':'idle');}
+  const frames=frameMap[state]||frameMap.idle;
+  const speed=state==='run'?0.075:state==='idle'?0.45:0.25;
+  frameTick+=dt;
+  if(frameTick>=speed){frameTick=0;frameIndex=(frameIndex+1)%frames.length;}
+  setFrame(frames[frameIndex]);
+}
+function collide(prevY){
+  onGround=false;
+  const plats=platforms();
+  const feetPrev=prevY+H, feet=py+H;
+  for(const p of plats){
+    const overlapX=(px+W*0.28)<(p.x+p.w) && (px+W*0.72)>p.x;
+    if(!overlapX) continue;
+    if(vy>=0 && feetPrev<=p.y+8 && feet>=p.y){
+      py=p.y-H; vy=0; onGround=true;
+      if(state==='fall'||state==='jump'){setState('land',130);}
+      break;
+    }
+  }
+  // fail-safe floor
+  const floor=game.clientHeight*0.86;
+  if(py+H>floor){py=floor-H;vy=0;onGround=true;}
+}
+function update(now){
+  const dt=Math.min((now-last)/1000,.032); last=now;
+
+  if(!stateUntil || !['shoot','bat','damage','land'].includes(state)){
+    vx=joyDir*MOVE;
+    if(joyDir) face=joyDir;
+  } else vx*=.82;
+
+  if(jumpQueued && onGround && !stateUntil){vy=JUMP;onGround=false;setState('jump');jumpQueued=false;}
+  else jumpQueued=false;
+
+  const prevY=py;
+  px+=vx*dt; py+=vy*dt; vy+=GRAV*dt;
+
+  // keep player in view, push world/camera after midpoint
+  const minX=70, maxX=game.clientWidth*.52;
+  if(px<minX) px=minX;
+  if(px>maxX){ world += px-maxX; px=maxX; }
+
+  collide(prevY);
+
+  if(!stateUntil){
+    if(!onGround) setState(vy<20?'jump':'fall');
+    else if(Math.abs(vx)>10) setState('run');
+    else if(state!=='land') setState('idle');
+  }
+
+  F.style.transform=`translateX(${-world*.10}px)`;
+  M.style.transform=`translateX(${-world*.32}px)`;
+  R.style.transform=`translateX(${-world*.72}px)`;
+  animate(dt,now); placePlayer();
+  requestAnimationFrame(update);
+}
+
+function init(){
+  px=game.clientWidth*.18;
+  const p0=document.querySelector('#plat0').getBoundingClientRect(), gr=game.getBoundingClientRect();
+  py=(p0.top-gr.top)-H; onGround=true; placePlayer(); requestAnimationFrame(update);
+}
+window.addEventListener('resize',()=>{ if(onGround){const gr=game.getBoundingClientRect(),p0=document.querySelector('#plat0').getBoundingClientRect();py=Math.min(py,p0.top-gr.top-H);} });
+
+function joyMove(e){
+  const r=J.getBoundingClientRect(), t=e.touches[0];
+  const dx=Math.max(-38,Math.min(38,t.clientX-r.left-r.width/2));
+  S.style.transform=`translateX(${dx}px)`; joyDir=Math.abs(dx)>9?Math.sign(dx):0;
+}
+J.addEventListener('touchstart',e=>{e.preventDefault();joyMove(e)},{passive:false});
+J.addEventListener('touchmove',e=>{e.preventDefault();joyMove(e)},{passive:false});
+J.addEventListener('touchend',()=>{joyDir=0;S.style.transform='translateX(0)'});
+
+document.querySelector('#jump').addEventListener('touchstart',e=>{e.preventDefault();jumpQueued=true},{passive:false});
+
+function spawnMuzzle(){
+  const m=document.createElement('div');m.className='muzzle';
+  m.style.left=(px+(face>0?W-12:-16))+'px';m.style.top=(py+55)+'px';game.appendChild(m);setTimeout(()=>m.remove(),90);
+}
+function spawnProjectile(){
+  const b=document.createElement('div');b.className='projectile';
+  let bx=px+(face>0?W-8:-10), by=py+66, life=0; game.appendChild(b);
+  const t0=performance.now();
+  function tick(t){let dt=Math.min((t-(tick.last||t))/1000,.03);tick.last=t;bx+=face*760*dt;life+=dt;b.style.left=bx+'px';b.style.top=by+'px';if(life<1.2&&bx>-30&&bx<game.clientWidth+30)requestAnimationFrame(tick);else b.remove()}
+  requestAnimationFrame(tick);
+}
+document.querySelector('#shoot').addEventListener('touchstart',e=>{
+  e.preventDefault(); if(ammo<=0||stateUntil)return;
+  ammo--;ammoEl.textContent=ammo+'/12';setState('shoot',260);spawnMuzzle();spawnProjectile();
+},{passive:false});
+
+document.querySelector('#hit').addEventListener('touchstart',e=>{
+  e.preventDefault(); if(stateUntil)return; setState('bat',360);
+  const fx=document.createElement('div');fx.className='hitfx';
+  fx.style.left=(px+(face>0?W-8:-44))+'px';fx.style.top=(py+40)+'px';game.appendChild(fx);
+  fx.animate([{transform:'scale(.4)',opacity:1},{transform:'scale(1.25)',opacity:0}],{duration:260});
+  setTimeout(()=>fx.remove(),270);
+},{passive:false});
+
+const lines=["Segnali deboli... ma sei ancora lì?","Finché ascolti, non sei solo.","Qualcuno trasmette ancora.","Alter... resta sulla frequenza."];
+document.querySelector('#radio').addEventListener('touchstart',e=>{
+  e.preventDefault();radioOpen=!radioOpen;document.querySelector('#radioBox').style.display=radioOpen?'block':'none';
+  if(radioOpen)document.querySelector('#line').textContent=lines[radioLine++%lines.length];
+},{passive:false});
+
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+init();
 </script></body></html>

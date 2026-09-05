@@ -1,13 +1,29 @@
-ECO SOLITARIO v0.9 — ALTER ALIVE
+ECO SOLITARIO v0.9.1 — PHYSICS & ANIMATIONS
 
-- Alter Alive: sheet multi-stato per idle, corsa, salto, sparo, mazza e danno.
-- Primo vero pass artistico del mondo: skyline anonimo irregolare, rovine industriali, ponte, cavi, vegetazione e foreground.
-- Tre velocità di parallasse.
-- Prime piattaforme a quote differenti: inizio della struttura platform.
-- HUD mobile più compatto.
-- Città non riconoscibile.
-- Cache aggiornata: eco-v090-alter-alive.
+QUESTA BUILD CAMBIA IL MOVIMENTO DEL PERSONAGGIO.
 
-Questa build è un ponte importante: da qui rifiniamo le animazioni frame-by-frame e trasformiamo le piattaforme in collisioni reali.
+ALTER
+- Ridimensionato per essere proporzionato al mondo.
+- IDLE con cambio frame.
+- CORSA con sequenza di frame.
+- SALTO fisico con velocità verticale.
+- CADUTA distinta dal salto.
+- ATTERRAGGIO con stato dedicato.
+- SPARO con frame, lampo di volata e proiettile reale.
+- MAZZA con stato dedicato ed effetto hit.
+- Stato DANNO già predisposto.
+- Direzione destra/sinistra con flip del personaggio.
+
+FISICA
+- Gravità reale.
+- Velocità verticale.
+- Collisioni con piattaforme.
+- Atterraggio sulle piattaforme dall'alto.
+- Prime piattaforme a diverse altezze.
+- Camera/world scroll dopo il centro dello schermo.
+- Parallasse conservato.
+
+NEXT
+v0.9.2: sprite art veramente frame-by-frame ridisegnata (gambe, braccia, zaino, codino), collisioni laterali e nemico con danno reale.
 
 STAY ON THE AIR.
