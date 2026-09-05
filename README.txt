@@ -1,19 +1,13 @@
-ECO SOLITARIO v0.8.1 — VISUAL PASS
+ECO SOLITARIO v0.9 — ALTER ALIVE
 
-PRIMO PASSAGGIO VERSO IL CONCEPT DEFINITIVO
+- Alter Alive: sheet multi-stato per idle, corsa, salto, sparo, mazza e danno.
+- Primo vero pass artistico del mondo: skyline anonimo irregolare, rovine industriali, ponte, cavi, vegetazione e foreground.
+- Tre velocità di parallasse.
+- Prime piattaforme a quote differenti: inizio della struttura platform.
+- HUD mobile più compatto.
+- Città non riconoscibile.
+- Cache aggiornata: eco-v090-alter-alive.
 
-- Alter sostituito con una versione molto più dettagliata e ricca di pixel.
-- Capelli/codino, felpa rossa, zaino, pantaloncini e scarpe leggono finalmente come nel concept.
-- Movimento corporeo durante la corsa e respirazione idle.
-- HUD e comandi ridotti per lasciare più spazio al mondo.
-- Città sempre anonima: nessun riferimento geografico riconoscibile.
-- Atmosfera più cinematografica.
-- Manteniamo il motore WORLD LAYERS e il parallasse.
-- Nuova cache: eco-v081-visual-pass.
-
-NOTA
-Questa è la prima versione di Alter ad alta definizione.
-Il prossimo passaggio sarà lo sprite sheet completo con animazioni vere:
-IDLE / WALK-RUN / JUMP / SHOOT / BAT / DAMAGE.
+Questa build è un ponte importante: da qui rifiniamo le animazioni frame-by-frame e trasformiamo le piattaforme in collisioni reali.
 
 STAY ON THE AIR.
