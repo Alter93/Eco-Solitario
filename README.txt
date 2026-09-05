@@ -1,13 +1,12 @@
-ECO SOLITARIO v0.7 — PIXEL WORLD
+ECO SOLITARIO v0.7.1 — HOTFIX GRAFICO
 
-Prima conversione visiva verso il concept definitivo.
-- Fondale pixel-art ricavato dal concept ufficiale.
-- Scenario post-apocalittico più ricco e atmosferico.
-- Alter con idle/respirazione, corsa, codino, salto.
-- Parallasse orizzontale del fondale.
-- HUD 47.3 FM ridisegnato.
-- Radio Eco interattiva con messaggi.
-- Controlli touch landscape.
-- PWA iPhone / GitHub Pages.
+Correzione:
+- Gli asset grafici ora vengono caricati dalla root del repository GitHub.
+- napoli_ruins.png
+- alter_portrait.png
+- ruins_tiles_reference.png
+- Service worker aggiornato a eco-v071 per forzare il refresh della cache.
+
+Non serve spostare le immagini in una cartella assets.
 
 STAY ON THE AIR.
