@@ -1,62 +1,64 @@
 'use strict';
 
-const game = document.querySelector('#game');
-const P = document.querySelector('#player'), SH = document.querySelector('#shadow');
-const F = document.querySelector('#far'), M = document.querySelector('#mid'), R = document.querySelector('#fore');
-const J = document.querySelector('#joy'), S = document.querySelector('#stick');
+const stage = document.getElementById('stage');
+const player = document.getElementById('player');
+const shadow = document.getElementById('shadow');
+const joy = document.getElementById('joy');
+const stick = document.getElementById('stick');
+const stateLabel = document.getElementById('state');
+const speedLabel = document.getElementById('speed');
+const frameLabel = document.getElementById('frame');
 
-const GRAV = 1550, MOVE = 245, JUMP = -650;
+const ctx = player.getContext('2d', {alpha: true, desynchronized: true});
+ctx.imageSmoothingEnabled = false;
+
 const W = 96, H = 128, CELL = 96, FRAME_COUNT = 54;
+const GRAV = 1650;
+const MAX_SPEED = 255;
+const JUMP_SPEED = -650;
 const STEP = 1 / 120;
-const WALK_STRIDE = 118;
 const STOP_EPSILON = 0.35;
-const FACE_EPSILON = 10;
-const JOY_RADIUS = 38;
-const JOY_DEADZONE = 0.14;
+const FACE_EPSILON = 7;
+const JOY_RADIUS = 42;
+const JOY_DEADZONE = 0.12;
+const RUN_THRESHOLD = 188;
 
 const anim = {
-  idle: {f: [0]},
-  walk: {f: [6, 7, 8, 9, 10, 11], distance: WALK_STRIDE},
-  jump: {f: [20, 21, 22, 23], fps: 14, once: true},
-  air: {f: [24, 25, 26, 27], fps: 12},
-  fall: {f: [28, 29, 30, 31], fps: 11},
-  land: {f: [32, 33, 34, 35, 36, 37], fps: 16, once: true},
-  shoot: {f: [38, 39, 40, 41, 42, 43], fps: 18, once: true},
-  bat: {f: [44, 45, 46, 47, 48, 49], fps: 16, once: true},
-  damage: {f: [50, 51, 52, 53], fps: 12, once: true}
+  idle:   {frames: [0]},
+  walk:   {frames: [6, 7, 8, 9, 10, 11], stride: 116},
+  run:    {frames: [12, 13, 14, 15, 16, 17, 18, 19], stride: 156},
+  jump:   {frames: [20, 21, 22, 23], fps: 14, once: true},
+  air:    {frames: [24, 25, 26, 27], fps: 12},
+  fall:   {frames: [28, 29, 30, 31], fps: 11},
+  land:   {frames: [32, 33, 34, 35, 36, 37], fps: 16, once: true},
+  shoot:  {frames: [38, 39, 40, 41, 42, 43], fps: 18, once: true},
+  bat:    {frames: [44, 45, 46, 47, 48, 49], fps: 16, once: true},
+  damage: {frames: [50, 51, 52, 53], fps: 12, once: true}
 };
 
-let px = 0, py = 0, vx = 0, vy = 0, face = 1, world = 0, ammo = 12;
-let previousX = 0, previousY = 0, previousWorld = 0;
-let onGround = false, state = 'idle', animTime = 0, actionLeft = 0;
-let gaitDistance = 0;
-let joyAxis = 0, jumpQueued = false, joyPointer = null;
-let last = null, accumulator = 0, initialized = false, platforms = [];
-const keys = new Set();
-
-const CTX = P && typeof P.getContext === 'function'
-  ? P.getContext('2d', {alpha: true, desynchronized: true})
-  : null;
-
+const sprite = new Image();
 let spriteReady = false;
-let lastDrawnFrame = -1;
+let lastFrame = -1;
 let pendingFrame = 0;
-const sprite = typeof Image !== 'undefined' ? new Image() : null;
+sprite.onload = () => {
+  spriteReady = true;
+  if (sprite.naturalWidth && (sprite.naturalWidth !== FRAME_COUNT * CELL || sprite.naturalHeight !== H)) {
+    console.warn(`Sprite sheet inatteso: ${sprite.naturalWidth}x${sprite.naturalHeight}`);
+  }
+  lastFrame = -1;
+  drawFrame(pendingFrame);
+};
+sprite.onerror = () => console.warn('Sprite di Alter non disponibile.');
+sprite.decoding = 'async';
+sprite.src = './alter_master_sheet.png?v=098';
 
-if (CTX) {
-  CTX.imageSmoothingEnabled = false;
-}
-
-if (sprite) {
-  sprite.onload = () => {
-    spriteReady = true;
-    lastDrawnFrame = -1;
-    setFrame(pendingFrame);
-  };
-  sprite.onerror = () => console.warn('Sprite di Alter non disponibile.');
-  sprite.decoding = 'async';
-  sprite.src = './alter_master_sheet.png';
-}
+let x = 120, y = 0, previousX = 120, previousY = 0;
+let vx = 0, vy = 0, face = 1;
+let grounded = true;
+let state = 'idle', animTime = 0, gaitPhase = 0, actionLeft = 0;
+let joyAxis = 0, joyPointer = null, jumpQueued = false;
+let last = null, accumulator = 0;
+const keys = new Set();
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -68,237 +70,187 @@ function approach(current, target, delta) {
   return target;
 }
 
+function deadzone(value) {
+  const magnitude = Math.abs(value);
+  if (magnitude <= JOY_DEADZONE) return 0;
+  return Math.sign(value) * clamp((magnitude - JOY_DEADZONE) / (1 - JOY_DEADZONE), 0, 1);
+}
+
 function snapToDevicePixel(value) {
   const dpr = Math.max(1, Number(window.devicePixelRatio) || 1);
   return Math.round(value * dpr) / dpr;
 }
 
-function applyDeadzone(value) {
-  const magnitude = Math.abs(value);
-  if (magnitude <= JOY_DEADZONE) return 0;
-  const normalized = (magnitude - JOY_DEADZONE) / (1 - JOY_DEADZONE);
-  return Math.sign(value) * clamp(normalized, 0, 1);
+function groundY() {
+  return stage.clientHeight - 92 - H;
 }
 
-function setFrame(frame) {
+function drawFrame(frame) {
   frame = clamp(Math.floor(frame), 0, FRAME_COUNT - 1);
   pendingFrame = frame;
-  if (!CTX || !spriteReady || frame === lastDrawnFrame) return;
+  if (!spriteReady || frame === lastFrame) return;
 
-  CTX.clearRect(0, 0, W, H);
-  CTX.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = false;
 
-  // Draw exactly one 96x128 cell into its own canvas.
-  // This completely prevents neighbouring sprite cells from bleeding in on iOS/GPU transforms.
-  CTX.drawImage(sprite, frame * CELL, 0, CELL, H, 0, 0, W, H);
-  lastDrawnFrame = frame;
+  // One source cell only. No CSS background-position, no neighbour-frame bleed.
+  ctx.drawImage(sprite, frame * CELL, 0, CELL, H, 0, 0, W, H);
+  lastFrame = frame;
+}
+
+function isGait(name) {
+  return name === 'walk' || name === 'run';
 }
 
 function setState(next) {
   if (state === next) return;
+  const wasGait = isGait(state);
+  const nextIsGait = isGait(next);
+
   state = next;
   animTime = 0;
-  if (next === 'idle') gaitDistance = 0;
+
+  // Preserve the exact gait phase between walk and run.
+  if (!wasGait && nextIsGait) gaitPhase = 0;
+  if (next === 'idle') gaitPhase = 0;
 }
 
 function startAction(next) {
+  if (actionLeft > 0) return;
   setState(next);
-  animTime = 0;
   const sequence = anim[next];
-  actionLeft = sequence.f.length / sequence.fps + STEP;
+  actionLeft = sequence.frames.length / sequence.fps + STEP;
 }
 
-function chooseMovement() {
-  if (!onGround) {
-    setState(vy < -140 ? 'jump' : vy < 100 ? 'air' : 'fall');
-    return;
-  }
-  setState(Math.abs(vx) > 7 ? 'walk' : 'idle');
-}
-
-function currentInputAxis() {
+function currentAxis() {
   const keyboard =
     Number(keys.has('ArrowRight') || keys.has('KeyD')) -
     Number(keys.has('ArrowLeft') || keys.has('KeyA'));
   return keyboard || joyAxis;
 }
 
-function resetInput() {
-  const pointer = joyPointer;
-  joyPointer = null;
-  if (pointer !== null && J.hasPointerCapture(pointer)) J.releasePointerCapture(pointer);
-  joyAxis = 0;
-  jumpQueued = false;
-  keys.clear();
-  S.style.transform = 'translate3d(0px,0,0)';
+function chooseLocomotion() {
+  if (!grounded) {
+    setState(vy < -150 ? 'jump' : vy < 110 ? 'air' : 'fall');
+    return;
+  }
+
+  const speed = Math.abs(vx);
+  if (speed < 6) setState('idle');
+  else if (speed >= RUN_THRESHOLD) setState('run');
+  else setState('walk');
 }
 
-function layout() {
-  resetInput();
-  last = null;
-  accumulator = 0;
-
-  if (!game.clientWidth || !game.clientHeight) return;
-
-  const bounds = game.getBoundingClientRect();
-  platforms = [...document.querySelectorAll('.platform')].map(element => {
-    const rect = element.getBoundingClientRect();
-    return {x: rect.left - bounds.left, y: rect.top - bounds.top, w: rect.width};
-  });
-
-  px = game.clientWidth * .18;
-  py = platforms[0].y - H;
-  vx = 0;
-  vy = 0;
-  onGround = true;
-  state = 'idle';
-  animTime = 0;
-  actionLeft = 0;
-  gaitDistance = 0;
-  previousX = px;
-  previousY = py;
-  previousWorld = world;
-  initialized = true;
-  setFrame(0);
-  render(1);
-}
-
-function collide(oldY) {
-  const wasGrounded = onGround;
-  onGround = false;
-  const footBefore = oldY + H;
-  const footNow = py + H;
-
-  for (const platform of platforms) {
-    const overlaps = px + W * .68 > platform.x && px + W * .32 < platform.x + platform.w;
-    if (overlaps && vy >= 0 && footBefore <= platform.y + .5 && footNow >= platform.y) {
-      py = platform.y - H;
-      onGround = true;
-      break;
-    }
-  }
-
-  const floor = game.clientHeight * .88;
-  if (py + H >= floor) {
-    py = floor - H;
-    onGround = true;
-  }
-
-  if (onGround) {
-    vy = 0;
-    if (!wasGrounded && !actionLeft) startAction('land');
-  }
-}
-
-function simulate(dt) {
-  previousX = px;
-  previousY = py;
-  previousWorld = world;
-
-  animTime += dt;
-  actionLeft = Math.max(0, actionLeft - dt);
-
-  const direction = currentInputAxis();
-
-  if (!actionLeft) {
-    const target = direction * MOVE;
-    const reversing = direction && vx && Math.sign(direction) !== Math.sign(vx);
-    const acceleration = direction ? (reversing ? 2450 : 1550) : 2250;
-    vx = approach(vx, target, acceleration * dt);
-
-    if (!direction && Math.abs(vx) <= STOP_EPSILON) vx = 0;
-    if (Math.abs(vx) > FACE_EPSILON) face = Math.sign(vx);
-  } else {
-    vx *= Math.pow(.18, dt);
-    if (Math.abs(vx) <= STOP_EPSILON) vx = 0;
-  }
-
-  if (jumpQueued && onGround && !actionLeft) {
-    vy = JUMP;
-    onGround = false;
-    setState('jump');
-  }
-  jumpQueued = false;
-
-  const oldX = px;
-  const oldY = py;
-
-  px += vx * dt;
-  py += vy * dt;
-  vy += GRAV * dt;
-
-  const min = 65;
-  const max = Math.max(min, game.clientWidth * .50);
-
-  if (px < min) {
-    px = min;
-    vx = Math.max(0, vx);
-  }
-
-  if (px > max) {
-    world += px - max;
-    px = max;
-  }
-
-  collide(oldY);
-
-  if (!actionLeft) {
-    chooseMovement();
-    if (state === 'walk' && onGround) {
-      gaitDistance += Math.abs(px - oldX);
-    }
-  }
+function advanceGait(distance) {
+  if (!isGait(state) || !grounded || distance <= 0) return;
+  gaitPhase = (gaitPhase + distance / anim[state].stride) % 1;
 }
 
 function frameForState() {
   const sequence = anim[state];
 
-  if (state === 'idle') return sequence.f[0];
+  if (state === 'idle') return sequence.frames[0];
 
-  if (state === 'walk') {
-    const phase = ((gaitDistance % sequence.distance) / sequence.distance);
-    const index = Math.floor(phase * sequence.f.length + 1e-9) % sequence.f.length;
-    return sequence.f[index];
+  if (isGait(state)) {
+    const index = Math.floor(gaitPhase * sequence.frames.length + 1e-9) % sequence.frames.length;
+    return sequence.frames[index];
   }
 
-  const frame = Math.floor((animTime + 1e-9) * sequence.fps);
+  const n = Math.floor((animTime + 1e-9) * sequence.fps);
   const index = sequence.once
-    ? Math.min(frame, sequence.f.length - 1)
-    : frame % sequence.f.length;
-  return sequence.f[index];
+    ? Math.min(n, sequence.frames.length - 1)
+    : n % sequence.frames.length;
+  return sequence.frames[index];
+}
+
+function simulate(dt) {
+  previousX = x;
+  previousY = y;
+  animTime += dt;
+  actionLeft = Math.max(0, actionLeft - dt);
+
+  const axis = currentAxis();
+
+  if (actionLeft <= 0) {
+    const target = axis * MAX_SPEED;
+    const reversing = axis && vx && Math.sign(axis) !== Math.sign(vx);
+    const acceleration = axis ? (reversing ? 2850 : 1780) : 2500;
+    vx = approach(vx, target, acceleration * dt);
+
+    if (!axis && Math.abs(vx) <= STOP_EPSILON) vx = 0;
+    if (Math.abs(vx) > FACE_EPSILON) face = Math.sign(vx);
+  } else {
+    vx *= Math.pow(0.10, dt);
+    if (Math.abs(vx) <= STOP_EPSILON) vx = 0;
+  }
+
+  if (jumpQueued && grounded && actionLeft <= 0) {
+    vy = JUMP_SPEED;
+    grounded = false;
+    setState('jump');
+  }
+  jumpQueued = false;
+
+  const beforeX = x;
+  x += vx * dt;
+  y += vy * dt;
+  vy += GRAV * dt;
+
+  const minX = 26;
+  const maxX = Math.max(minX, stage.clientWidth - W - 26);
+  if (x < minX) {
+    x = minX;
+    vx = Math.max(0, vx);
+  }
+  if (x > maxX) {
+    x = maxX;
+    vx = Math.min(0, vx);
+  }
+
+  const gy = groundY();
+  if (y >= gy) {
+    const landed = !grounded && vy > 0;
+    y = gy;
+    vy = 0;
+    grounded = true;
+    if (landed && actionLeft <= 0) startAction('land');
+  } else {
+    grounded = false;
+  }
+
+  if (actionLeft <= 0) {
+    chooseLocomotion();
+    advanceGait(Math.abs(x - beforeX));
+  }
 }
 
 function render(alpha) {
-  const x = previousX + (px - previousX) * alpha;
-  const y = previousY + (py - previousY) * alpha;
-  const scroll = previousWorld + (world - previousWorld) * alpha;
+  const rx = previousX + (x - previousX) * alpha;
+  const ry = previousY + (y - previousY) * alpha;
+  const drawX = snapToDevicePixel(rx);
+  const drawY = snapToDevicePixel(ry);
 
-  const drawX = snapToDevicePixel(x);
-  const drawY = snapToDevicePixel(y);
+  player.style.transform = `translate3d(${drawX}px,${drawY}px,0) scaleX(${face})`;
+  shadow.style.transform = `translate3d(${snapToDevicePixel(rx + 22)}px,${snapToDevicePixel(groundY() + H - 5)}px,0)`;
+  shadow.style.opacity = grounded ? '0.55' : '0.22';
 
-  P.style.transform = `translate3d(${drawX}px, ${drawY}px, 0) scaleX(${face})`;
-  SH.style.transform = `translate3d(${snapToDevicePixel(x + W * .24)}px, ${snapToDevicePixel(y + H - 5)}px, 0)`;
-  SH.style.opacity = onGround ? '.7' : '.2';
-
-  F.style.backgroundPositionX = `${-scroll * .10}px`;
-  M.style.backgroundPositionX = `${-scroll * .30}px`;
-  R.style.backgroundPositionX = `${-scroll * .66}px`;
-
-  setFrame(frameForState());
+  const frame = frameForState();
+  drawFrame(frame);
+  stateLabel.textContent = state.toUpperCase();
+  speedLabel.textContent = Math.round(Math.abs(vx));
+  frameLabel.textContent = frame;
 }
 
-function update(now) {
-  requestAnimationFrame(update);
+function loop(now) {
+  requestAnimationFrame(loop);
 
-  if (document.hidden || !game.clientWidth || !game.clientHeight) {
+  if (document.hidden || !stage.clientWidth || !stage.clientHeight) {
     last = null;
     return;
   }
 
-  if (!initialized) layout();
   if (last === null) last = now;
-
-  accumulator += Math.min(Math.max((now - last) / 1000, 0), .1);
+  accumulator += Math.min(Math.max((now - last) / 1000, 0), 0.1);
   last = now;
 
   while (accumulator + 1e-9 >= STEP) {
@@ -309,24 +261,54 @@ function update(now) {
   render(accumulator / STEP);
 }
 
-function moveJoystick(event) {
-  const rect = J.getBoundingClientRect();
-  const rawDx = event.clientX - rect.left - rect.width / 2;
-  const dx = clamp(rawDx, -JOY_RADIUS, JOY_RADIUS);
-
-  S.style.transform = `translate3d(${dx}px,0,0)`;
-  joyAxis = applyDeadzone(dx / JOY_RADIUS);
+function resetInput() {
+  const pointer = joyPointer;
+  joyPointer = null;
+  if (pointer !== null && joy.hasPointerCapture(pointer)) joy.releasePointerCapture(pointer);
+  joyAxis = 0;
+  jumpQueued = false;
+  keys.clear();
+  stick.style.transform = 'translate3d(0,0,0)';
 }
 
-J.addEventListener('pointerdown', event => {
+function resetPosition() {
+  resetInput();
+  x = Math.max(40, stage.clientWidth * 0.22);
+  y = groundY();
+  previousX = x;
+  previousY = y;
+  vx = 0;
+  vy = 0;
+  face = 1;
+  grounded = true;
+  state = 'idle';
+  animTime = 0;
+  gaitPhase = 0;
+  actionLeft = 0;
+  accumulator = 0;
+  last = null;
+  lastFrame = -1;
+  drawFrame(0);
+  render(1);
+}
+
+function moveJoystick(event) {
+  const rect = joy.getBoundingClientRect();
+  const raw = event.clientX - rect.left - rect.width / 2;
+  const dx = clamp(raw, -JOY_RADIUS, JOY_RADIUS);
+  stick.style.transform = `translate3d(${dx}px,0,0)`;
+  joyAxis = deadzone(dx / JOY_RADIUS);
+}
+
+joy.addEventListener('pointerdown', event => {
   if (joyPointer !== null) return;
   event.preventDefault();
   joyPointer = event.pointerId;
-  J.setPointerCapture(joyPointer);
+  joy.setPointerCapture(event.pointerId);
   moveJoystick(event);
 });
 
-J.addEventListener('pointermove', event => {
+joy.addEventListener('pointermove', event => {
   if (event.pointerId === joyPointer) {
     event.preventDefault();
     moveJoystick(event);
@@ -334,123 +316,40 @@ J.addEventListener('pointermove', event => {
 });
 
 for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-  J.addEventListener(type, event => {
+  joy.addEventListener(type, event => {
     if (event.pointerId === joyPointer) resetInput();
   });
 }
 
-function muzzle() {
-  const flash = document.createElement('div');
-  flash.className = 'muzzle';
-  flash.style.left = `${px + (face > 0 ? W - 5 : -18)}px`;
-  flash.style.top = `${py + 55}px`;
-  game.appendChild(flash);
-  setTimeout(() => flash.remove(), 80);
-}
-
-function bullet() {
-  const element = document.createElement('div');
-  const direction = face;
-  let x = px + (direction > 0 ? W - 4 : -12);
-  let started = performance.now();
-  let previous = started;
-
-  element.className = 'projectile';
-  element.style.left = `${x}px`;
-  element.style.top = `${py + 62}px`;
-  game.appendChild(element);
-
-  function fly(now) {
-    x += direction * 760 * Math.min((now - previous) / 1000, .1);
-    previous = now;
-    element.style.left = `${x}px`;
-
-    if (now - started < 1200 && x > -30 && x < game.clientWidth + 30) {
-      requestAnimationFrame(fly);
-    } else {
-      element.remove();
-    }
-  }
-
-  requestAnimationFrame(fly);
-}
-
-function shoot() {
-  if (ammo <= 0 || actionLeft) return;
-  document.querySelector('#ammo').textContent = `${--ammo}/12`;
-  startAction('shoot');
-  muzzle();
-  bullet();
-}
-
-function hit() {
-  if (actionLeft) return;
-  startAction('bat');
-
-  const effect = document.createElement('div');
-  effect.className = 'hitfx';
-  effect.style.left = `${px + (face > 0 ? W - 4 : -46)}px`;
-  effect.style.top = `${py + 38}px`;
-  game.appendChild(effect);
-  effect.animate(
-    [{transform: 'scale(.3)', opacity: 1}, {transform: 'scale(1.3)', opacity: 0}],
-    {duration: 280}
-  );
-  setTimeout(() => effect.remove(), 290);
-}
-
-let radioOpen = false;
-let lineIndex = 0;
-const lines = [
-  'Segnali deboli... ma sei ancora lì?',
-  'Finché ascolti, non sei solo.',
-  'Qualcuno trasmette ancora.',
-  'Alter... resta sulla frequenza.'
-];
-
-function radio() {
-  radioOpen = !radioOpen;
-  document.querySelector('#radioBox').style.display = radioOpen ? 'block' : 'none';
-  if (radioOpen) document.querySelector('#line').textContent = lines[lineIndex++ % lines.length];
-}
-
-const actions = {
-  jump: () => { jumpQueued = true; },
-  shoot,
-  hit,
-  radio
-};
-
-for (const [id, action] of Object.entries(actions)) {
-  const button = document.querySelector(`#${id}`);
-  button.addEventListener('pointerdown', event => {
+function bindAction(id, action) {
+  document.getElementById(id).addEventListener('pointerdown', event => {
     event.preventDefault();
     action();
   });
-  button.addEventListener('click', event => {
-    if (event.detail === 0) action();
-  });
 }
 
-const keyboardActions = {
-  Space: actions.jump,
-  KeyJ: shoot,
-  KeyK: hit,
-  KeyR: radio
-};
+bindAction('jump', () => { jumpQueued = true; });
+bindAction('shoot', () => startAction('shoot'));
+bindAction('bat', () => startAction('bat'));
+bindAction('damage', () => startAction('damage'));
+document.getElementById('reset').addEventListener('click', resetPosition);
 
 window.addEventListener('keydown', event => {
-  if (['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].includes(event.code) || keyboardActions[event.code]) {
-    event.preventDefault();
-    keys.add(event.code);
-    if (!event.repeat && keyboardActions[event.code]) keyboardActions[event.code]();
+  const handled = ['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD', 'Space', 'KeyJ', 'KeyK', 'KeyH'];
+  if (handled.includes(event.code)) event.preventDefault();
+  keys.add(event.code);
+
+  if (!event.repeat) {
+    if (event.code === 'Space') jumpQueued = true;
+    if (event.code === 'KeyJ') startAction('shoot');
+    if (event.code === 'KeyK') startAction('bat');
+    if (event.code === 'KeyH') startAction('damage');
   }
 });
 
 window.addEventListener('keyup', event => keys.delete(event.code));
 window.addEventListener('blur', resetInput);
-window.addEventListener('resize', layout);
-
+window.addEventListener('resize', resetPosition);
 document.addEventListener('visibilitychange', () => {
   resetInput();
   last = null;
@@ -458,10 +357,10 @@ document.addEventListener('visibilitychange', () => {
 });
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js?v=096', {updateViaCache: 'none'})
-    .then(registration => registration.update())
-    .catch(error => console.warn('Modalità offline non disponibile:', error));
+  navigator.serviceWorker.register('./sw.js').catch(error =>
+    console.warn('Modalità offline non disponibile:', error)
+  );
 }
 
-layout();
-requestAnimationFrame(update);
+resetPosition();
+requestAnimationFrame(loop);

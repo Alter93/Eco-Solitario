@@ -1,0 +1,41 @@
+ECO SOLITARIO v0.9.8 — ALTER MOTION LOCK
+
+Questa cartella contiene SOLO i file da sostituire nel repository Alter93/Eco-Solitario.
+Gli asset PNG del repository non cambiano e devono restare dove sono.
+
+SOSTITUIRE SU main:
+- index.html
+- game.js
+- sw.js
+- README.txt
+- motion.test.cjs
+
+FIX ATTIVI:
+- idle = frame 0 fisso, senza oscillazioni
+- canvas 96x128 con ritaglio di una singola cella dello sprite sheet
+- nessun frame laterale può sbordare durante il movimento
+- fisica fixed-step 120 Hz + rendering interpolato
+- camminata/corsa legate alla distanza percorsa
+- gait phase continua tra walk e run
+- joystick analogico con dead-zone
+- accelerazione, frenata e inversione separate
+- flip del personaggio solo quando la velocità reale cambia verso
+- snap ai pixel fisici del display per ridurre shimmer su iPhone
+- stop a velocità esatta 0
+- salto/aria/caduta/atterraggio separati
+- cache PWA aggiornata a eco-v098-alter-motion-lock
+
+TEST ESEGUITI LOCALMENTE:
+node --check game.js
+node --check motion.test.cjs
+node --test motion.test.cjs
+RISULTATO: 13/13 PASS
+
+Dopo l'upload, se Safari/PWA mostra ancora la versione vecchia, chiudere completamente la pagina/app web e riaprirla. La nuova cache ha un nome diverso e sostituisce le vecchie cache eco-v*.
+
+ORDINE SUCCESSIVO:
+1. conferma visiva Alter
+2. world scrolling/camera
+3. Dexter e Jack via radio
+
+STAY ON THE AIR.

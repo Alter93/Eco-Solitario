@@ -1,22 +1,28 @@
-ECO SOLITARIO v0.9.6 — ALTER PERFECT MOTION
+ECO SOLITARIO v0.9.8 — ALTER MOTION LOCK
 
-FOCUS: chiudere il movimento di Alter prima di espandere il mondo.
+FOCUS: chiudere il movimento di Alter al 100% prima di riaprire il mondo.
 
-FIX PRINCIPALI
-- idle realmente fermo: un solo frame, nessun respiro/oscillazione automatica
-- eliminato il cambio walk/run che poteva produrre salti di posa durante l'accelerazione
-- camminata sincronizzata alla distanza percorsa, non al refresh rate dello schermo
-- joystick orizzontale analogico con dead-zone e accelerazione/decelerazione progressive
-- inversione di marcia più rapida ma senza flip mentre il corpo sta ancora scivolando
-- posizione agganciata ai pixel fisici del display per ridurre micro-jitter su iPhone
-- rendering di Alter su canvas: viene ritagliata una sola cella 96x128 per volta
-- il canvas impedisce che i frame vicini dello sprite sheet compaiano ai bordi durante i transform GPU
-- fisica invariata a passo fisso 120 Hz con rendering interpolato
-- salto, atterraggio, sparo, mazza e radio restano disponibili
-- cache PWA aggiornata a eco-v096-alter-perfect-motion
+PATCH PRINCIPALI
+- idle bloccato su un solo frame: nessuna oscillazione quando Alter è fermo
+- rendering su canvas 96x128: viene disegnata una sola cella dello sprite sheet alla volta
+- eliminato il bleed dei frame laterali tipico del background-position durante i transform GPU
+- fisica a passo fisso 120 Hz con rendering interpolato
+- movimento indipendente da 30/60/120 Hz
+- camminata e corsa sincronizzate alla distanza percorsa, non al tempo dello schermo
+- fase del passo conservata nel passaggio walk/run, così le gambe non saltano posa
+- joystick realmente analogico con dead-zone 12%
+- accelerazione, frenata e inversione separate per ridurre scatti e slittamenti
+- direzione grafica cambia solo quando la velocità reale ha davvero invertito segno
+- posizione agganciata ai pixel fisici del display per ridurre shimmer su iPhone
+- stop finale a velocità esattamente zero
+- salto, aria, caduta e atterraggio restano separati
+- sparo, mazza e danno mantengono le sequenze complete
+- cache PWA aggiornata a eco-v098-alter-motion-lock
+- build attiva ripulita: index.html usa game.js?v=098, senza doppia logica inline
 
-NOTA
-Questa patch non espande ancora il mondo e non aggiunge Dexter a schermo.
-Il prossimo passaggio, dopo la verifica visiva di Alter, sarà camera/world scrolling e poi radio con Dexter.
+ORDINE DI SVILUPPO
+1. Alter fluido e stabile
+2. camera e world scrolling
+3. radio con Dexter / Jack e ritratti
 
 STAY ON THE AIR.
