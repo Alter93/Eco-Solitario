@@ -1,21 +1,26 @@
-ECO SOLITARIO v0.5 — ALTER PRENDE VITA
+ECO SOLITARIO v0.6 — LA VOCE NELLA TORRE
 
-Novità:
-- Landscape obbligatorio con schermata di rotazione.
-- HUD riposizionato e più compatto per iPhone.
-- Controlli touch più piccoli e trasparenti.
-- Alter ridisegnato in pixel-art più dettagliata.
-- Respirazione idle.
-- Codino dinamico.
-- Corsa con bob del corpo, braccia e gambe animate.
-- Polvere sotto le scarpe.
-- Vegetazione animata.
-- 3 livelli di parallasse.
-- Uccelli lontani e pozzanghere.
-- Ritratti nei dialoghi.
-- Banditi migliorati.
-- Radio 47.3 FM.
-- Primo indizio: Protocollo Sole.
+Capitolo I prende forma.
+
+NOVITÀ
+- Finale narrativo alla torre.
+- Segnale 47.3 FM duplicato.
+- Prima apparizione della VOCE SCONOSCIUTA.
+- Effetto interferenza/statico.
+- Schermata finale della prima sezione.
+- Atmosfera audio procedurale: drone, vento, radio noise.
+- Effetti sonori sintetizzati per salto, sparo, mazza e danno.
+- Scenario più ricco: mattoni, tubi, cavi, rovine, pozzanghere, vegetazione.
+- Torre radio animata.
+- Dialoghi Jack / Dexter / Alter ampliati.
+- Ritratto misterioso della voce.
+- Mantiene animazioni di Alter, controlli landscape e PWA iPhone.
+
+NOTA AUDIO
+Su iPhone l'audio parte dopo il primo tocco, per rispettare le regole di Safari.
 
 Per aggiornare GitHub:
 sostituire index.html, manifest.json, sw.js e README.txt.
+
+“A volte una voce è l’unica cosa che ti tiene vivo.”
+📻 STAY ON THE AIR.
