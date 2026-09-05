@@ -1,96 +1,81 @@
 <!doctype html>
-<html lang="it">
-<head>
+<html lang="it"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#090d13">
-<link rel="manifest" href="manifest.json">
-<title>Eco Solitario v0.7</title>
+<meta name="theme-color" content="#090d13"><link rel="manifest" href="manifest.json">
+<title>Eco Solitario v0.8 — World Layers</title>
 <style>
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b10;font-family:"Courier New",monospace;color:#f3dfb3}
 #rotate{display:none;position:fixed;inset:0;z-index:99;background:#080b10;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:20px}
-#game{position:fixed;inset:0;overflow:hidden;background:#151528}
-.sky{position:absolute;inset:-6%;background:url('napoli_ruins.png') center 44%/cover no-repeat;filter:saturate(1.08) brightness(.72);transform:scale(1.05)}
-.haze{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,9,20,.05),rgba(8,10,15,.05) 55%,rgba(4,6,8,.62));pointer-events:none}
-.fore{position:absolute;left:0;right:0;bottom:0;height:25%;background:
-linear-gradient(180deg,rgba(8,11,12,.1),rgba(5,7,8,.95)),
-url('ruins_tiles_reference.png') center bottom/cover no-repeat;
-border-top:3px solid rgba(221,157,83,.35)}
-#player{position:absolute;left:18%;bottom:19%;width:54px;height:92px;transform-origin:50% 100%;transition:filter .12s}
-#player .head{position:absolute;left:15px;top:3px;width:27px;height:28px;border-radius:48% 45% 42% 45%;background:#d7a76e;box-shadow:9px -4px 0 -4px #6d4429}
-#player .hair{position:absolute;left:9px;top:-2px;width:36px;height:17px;background:#4b2b20;border-radius:60% 40% 30% 20%;transform:rotate(-8deg)}
-#player .tail{position:absolute;left:4px;top:2px;width:18px;height:8px;background:#4b2b20;border-radius:70%;transform-origin:right center}
-#player .body{position:absolute;left:10px;top:31px;width:38px;height:38px;background:#a92f2f;border:3px solid #692329;border-radius:5px 8px 4px 4px}
-#player .pack{position:absolute;left:42px;top:34px;width:16px;height:34px;background:#39483b;border:3px solid #202c27;border-radius:3px}
-#player .leg{position:absolute;top:68px;width:11px;height:20px;background:#c79a62;transform-origin:50% 0}
-#player .l1{left:16px}.l2{left:34px}
-#player .shoe{position:absolute;top:86px;width:18px;height:7px;background:#eee;border-bottom:3px solid #b33939}
-#player .s1{left:10px}.s2{left:31px}
-#player.run{animation:bob .28s infinite alternate}
-#player.run .l1{animation:leg1 .28s infinite alternate}
-#player.run .l2{animation:leg2 .28s infinite alternate}
-#player.run .tail{animation:tail .22s infinite alternate}
+#game{position:fixed;inset:0;overflow:hidden;background:#151528;touch-action:none}
+.layer{position:absolute;inset:-3%;background-repeat:repeat-x;background-position:center bottom;will-change:transform}
+#far{background-image:url('layer_far.png');background-size:auto 106%;filter:saturate(1.08) brightness(.88)}
+#mid{background-image:url('layer_mid.png');background-size:auto 106%}
+.haze{position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(18,12,24,.12) 62%,rgba(4,6,8,.45));pointer-events:none}
+.ground{position:absolute;left:0;right:0;bottom:0;height:20%;background:linear-gradient(#29252a,#0a0c0f);border-top:4px solid #6d5140}
+#fore{background-image:url('layer_fore.png');background-size:auto 106%;z-index:15;pointer-events:none;opacity:.92}
+#player{position:absolute;left:18%;bottom:17%;width:48px;height:80px;background:url('alter_run.png') 0 0/384px 80px no-repeat;image-rendering:pixelated;transform-origin:50% 100%;z-index:10;filter:drop-shadow(0 5px 4px #0008)}
 #player.idle{animation:breath 2.2s ease-in-out infinite}
+#player.run{animation:runFrames .52s steps(8) infinite,bob .26s ease-in-out infinite alternate}
+@keyframes runFrames{to{background-position:-384px 0}} @keyframes bob{to{margin-bottom:2px}}
 @keyframes breath{50%{transform:translateY(2px) scaleY(.985)}}
-@keyframes bob{to{transform:translateY(-3px)}}
-@keyframes leg1{to{transform:rotate(24deg)}} @keyframes leg2{to{transform:rotate(-24deg)}}
-@keyframes tail{to{transform:rotate(-22deg)}}
-#hud{position:absolute;left:2%;top:4%;min-width:300px;padding:13px 17px;background:rgba(5,8,13,.88);border:2px solid #705849;box-shadow:0 0 18px #0008}
-.title{font-weight:900;font-size:25px;letter-spacing:2px}.red{color:#e25243}.cyan{color:#53d8df}
-#objective{position:absolute;right:3%;top:4%;padding:13px 18px;background:rgba(5,8,13,.9);border-left:3px solid #d38b46;min-width:330px}
-#radioBox{position:absolute;right:3%;top:20%;width:365px;background:rgba(3,8,13,.91);border:1px solid #248da0;padding:12px;display:none}
+.prop{position:absolute;z-index:8;bottom:18%;filter:drop-shadow(0 4px 3px #0008)}
+.crate{width:55px;height:45px;background:#553c2b;border:5px solid #2c211d;box-shadow:inset 0 0 0 3px #8a6442}
+.barrel{width:38px;height:54px;border-radius:4px;background:linear-gradient(90deg,#3b2e29,#76513c,#302723);border:3px solid #211a18}
+.grass{position:absolute;z-index:11;bottom:18%;width:10px;height:60px;border-left:5px solid #28533a;transform:skew(-15deg)}
+#hud{position:absolute;z-index:30;left:2%;top:4%;min-width:300px;padding:12px 16px;background:rgba(5,8,13,.90);border:2px solid #705849;box-shadow:0 0 18px #0008}
+.title{font-weight:900;font-size:24px;letter-spacing:2px}.red{color:#e25243}.cyan{color:#53d8df}
+#objective{position:absolute;z-index:30;right:3%;top:4%;padding:12px 18px;background:rgba(5,8,13,.91);border-left:3px solid #d38b46;min-width:330px}
+#radioBox{position:absolute;z-index:31;right:3%;top:20%;width:365px;background:rgba(3,8,13,.94);border:1px solid #248da0;padding:12px;display:none}
 .wave{height:16px;margin-top:8px;background:repeating-linear-gradient(90deg,#42d4df 0 2px,transparent 2px 7px);clip-path:polygon(0 50%,4% 20%,8% 70%,12% 25%,16% 80%,20% 35%,24% 65%,28% 10%,32% 90%,36% 35%,40% 60%,44% 20%,48% 75%,52% 40%,56% 60%,60% 15%,64% 85%,68% 35%,72% 70%,76% 25%,80% 75%,84% 35%,88% 60%,92% 20%,96% 70%,100% 50%)}
-#joy{position:absolute;left:4%;bottom:5%;width:150px;height:150px;border-radius:50%;border:3px solid #7778;background:#080c12aa}
-#stick{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px;border-radius:50%;background:#bbb8}
-.btn{position:absolute;border-radius:50%;background:#080c12cc;border:3px solid #7778;color:#fff;font-weight:bold;display:grid;place-items:center;touch-action:none}
-#jump{right:5%;bottom:19%;width:105px;height:105px}#hit{right:4%;bottom:5%;width:92px;height:92px}
-#shoot{right:15%;bottom:7%;width:96px;height:96px}#radio{right:17%;bottom:23%;width:80px;height:80px}
-#tag{position:absolute;left:2%;bottom:2%;font-size:12px;color:#ddd}
-#dust{position:absolute;pointer-events:none;width:8px;height:8px;border-radius:50%;background:#d5a86d;opacity:0}
+#joy{position:absolute;z-index:40;left:4%;bottom:5%;width:145px;height:145px;border-radius:50%;border:3px solid #7778;background:#080c12aa}
+#stick{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px;border-radius:50%;background:#bbb8}
+.btn{position:absolute;z-index:40;border-radius:50%;background:#080c12cc;border:3px solid #7778;color:#fff;font-weight:bold;display:grid;place-items:center;touch-action:none}
+#jump{right:5%;bottom:19%;width:102px;height:102px}#hit{right:4%;bottom:5%;width:90px;height:90px}
+#shoot{right:15%;bottom:7%;width:94px;height:94px}#radio{right:17%;bottom:23%;width:78px;height:78px}
+#tag{position:absolute;z-index:30;left:2%;bottom:2%;font-size:12px;color:#ddd;letter-spacing:1px}
+#version{color:#53d8df}
 @media (orientation:portrait){#rotate{display:flex}#game{display:none}}
-</style>
-</head>
-<body>
+</style></head><body>
 <div id="rotate">📻 RUOTA L’iPHONE<br><br><small>ECO SOLITARIO si gioca in orizzontale.</small></div>
 <div id="game">
-  <div class="sky"></div><div class="haze"></div><div class="fore"></div>
-  <div id="hud"><div class="title">ECO SOLITARIO</div><div>VITA <span class="red">♥♥♥♥♥</span> &nbsp; MUNIZIONI <span id="ammo">12/12</span></div></div>
-  <div id="objective"><span class="red">OBIETTIVO:</span><br>SEGUI LA FREQUENZA <span class="cyan">47.3 FM</span></div>
-  <div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">...C’è qualcuno?</span><div class="wave"></div></div>
-  <div id="player" class="idle"><div class="tail"></div><div class="hair"></div><div class="head"></div><div class="pack"></div><div class="body"></div><div class="leg l1"></div><div class="leg l2"></div><div class="shoe s1"></div><div class="shoe s2"></div></div>
-  <div id="joy"><div id="stick"></div></div>
-  <button class="btn" id="radio">📻</button><button class="btn" id="jump">SALTO</button><button class="btn" id="shoot">SPARO</button><button class="btn" id="hit">MAZZA</button>
-  <div id="tag">NAPOLI — ZONA EST · GIORNO ??? &nbsp; | &nbsp; STAY ON THE AIR</div><div id="dust"></div>
+ <div id="far" class="layer"></div><div id="mid" class="layer"></div><div class="haze"></div><div class="ground"></div>
+ <div class="prop crate" style="left:42%"></div><div class="prop barrel" style="left:67%"></div>
+ <i class="grass" style="left:34%"></i><i class="grass" style="left:58%;height:78px"></i><i class="grass" style="left:79%;height:48px"></i>
+ <div id="player" class="idle"></div><div id="fore" class="layer"></div>
+ <div id="hud"><div class="title">ECO SOLITARIO</div><div>VITA <span class="red">♥♥♥♥♥</span> &nbsp; MUNIZIONI <span id="ammo">12/12</span></div></div>
+ <div id="objective"><span class="red">OBIETTIVO:</span><br>SEGUI LA FREQUENZA <span class="cyan">47.3 FM</span></div>
+ <div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">...C’è qualcuno?</span><div class="wave"></div></div>
+ <div id="joy"><div id="stick"></div></div>
+ <button class="btn" id="radio">📻</button><button class="btn" id="jump">SALTO</button><button class="btn" id="shoot">SPARO</button><button class="btn" id="hit">MAZZA</button>
+ <div id="tag">ZONA SCONOSCIUTA · GIORNO ??? &nbsp; | &nbsp; STAY ON THE AIR &nbsp; <span id="version">v0.8 WORLD LAYERS</span></div>
 </div>
 <script>
-const p=document.querySelector('#player'), sky=document.querySelector('.sky'), stick=document.querySelector('#stick');
-let x=18, ammo=12, dir=0, jumping=false, radioOpen=false;
+const p=document.querySelector('#player'),far=document.querySelector('#far'),mid=document.querySelector('#mid'),fore=document.querySelector('#fore'),stick=document.querySelector('#stick');
+let x=18,ammo=12,dir=0,jumping=false,radioOpen=false,world=0;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 function update(){
- x=clamp(x+dir*.22,5,84); p.style.left=x+'%';
- p.className=dir?'run':'idle';
- p.style.transform=(dir<0?'scaleX(-1)':'scaleX(1)');
- sky.style.backgroundPosition=(50-(x-18)*.08)+'% 44%';
+ if(dir){world+=dir*.75;x=clamp(x+dir*.08,12,52)}
+ p.style.left=x+'%';p.className=dir?'run':'idle';
+ p.style.scale=dir<0?'-1 1':'1 1';
+ far.style.transform=`translateX(${-world*.12}px)`;
+ mid.style.transform=`translateX(${-world*.32}px)`;
+ fore.style.transform=`translateX(${-world*.68}px)`;
  requestAnimationFrame(update)
 } update();
 function joyMove(e){
- const r=document.querySelector('#joy').getBoundingClientRect(), t=e.touches?e.touches[0]:e;
- const dx=clamp(t.clientX-(r.left+r.width/2),-48,48); stick.style.transform=`translateX(${dx}px)`; dir=Math.abs(dx)>12?Math.sign(dx):0
+ const r=document.querySelector('#joy').getBoundingClientRect(),t=e.touches?e.touches[0]:e;
+ const dx=clamp(t.clientX-(r.left+r.width/2),-46,46);stick.style.transform=`translateX(${dx}px)`;dir=Math.abs(dx)>10?Math.sign(dx):0
 }
 const joy=document.querySelector('#joy');
 joy.addEventListener('touchstart',e=>{e.preventDefault();joyMove(e)},{passive:false});
 joy.addEventListener('touchmove',e=>{e.preventDefault();joyMove(e)},{passive:false});
 joy.addEventListener('touchend',()=>{dir=0;stick.style.transform='translateX(0)'});
-document.querySelector('#jump').ontouchstart=()=>{
- if(jumping)return;jumping=true;p.animate([{bottom:'19%'},{bottom:'39%'},{bottom:'19%'}],{duration:620,easing:'ease-out'}).onfinish=()=>jumping=false
-};
-document.querySelector('#shoot').ontouchstart=()=>{if(ammo>0){ammo--;document.querySelector('#ammo').textContent=ammo+'/12';p.style.filter='brightness(1.8)';setTimeout(()=>p.style.filter='',70)}};
-document.querySelector('#hit').ontouchstart=()=>p.animate([{rotate:'0deg'},{rotate:'-5deg'},{rotate:'0deg'}],{duration:180});
-const lines=["...C’è qualcuno?","Se mi senti, rispondi...","Questa è Radio Eco.","Non sei solo.","Alter... resta sulla frequenza."];
-let li=0;
-document.querySelector('#radio').ontouchstart=()=>{radioOpen=!radioOpen;document.querySelector('#radioBox').style.display=radioOpen?'block':'none';if(radioOpen){document.querySelector('#line').textContent=lines[li++%lines.length]}};
-document.body.addEventListener('touchstart',()=>{try{navigator.vibrate?.(8)}catch(e){}},{once:true});
-if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
-</script>
-</body></html>
+document.querySelector('#jump').ontouchstart=()=>{if(jumping)return;jumping=true;p.animate([{bottom:'17%'},{bottom:'40%'},{bottom:'17%'}],{duration:650,easing:'cubic-bezier(.2,.7,.25,1)'}).onfinish=()=>jumping=false};
+document.querySelector('#shoot').ontouchstart=()=>{if(ammo>0){ammo--;document.querySelector('#ammo').textContent=ammo+'/12';p.animate([{filter:'brightness(2)'},{filter:'brightness(1)'}],{duration:100})}};
+document.querySelector('#hit').ontouchstart=()=>p.animate([{rotate:'0deg'},{rotate:'-8deg'},{rotate:'0deg'}],{duration:180});
+const lines=["...C’è qualcuno?","Se mi senti, rispondi...","Questa è Radio Eco.","Non so più dove siamo.","Forse è meglio così.","Alter... resta sulla frequenza."];
+let li=0;document.querySelector('#radio').ontouchstart=()=>{radioOpen=!radioOpen;document.querySelector('#radioBox').style.display=radioOpen?'block':'none';if(radioOpen)document.querySelector('#line').textContent=lines[li++%lines.length]};
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');
+</script></body></html>

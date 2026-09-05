@@ -1,12 +1,20 @@
-ECO SOLITARIO v0.7.1 — HOTFIX GRAFICO
+ECO SOLITARIO v0.8 — WORLD LAYERS
 
-Correzione:
-- Gli asset grafici ora vengono caricati dalla root del repository GitHub.
-- napoli_ruins.png
-- alter_portrait.png
-- ruins_tiles_reference.png
-- Service worker aggiornato a eco-v071 per forzare il refresh della cache.
+Questa build avvia la conversione del gioco vero al concept visivo definitivo.
 
-Non serve spostare le immagini in una cartella assets.
+NOVITÀ
+- Città anonima: rimossi i riferimenti a Napoli.
+- Mondo diviso in livelli grafici indipendenti.
+- Parallasse: skyline lontano, rovine intermedie, primo piano.
+- Alter ora usa un vero sprite-sheet pixel art a 8 frame.
+- Corsa animata + respirazione idle.
+- Primo piano passa davanti ad Alter.
+- Oggetti ambientali integrati nel livello.
+- Mantiene joystick, salto, sparo, mazza, radio, HUD e PWA.
+- Cache aggiornata a eco-v080-world-layers.
+
+CARICAMENTO SU GITHUB
+Sostituisci i vecchi file con TUTTI i file di questo pacchetto nella root del repository e fai Commit changes.
+Poi attendi il deploy di GitHub Pages e ricarica il gioco.
 
 STAY ON THE AIR.

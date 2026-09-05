@@ -1,9 +1,9 @@
 {
-  "name": "Eco Solitario – Capitolo I",
-  "short_name": "Eco Solitario",
-  "start_url": "./",
-  "display": "standalone",
-  "orientation": "landscape",
-  "background_color": "#080b10",
-  "theme_color": "#080b10"
+  "name":"Eco Solitario – Capitolo I",
+  "short_name":"Eco Solitario",
+  "start_url":"./",
+  "display":"standalone",
+  "orientation":"landscape",
+  "background_color":"#080b10",
+  "theme_color":"#080b10"
 }
