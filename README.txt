@@ -1,31 +1,19 @@
-ECO SOLITARIO v0.9.2 — TRUE ANIMATION
+ECO SOLITARIO v0.9.2.1 — SPRITE FIX
 
-OBIETTIVO DI QUESTA BUILD:
-Alter non usa più la stessa immagine inclinata per ogni azione.
-Il nuovo alter_true_sheet.png contiene pose visivamente differenti.
+PATCH MIRATA
 
-ANIMAZIONI:
-- IDLE: 3 frame
-- WALK: 4 frame
-- RUN: 5 frame
-- JUMP: 2 frame
-- FALL: 2 frame
-- LAND: 3 frame
-- SHOOT: 5 frame
-- BAT: 4 frame
-- DAMAGE: 3 frame
+Correzione del bug visto su iPhone:
+- una sola posa di Alter visibile per volta
+- celle sprite normalizzate a 96x128
+- foglio completo: 31 frame = 2976x128
+- piedi allineati sullo stesso punto d'appoggio
+- background-position forzato a multipli esatti di 96 px
+- nessuna sovrapposizione tra fotogrammi
+- mantiene tutte le animazioni:
+  IDLE / WALK / RUN / JUMP / FALL / LAND / SHOOT / BAT / DAMAGE
+- mantiene fisica, piattaforme, proiettile, parallasse e HUD
 
-MOTORE:
-- gravità e salto reali
-- caduta / atterraggio
-- collisioni piattaforme
-- sparo + proiettile
-- mazza + hit effect
-- flip destra/sinistra
-- fix importante dei fondali: i layer non vengono più spostati fuori dallo schermo; scorre solo la texture.
-- parallasse mantenuto
-
-NEXT:
-v0.9.3 — collisioni laterali, nemico attivo, danno, hitbox e camera/world level.
+CACHE:
+eco-v0921-sprite-fix
 
 STAY ON THE AIR.

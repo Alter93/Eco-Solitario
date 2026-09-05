@@ -18,7 +18,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07090d;fon
 #plat0{left:-4%;bottom:15%;width:62%}#plat1{left:64%;bottom:23%;width:43%}#plat2{left:39%;bottom:37%;width:17%}#plat3{left:17%;bottom:49%;width:14%}
 .crate{position:absolute;z-index:8;width:46px;height:41px;background:#67462e;border:5px solid #30231c;box-shadow:inset 0 0 0 2px #987047}
 
-#player{position:absolute;z-index:12;width:96px;height:128px;background-image:url('alter_true_sheet.png');background-size:2304px 128px;background-repeat:no-repeat;image-rendering:pixelated;transform-origin:50% 100%;filter:drop-shadow(0 7px 5px #000b)}
+#player{position:absolute;z-index:12;width:96px;height:128px;overflow:hidden;
+background-image:url('alter_true_sheet.png');background-size:2976px 128px;background-repeat:no-repeat;
+background-position:0 0;image-rendering:pixelated;transform-origin:50% 100%;
+filter:drop-shadow(0 7px 5px #000b)}
 #player.faceL{transform:scaleX(-1)}
 #player.damage{filter:brightness(1.7) saturate(.4) drop-shadow(0 7px 5px #000b)}
 #shadow{position:absolute;z-index:9;width:50px;height:11px;border-radius:50%;background:#0007;filter:blur(2px)}
@@ -50,7 +53,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07090d;fon
 <div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">Segnali deboli...</span><div class="wave"></div></div>
 <div id="joy"><div class="stick" id="stick"></div></div>
 <button id="radio" class="btn">📻</button><button id="jump" class="btn">SALTO</button><button id="shoot" class="btn">SPARO</button><button id="hit" class="btn">MAZZA</button>
-<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.2 TRUE ANIMATION</span></div>
+<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.2.1 SPRITE FIX</span></div>
 </div>
 <script>
 const game=document.querySelector('#game'),P=document.querySelector('#player'),SH=document.querySelector('#shadow');
@@ -63,7 +66,7 @@ const anim={
  shoot:{f:[19,20,21,22,23],fps:16}, bat:{f:[24,25,26,27],fps:12}, damage:{f:[28,29,30],fps:10}
 };
 let af=0,acc=0;
-function setFrame(c){P.style.backgroundPosition=(-CELL*c)+'px 0'}
+function setFrame(c){c=Math.max(0,Math.min(30,Math.floor(c)));P.style.backgroundPositionX=(-CELL*c)+'px';P.style.backgroundPositionY='0px'}
 function setState(s,ms=0){if(state!==s){state=s;af=0;acc=0}if(ms)stateUntil=performance.now()+ms}
 function animate(dt,now){
  if(stateUntil&&now>stateUntil){stateUntil=0;setState(!onGround?(vy<0?'jump':'fall'):(Math.abs(vx)>10?'run':'idle'))}
