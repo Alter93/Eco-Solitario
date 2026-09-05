@@ -21,7 +21,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07090d;fon
 #player{position:absolute;z-index:12;width:96px;height:128px;overflow:hidden;
 background-image:url('alter_master_sheet.png');background-size:5184px 128px;background-repeat:no-repeat;
 background-position:0 0;image-rendering:pixelated;transform-origin:50% 100%;
-filter:drop-shadow(0 7px 5px #000b);will-change:left,top,background-position}
+filter:drop-shadow(0 7px 5px #000b);will-change:left,top,background-position;transition:filter .08s linear}
 #player.faceL{transform:scaleX(-1)}
 #player.damage{filter:brightness(1.7) saturate(.4) drop-shadow(0 7px 5px #000b)}
 #shadow{position:absolute;z-index:9;width:50px;height:11px;border-radius:50%;background:#0007;filter:blur(2px)}
@@ -53,7 +53,7 @@ filter:drop-shadow(0 7px 5px #000b);will-change:left,top,background-position}
 <div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">Segnali deboli...</span><div class="wave"></div></div>
 <div id="joy"><div class="stick" id="stick"></div></div>
 <button id="radio" class="btn">📻</button><button id="jump" class="btn">SALTO</button><button id="shoot" class="btn">SPARO</button><button id="hit" class="btn">MAZZA</button>
-<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.3.1 MASTER HOTFIX</span></div>
+<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.4 ALTER MOTION POLISH</span></div>
 </div>
 <script>
 const game=document.querySelector('#game'),P=document.querySelector('#player'),SH=document.querySelector('#shadow');
@@ -74,7 +74,17 @@ const anim={
 };
 let af=0,acc=0;
 function setFrame(c){c=Math.max(0,Math.min(47,Math.floor(c)));P.style.backgroundPositionX=(-CELL*c)+'px';P.style.backgroundPositionY='0px'}
-function setState(s,ms=0){if(state!==s){state=s;af=0;acc=0}if(ms)stateUntil=performance.now()+ms}
+function setState(s,ms=0){
+  if(state!==s){
+    const prev=state;
+    state=s; af=0; acc=0;
+    P.dataset.prev=prev;
+    P.classList.add('blend');
+    clearTimeout(P._blendTimer);
+    P._blendTimer=setTimeout(()=>P.classList.remove('blend'),70);
+  }
+  if(ms) stateUntil=performance.now()+ms;
+}if(ms)stateUntil=performance.now()+ms}
 function animate(dt,now){
  if(stateUntil&&now>stateUntil){
    stateUntil=0;
@@ -91,15 +101,30 @@ function animate(dt,now){
  setFrame(a.f[af]);
 }
 function plats(){let g=game.getBoundingClientRect();return[...document.querySelectorAll('.platform')].map(e=>{let r=e.getBoundingClientRect();return{x:r.left-g.left,y:r.top-g.top,w:r.width,h:r.height}})}
-function collide(prevY){onGround=false;let fp=prevY+H,f=py+H;for(let p of plats()){let ox=px+W*.68>p.x&&px+W*.32<p.x+p.w;if(ox&&vy>=0&&fp<=p.y+8&&f>=p.y){py=p.y-H;vy=0;onGround=true;if(state==='fall'||state==='jump')setState('land',300);break}}let floor=game.clientHeight*.88;if(py+H>floor){py=floor-H;vy=0;onGround=true}}
+function collide(prevY){onGround=false;let fp=prevY+H,f=py+H;for(let p of plats()){let ox=px+W*.68>p.x&&px+W*.32<p.x+p.w;if(ox&&vy>=0&&fp<=p.y+8&&f>=p.y){py=p.y-H;vy=0;onGround=true;if(state==='fall'||state==='jump')setState('land',250);break}}let floor=game.clientHeight*.88;if(py+H>floor){py=floor-H;vy=0;onGround=true}}
 function update(now){let dt=Math.min((now-last)/1000,.032);last=now;
- if(!stateUntil||!['shoot','bat','damage','land'].includes(state)){vx=joyDir*MOVE;if(joyDir)face=joyDir}else vx*=.8;
+ if(!stateUntil||!['shoot','bat','damage','land'].includes(state)){
+   const target=joyDir*MOVE;
+   const accel=joyDir ? 1350 : 1900;
+   const diff=target-vx;
+   const step=Math.sign(diff)*Math.min(Math.abs(diff),accel*dt);
+   vx+=step;
+   if(joyDir)face=joyDir;
+ }else vx*=Math.pow(.18,dt);
  if(jumpQueued&&onGround&&!stateUntil){vy=JUMP;onGround=false;setState('jump');jumpQueued=false}else jumpQueued=false;
  let prevY=py;px+=vx*dt;py+=vy*dt;vy+=GRAV*dt;
  let min=65,max=game.clientWidth*.50;if(px<min)px=min;if(px>max){world+=px-max;px=max}
  collide(prevY);
- if(!stateUntil){if(!onGround)setState(vy<-120?'jump':vy<120?'air':'fall');else if(Math.abs(vx)>150)setState('run');else if(Math.abs(vx)>8)setState('walk');else setState('idle')}
- P.style.left=px+'px';P.style.top=py+'px';P.classList.toggle('faceL',face<0);
+ if(!stateUntil){
+   if(!onGround) setState(vy<-140?'jump':vy<100?'air':'fall');
+   else{
+     const sp=Math.abs(vx);
+     if(sp>175) setState('run');
+     else if(sp>22) setState('walk');
+     else setState('idle');
+   }
+ }
+ P.style.left=Math.round(px)+'px';P.style.top=Math.round(py)+'px';P.classList.toggle('faceL',face<0);
  SH.style.left=(px+W*.24)+'px';SH.style.top=(py+H-5)+'px';SH.style.opacity=onGround?'.7':'.2';
  /* FIX: move only background image, never the layer element itself */
  F.style.backgroundPositionX=(-world*.10)+'px';M.style.backgroundPositionX=(-world*.30)+'px';R.style.backgroundPositionX=(-world*.66)+'px';
@@ -111,8 +136,8 @@ J.addEventListener('touchstart',e=>{e.preventDefault();move(e)},{passive:false})
 document.querySelector('#jump').addEventListener('touchstart',e=>{e.preventDefault();jumpQueued=true},{passive:false});
 function muzzle(){let m=document.createElement('div');m.className='muzzle';m.style.left=(px+(face>0?W-5:-18))+'px';m.style.top=(py+55)+'px';game.appendChild(m);setTimeout(()=>m.remove(),80)}
 function bullet(){let b=document.createElement('div');b.className='projectile';let bx=px+(face>0?W-4:-12),by=py+62,t0=performance.now(),lt=t0;b.style.left=bx+'px';b.style.top=by+'px';game.appendChild(b);function go(t){let dt=Math.min((t-lt)/1000,.03);lt=t;bx+=face*760*dt;b.style.left=bx+'px';if(t-t0<1200&&bx>-30&&bx<game.clientWidth+30)requestAnimationFrame(go);else b.remove()}requestAnimationFrame(go)}
-document.querySelector('#shoot').addEventListener('touchstart',e=>{e.preventDefault();if(ammo<=0||stateUntil)return;ammo--;document.querySelector('#ammo').textContent=ammo+'/12';setState('shoot',340);muzzle();bullet()},{passive:false});
-document.querySelector('#hit').addEventListener('touchstart',e=>{e.preventDefault();if(stateUntil)return;setState('bat',380);let fx=document.createElement('div');fx.className='hitfx';fx.style.left=(px+(face>0?W-4:-46))+'px';fx.style.top=(py+38)+'px';game.appendChild(fx);fx.animate([{transform:'scale(.3)',opacity:1},{transform:'scale(1.3)',opacity:0}],{duration:280});setTimeout(()=>fx.remove(),290)},{passive:false});
+document.querySelector('#shoot').addEventListener('touchstart',e=>{e.preventDefault();if(ammo<=0||stateUntil)return;ammo--;document.querySelector('#ammo').textContent=ammo+'/12';setState('shoot',320);muzzle();bullet()},{passive:false});
+document.querySelector('#hit').addEventListener('touchstart',e=>{e.preventDefault();if(stateUntil)return;setState('bat',360);let fx=document.createElement('div');fx.className='hitfx';fx.style.left=(px+(face>0?W-4:-46))+'px';fx.style.top=(py+38)+'px';game.appendChild(fx);fx.animate([{transform:'scale(.3)',opacity:1},{transform:'scale(1.3)',opacity:0}],{duration:280});setTimeout(()=>fx.remove(),290)},{passive:false});
 let ro=false,li=0,lines=["Segnali deboli... ma sei ancora lì?","Finché ascolti, non sei solo.","Qualcuno trasmette ancora.","Alter... resta sulla frequenza."];
 document.querySelector('#radio').addEventListener('touchstart',e=>{e.preventDefault();ro=!ro;document.querySelector('#radioBox').style.display=ro?'block':'none';if(ro)document.querySelector('#line').textContent=lines[li++%lines.length]},{passive:false});
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');init();

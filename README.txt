@@ -1,19 +1,24 @@
-ECO SOLITARIO v0.9.3.1 — MASTER HOTFIX
+ECO SOLITARIO v0.9.4 — ALTER MOTION POLISH
 
-HOTFIX URGENTE DELLA v0.9.3
+FOCUS: rendere Alter stabile e fluido prima di espandere il mondo.
 
-Problema trovato:
-- un errore di sintassi JavaScript bloccava completamente il loop di gioco.
-- per questo joystick, fisica e animazioni risultavano immobili.
+MOTION POLISH
+- tutti i frame ri-allineati su una baseline piedi comune
+- centro del corpo stabilizzato
+- ridotto l'effetto "Alter gira dentro il suo riquadro"
+- accelerazione e decelerazione progressive
+- transizioni idle/walk/run più naturali
+- soglie di cambio stato più stabili
+- salto / aria / caduta più leggibili
+- atterraggio più rapido e pulito
+- sparo e mazza più responsivi
+- rendering della posizione arrotondato per ridurre micro-jitter su iPhone
 
-Correzioni:
-- rimossa la riga duplicata che rompeva lo script
-- ripristinato il game loop
-- mantenute le 54 pose di Alter
-- mantenuti timing, stabilizzazione dei frame, fisica e parallasse
-- nuova cache Safari/PWA: eco-v0931-master-hotfix
+NON CAMBIA ANCORA IL WORLD:
+questa versione chiude il motion di Alter.
+Il passo successivo sarà il mondo che avanza davvero con camera e level scrolling.
 
-Questa patch NON cambia il design:
-serve solo a rimettere in funzione la v0.9.3 come previsto.
+CACHE:
+eco-v094-alter-motion-polish
 
 STAY ON THE AIR.

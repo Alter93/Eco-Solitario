@@ -1,4 +1,4 @@
-const C='eco-v0931-master-hotfix';
+const C='eco-v094-alter-motion-polish';
 const A=['./','./index.html','./manifest.json','./layer_far.png','./layer_mid.png','./layer_fore.png','./alter_master_sheet.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(A)))});
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([
