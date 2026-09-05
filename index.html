@@ -1,7 +1,7 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#080b10"><link rel="manifest" href="manifest.json">
-<title>Eco Solitario v0.9.2 — True Animation</title>
+<title>Eco Solitario v0.9.5 — Alter Motion Fix</title>
 <style>
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07090d;font-family:"Courier New",monospace;color:#f1dfb9}
@@ -18,13 +18,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07090d;fon
 #plat0{left:-4%;bottom:15%;width:62%}#plat1{left:64%;bottom:23%;width:43%}#plat2{left:39%;bottom:37%;width:17%}#plat3{left:17%;bottom:49%;width:14%}
 .crate{position:absolute;z-index:8;width:46px;height:41px;background:#67462e;border:5px solid #30231c;box-shadow:inset 0 0 0 2px #987047}
 
-#player{position:absolute;z-index:12;width:96px;height:128px;overflow:hidden;
+#player{position:absolute;left:0;top:0;z-index:12;width:96px;height:128px;overflow:hidden;
 background-image:url('alter_master_sheet.png');background-size:5184px 128px;background-repeat:no-repeat;
 background-position:0 0;image-rendering:pixelated;transform-origin:50% 100%;
-filter:drop-shadow(0 7px 5px #000b);will-change:left,top,background-position;transition:filter .08s linear}
-#player.faceL{transform:scaleX(-1)}
+filter:drop-shadow(0 7px 5px #000b);will-change:transform,background-position;transition:filter .08s linear}
 #player.damage{filter:brightness(1.7) saturate(.4) drop-shadow(0 7px 5px #000b)}
-#shadow{position:absolute;z-index:9;width:50px;height:11px;border-radius:50%;background:#0007;filter:blur(2px)}
+#shadow{position:absolute;left:0;top:0;z-index:9;width:50px;height:11px;border-radius:50%;background:#0007;filter:blur(2px)}
 .projectile{position:absolute;z-index:16;width:19px;height:5px;background:#ffd078;box-shadow:0 0 10px #ffae41;border-radius:3px}
 .muzzle{position:absolute;z-index:16;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,#fff 0 15%,#ffc15a 25%,#ff7c30 42%,transparent 70%)}
 .hitfx{position:absolute;z-index:17;width:58px;height:58px;border:4px solid #ffe2a0;border-radius:50%;opacity:.9}
@@ -53,92 +52,6 @@ filter:drop-shadow(0 7px 5px #000b);will-change:left,top,background-position;tra
 <div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">Segnali deboli...</span><div class="wave"></div></div>
 <div id="joy"><div class="stick" id="stick"></div></div>
 <button id="radio" class="btn">📻</button><button id="jump" class="btn">SALTO</button><button id="shoot" class="btn">SPARO</button><button id="hit" class="btn">MAZZA</button>
-<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.4 ALTER MOTION POLISH</span></div>
+<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.5 ALTER MOTION FIX</span></div>
 </div>
-<script>
-const game=document.querySelector('#game'),P=document.querySelector('#player'),SH=document.querySelector('#shadow');
-const F=document.querySelector('#far'),M=document.querySelector('#mid'),R=document.querySelector('#fore'),J=document.querySelector('#joy'),S=document.querySelector('#stick');
-let px=180,py=0,vx=0,vy=0,face=1,onGround=false,state='idle',stateUntil=0,world=0,ammo=12,last=performance.now(),joyDir=0,jumpQueued=false;
-const GRAV=1550,MOVE=245,JUMP=-650,W=96,H=128,CELL=96;
-const anim={
- idle:{f:[0, 1, 2, 3, 4, 5],fps:6},
- walk:{f:[6, 7, 8, 9, 10, 11],fps:10},
- run:{f:[12, 13, 14, 15, 16, 17, 18, 19],fps:14},
- jump:{f:[20, 21, 22, 23],fps:14,once:true},
- air:{f:[24, 25, 26, 27],fps:12},
- fall:{f:[28, 29, 30, 31],fps:11},
- land:{f:[32, 33, 34, 35, 36, 37],fps:16,once:true},
- shoot:{f:[38, 39, 40, 41, 42, 43],fps:18,once:true},
- bat:{f:[44, 45, 46, 47, 48, 49],fps:16,once:true},
- damage:{f:[50, 51, 52, 53],fps:12,once:true}
-};
-let af=0,acc=0;
-function setFrame(c){c=Math.max(0,Math.min(47,Math.floor(c)));P.style.backgroundPositionX=(-CELL*c)+'px';P.style.backgroundPositionY='0px'}
-function setState(s,ms=0){
-  if(state!==s){
-    const prev=state;
-    state=s; af=0; acc=0;
-    P.dataset.prev=prev;
-    P.classList.add('blend');
-    clearTimeout(P._blendTimer);
-    P._blendTimer=setTimeout(()=>P.classList.remove('blend'),70);
-  }
-  if(ms) stateUntil=performance.now()+ms;
-}if(ms)stateUntil=performance.now()+ms}
-function animate(dt,now){
- if(stateUntil&&now>stateUntil){
-   stateUntil=0;
-   setState(!onGround?(vy<-60?'jump':vy<110?'air':'fall'):(Math.abs(vx)>150?'run':Math.abs(vx)>8?'walk':'idle'));
- }
- const a=anim[state]||anim.idle;
- acc+=dt;
- const step=1/a.fps;
- while(acc>=step){
-   acc-=step;
-   if(a.once) af=Math.min(af+1,a.f.length-1);
-   else af=(af+1)%a.f.length;
- }
- setFrame(a.f[af]);
-}
-function plats(){let g=game.getBoundingClientRect();return[...document.querySelectorAll('.platform')].map(e=>{let r=e.getBoundingClientRect();return{x:r.left-g.left,y:r.top-g.top,w:r.width,h:r.height}})}
-function collide(prevY){onGround=false;let fp=prevY+H,f=py+H;for(let p of plats()){let ox=px+W*.68>p.x&&px+W*.32<p.x+p.w;if(ox&&vy>=0&&fp<=p.y+8&&f>=p.y){py=p.y-H;vy=0;onGround=true;if(state==='fall'||state==='jump')setState('land',250);break}}let floor=game.clientHeight*.88;if(py+H>floor){py=floor-H;vy=0;onGround=true}}
-function update(now){let dt=Math.min((now-last)/1000,.032);last=now;
- if(!stateUntil||!['shoot','bat','damage','land'].includes(state)){
-   const target=joyDir*MOVE;
-   const accel=joyDir ? 1350 : 1900;
-   const diff=target-vx;
-   const step=Math.sign(diff)*Math.min(Math.abs(diff),accel*dt);
-   vx+=step;
-   if(joyDir)face=joyDir;
- }else vx*=Math.pow(.18,dt);
- if(jumpQueued&&onGround&&!stateUntil){vy=JUMP;onGround=false;setState('jump');jumpQueued=false}else jumpQueued=false;
- let prevY=py;px+=vx*dt;py+=vy*dt;vy+=GRAV*dt;
- let min=65,max=game.clientWidth*.50;if(px<min)px=min;if(px>max){world+=px-max;px=max}
- collide(prevY);
- if(!stateUntil){
-   if(!onGround) setState(vy<-140?'jump':vy<100?'air':'fall');
-   else{
-     const sp=Math.abs(vx);
-     if(sp>175) setState('run');
-     else if(sp>22) setState('walk');
-     else setState('idle');
-   }
- }
- P.style.left=Math.round(px)+'px';P.style.top=Math.round(py)+'px';P.classList.toggle('faceL',face<0);
- SH.style.left=(px+W*.24)+'px';SH.style.top=(py+H-5)+'px';SH.style.opacity=onGround?'.7':'.2';
- /* FIX: move only background image, never the layer element itself */
- F.style.backgroundPositionX=(-world*.10)+'px';M.style.backgroundPositionX=(-world*.30)+'px';R.style.backgroundPositionX=(-world*.66)+'px';
- animate(dt,now);requestAnimationFrame(update)
-}
-function init(){px=game.clientWidth*.18;let g=game.getBoundingClientRect(),r=document.querySelector('#plat0').getBoundingClientRect();py=r.top-g.top-H;onGround=true;requestAnimationFrame(update)}
-function move(e){let r=J.getBoundingClientRect(),t=e.touches[0],dx=Math.max(-38,Math.min(38,t.clientX-r.left-r.width/2));S.style.transform=`translateX(${dx}px)`;joyDir=Math.abs(dx)>9?Math.sign(dx):0}
-J.addEventListener('touchstart',e=>{e.preventDefault();move(e)},{passive:false});J.addEventListener('touchmove',e=>{e.preventDefault();move(e)},{passive:false});J.addEventListener('touchend',()=>{joyDir=0;S.style.transform='translateX(0)'});
-document.querySelector('#jump').addEventListener('touchstart',e=>{e.preventDefault();jumpQueued=true},{passive:false});
-function muzzle(){let m=document.createElement('div');m.className='muzzle';m.style.left=(px+(face>0?W-5:-18))+'px';m.style.top=(py+55)+'px';game.appendChild(m);setTimeout(()=>m.remove(),80)}
-function bullet(){let b=document.createElement('div');b.className='projectile';let bx=px+(face>0?W-4:-12),by=py+62,t0=performance.now(),lt=t0;b.style.left=bx+'px';b.style.top=by+'px';game.appendChild(b);function go(t){let dt=Math.min((t-lt)/1000,.03);lt=t;bx+=face*760*dt;b.style.left=bx+'px';if(t-t0<1200&&bx>-30&&bx<game.clientWidth+30)requestAnimationFrame(go);else b.remove()}requestAnimationFrame(go)}
-document.querySelector('#shoot').addEventListener('touchstart',e=>{e.preventDefault();if(ammo<=0||stateUntil)return;ammo--;document.querySelector('#ammo').textContent=ammo+'/12';setState('shoot',320);muzzle();bullet()},{passive:false});
-document.querySelector('#hit').addEventListener('touchstart',e=>{e.preventDefault();if(stateUntil)return;setState('bat',360);let fx=document.createElement('div');fx.className='hitfx';fx.style.left=(px+(face>0?W-4:-46))+'px';fx.style.top=(py+38)+'px';game.appendChild(fx);fx.animate([{transform:'scale(.3)',opacity:1},{transform:'scale(1.3)',opacity:0}],{duration:280});setTimeout(()=>fx.remove(),290)},{passive:false});
-let ro=false,li=0,lines=["Segnali deboli... ma sei ancora lì?","Finché ascolti, non sei solo.","Qualcuno trasmette ancora.","Alter... resta sulla frequenza."];
-document.querySelector('#radio').addEventListener('touchstart',e=>{e.preventDefault();ro=!ro;document.querySelector('#radioBox').style.display=ro?'block':'none';if(ro)document.querySelector('#line').textContent=lines[li++%lines.length]},{passive:false});
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');init();
-</script></body></html>
+<script src="game.js"></script></body></html>
