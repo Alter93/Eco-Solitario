@@ -1,20 +1,19 @@
-ECO SOLITARIO v0.8 — WORLD LAYERS
+ECO SOLITARIO v0.8.1 — VISUAL PASS
 
-Questa build avvia la conversione del gioco vero al concept visivo definitivo.
+PRIMO PASSAGGIO VERSO IL CONCEPT DEFINITIVO
 
-NOVITÀ
-- Città anonima: rimossi i riferimenti a Napoli.
-- Mondo diviso in livelli grafici indipendenti.
-- Parallasse: skyline lontano, rovine intermedie, primo piano.
-- Alter ora usa un vero sprite-sheet pixel art a 8 frame.
-- Corsa animata + respirazione idle.
-- Primo piano passa davanti ad Alter.
-- Oggetti ambientali integrati nel livello.
-- Mantiene joystick, salto, sparo, mazza, radio, HUD e PWA.
-- Cache aggiornata a eco-v080-world-layers.
+- Alter sostituito con una versione molto più dettagliata e ricca di pixel.
+- Capelli/codino, felpa rossa, zaino, pantaloncini e scarpe leggono finalmente come nel concept.
+- Movimento corporeo durante la corsa e respirazione idle.
+- HUD e comandi ridotti per lasciare più spazio al mondo.
+- Città sempre anonima: nessun riferimento geografico riconoscibile.
+- Atmosfera più cinematografica.
+- Manteniamo il motore WORLD LAYERS e il parallasse.
+- Nuova cache: eco-v081-visual-pass.
 
-CARICAMENTO SU GITHUB
-Sostituisci i vecchi file con TUTTI i file di questo pacchetto nella root del repository e fai Commit changes.
-Poi attendi il deploy di GitHub Pages e ricarica il gioco.
+NOTA
+Questa è la prima versione di Alter ad alta definizione.
+Il prossimo passaggio sarà lo sprite sheet completo con animazioni vere:
+IDLE / WALK-RUN / JUMP / SHOOT / BAT / DAMAGE.
 
 STAY ON THE AIR.
