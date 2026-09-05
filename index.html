@@ -53,7 +53,7 @@ filter:drop-shadow(0 7px 5px #000b);will-change:left,top,background-position}
 <div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">Segnali deboli...</span><div class="wave"></div></div>
 <div id="joy"><div class="stick" id="stick"></div></div>
 <button id="radio" class="btn">📻</button><button id="jump" class="btn">SALTO</button><button id="shoot" class="btn">SPARO</button><button id="hit" class="btn">MAZZA</button>
-<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.3 ALTER MASTER ANIMATION</span></div>
+<div id="tag">CITTÀ SENZA NOME &nbsp;|&nbsp; GIORNO ??? &nbsp;|&nbsp; STAY ON THE AIR &nbsp; <span id="ver">v0.9.3.1 MASTER HOTFIX</span></div>
 </div>
 <script>
 const game=document.querySelector('#game'),P=document.querySelector('#player'),SH=document.querySelector('#shadow');
@@ -74,7 +74,7 @@ const anim={
 };
 let af=0,acc=0;
 function setFrame(c){c=Math.max(0,Math.min(47,Math.floor(c)));P.style.backgroundPositionX=(-CELL*c)+'px';P.style.backgroundPositionY='0px'}
-function setState(s,ms=0){if(state!==s){state=s;af=0;acc=0}if(ms)stateUntil=performance.now()+ms}if(ms)stateUntil=performance.now()+ms}
+function setState(s,ms=0){if(state!==s){state=s;af=0;acc=0}if(ms)stateUntil=performance.now()+ms}
 function animate(dt,now){
  if(stateUntil&&now>stateUntil){
    stateUntil=0;

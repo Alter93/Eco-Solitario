@@ -1,40 +1,19 @@
-ECO SOLITARIO v0.9.3 — ALTER MASTER ANIMATION
+ECO SOLITARIO v0.9.3.1 — MASTER HOTFIX
 
-FOCUS TOTALE SU ALTER.
+HOTFIX URGENTE DELLA v0.9.3
 
-Questa build elimina il problema dello "scatto dentro il quadro":
-- 54 pose reali e differenti estratte dal nuovo character animation board.
-- Ogni frame ha la stessa cella 96x128.
-- Centro orizzontale stabile.
-- Piedi ancorati alla stessa baseline.
-- Nessuna rotazione artificiale del personaggio.
-- Nessuna oscillazione casuale della posa dentro la cella.
-- Timing dedicato per ogni animazione.
+Problema trovato:
+- un errore di sintassi JavaScript bloccava completamente il loop di gioco.
+- per questo joystick, fisica e animazioni risultavano immobili.
 
-ANIMAZIONI:
-IDLE 6
-WALK 6
-RUN 8
-JUMP START 4
-JUMP / AIR 4
-FALL 4
-LAND 6
-SHOOT 6
-BAT 6
-DAMAGE 4
+Correzioni:
+- rimossa la riga duplicata che rompeva lo script
+- ripristinato il game loop
+- mantenute le 54 pose di Alter
+- mantenuti timing, stabilizzazione dei frame, fisica e parallasse
+- nuova cache Safari/PWA: eco-v0931-master-hotfix
 
-Il motore mantiene:
-- gravità
-- collisioni piattaforme
-- salto/caduta/atterraggio
-- sparo e proiettile
-- mazza
-- flip destra/sinistra
-- parallasse e HUD
-
-In questa fase NON stiamo ancora espandendo il mondo.
-Prima rendiamo Alter definitivo e fluido.
-
-CACHE: eco-v093-alter-master
+Questa patch NON cambia il design:
+serve solo a rimettere in funzione la v0.9.3 come previsto.
 
 STAY ON THE AIR.
