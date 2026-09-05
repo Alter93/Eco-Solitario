@@ -3,181 +3,94 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#070810">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#090d13">
 <link rel="manifest" href="manifest.json">
-<title>Eco Solitario v0.6 — La Voce nella Torre</title>
+<title>Eco Solitario v0.7</title>
 <style>
-*{box-sizing:border-box;-webkit-user-select:none;user-select:none;touch-action:none}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#070810;font-family:ui-monospace,Menlo,monospace}
-#game{position:fixed;inset:0;width:100vw;height:100vh;display:block;image-rendering:pixelated;background:#10131d}
-#rotate{display:none;position:fixed;inset:0;z-index:50;background:#070810;color:#f0d09c;align-items:center;justify-content:center;text-align:center;padding:36px;font:700 18px monospace}
-#rotate small{display:block;margin-top:14px;color:#999}
-#ui{position:fixed;inset:0;pointer-events:none}
-#joy{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));width:106px;height:106px;border:2px solid #ffffff32;border-radius:50%;background:#03060a66;pointer-events:auto;backdrop-filter:blur(2px)}
-#stick{position:absolute;left:34px;top:34px;width:38px;height:38px;border-radius:50%;background:#ffffff4a}
-#actions{position:absolute;right:max(16px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));width:186px;height:140px;pointer-events:auto}
-.btn{position:absolute;border-radius:50%;border:2px solid #ffffff32;background:#090d14ad;color:#fff;font:700 10px monospace;backdrop-filter:blur(2px)}
-#jump{right:0;top:0;width:60px;height:60px}
-#shoot{right:70px;top:67px;width:56px;height:56px}
-#melee{right:0;top:77px;width:56px;height:56px}
-#radio{right:134px;top:8px;width:48px;height:48px}
-@media(orientation:portrait){#rotate{display:flex}#ui{display:none}#game{filter:brightness(.4)}}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b10;font-family:"Courier New",monospace;color:#f3dfb3}
+#rotate{display:none;position:fixed;inset:0;z-index:99;background:#080b10;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:20px}
+#game{position:fixed;inset:0;overflow:hidden;background:#151528}
+.sky{position:absolute;inset:-6%;background:url('assets/napoli_ruins.png') center 44%/cover no-repeat;filter:saturate(1.08) brightness(.72);transform:scale(1.05)}
+.haze{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,9,20,.05),rgba(8,10,15,.05) 55%,rgba(4,6,8,.62));pointer-events:none}
+.fore{position:absolute;left:0;right:0;bottom:0;height:25%;background:
+linear-gradient(180deg,rgba(8,11,12,.1),rgba(5,7,8,.95)),
+url('assets/ruins_tiles_reference.png') center bottom/cover no-repeat;
+border-top:3px solid rgba(221,157,83,.35)}
+#player{position:absolute;left:18%;bottom:19%;width:54px;height:92px;transform-origin:50% 100%;transition:filter .12s}
+#player .head{position:absolute;left:15px;top:3px;width:27px;height:28px;border-radius:48% 45% 42% 45%;background:#d7a76e;box-shadow:9px -4px 0 -4px #6d4429}
+#player .hair{position:absolute;left:9px;top:-2px;width:36px;height:17px;background:#4b2b20;border-radius:60% 40% 30% 20%;transform:rotate(-8deg)}
+#player .tail{position:absolute;left:4px;top:2px;width:18px;height:8px;background:#4b2b20;border-radius:70%;transform-origin:right center}
+#player .body{position:absolute;left:10px;top:31px;width:38px;height:38px;background:#a92f2f;border:3px solid #692329;border-radius:5px 8px 4px 4px}
+#player .pack{position:absolute;left:42px;top:34px;width:16px;height:34px;background:#39483b;border:3px solid #202c27;border-radius:3px}
+#player .leg{position:absolute;top:68px;width:11px;height:20px;background:#c79a62;transform-origin:50% 0}
+#player .l1{left:16px}.l2{left:34px}
+#player .shoe{position:absolute;top:86px;width:18px;height:7px;background:#eee;border-bottom:3px solid #b33939}
+#player .s1{left:10px}.s2{left:31px}
+#player.run{animation:bob .28s infinite alternate}
+#player.run .l1{animation:leg1 .28s infinite alternate}
+#player.run .l2{animation:leg2 .28s infinite alternate}
+#player.run .tail{animation:tail .22s infinite alternate}
+#player.idle{animation:breath 2.2s ease-in-out infinite}
+@keyframes breath{50%{transform:translateY(2px) scaleY(.985)}}
+@keyframes bob{to{transform:translateY(-3px)}}
+@keyframes leg1{to{transform:rotate(24deg)}} @keyframes leg2{to{transform:rotate(-24deg)}}
+@keyframes tail{to{transform:rotate(-22deg)}}
+#hud{position:absolute;left:2%;top:4%;min-width:300px;padding:13px 17px;background:rgba(5,8,13,.88);border:2px solid #705849;box-shadow:0 0 18px #0008}
+.title{font-weight:900;font-size:25px;letter-spacing:2px}.red{color:#e25243}.cyan{color:#53d8df}
+#objective{position:absolute;right:3%;top:4%;padding:13px 18px;background:rgba(5,8,13,.9);border-left:3px solid #d38b46;min-width:330px}
+#radioBox{position:absolute;right:3%;top:20%;width:365px;background:rgba(3,8,13,.91);border:1px solid #248da0;padding:12px;display:none}
+.wave{height:16px;margin-top:8px;background:repeating-linear-gradient(90deg,#42d4df 0 2px,transparent 2px 7px);clip-path:polygon(0 50%,4% 20%,8% 70%,12% 25%,16% 80%,20% 35%,24% 65%,28% 10%,32% 90%,36% 35%,40% 60%,44% 20%,48% 75%,52% 40%,56% 60%,60% 15%,64% 85%,68% 35%,72% 70%,76% 25%,80% 75%,84% 35%,88% 60%,92% 20%,96% 70%,100% 50%)}
+#joy{position:absolute;left:4%;bottom:5%;width:150px;height:150px;border-radius:50%;border:3px solid #7778;background:#080c12aa}
+#stick{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px;border-radius:50%;background:#bbb8}
+.btn{position:absolute;border-radius:50%;background:#080c12cc;border:3px solid #7778;color:#fff;font-weight:bold;display:grid;place-items:center;touch-action:none}
+#jump{right:5%;bottom:19%;width:105px;height:105px}#hit{right:4%;bottom:5%;width:92px;height:92px}
+#shoot{right:15%;bottom:7%;width:96px;height:96px}#radio{right:17%;bottom:23%;width:80px;height:80px}
+#tag{position:absolute;left:2%;bottom:2%;font-size:12px;color:#ddd}
+#dust{position:absolute;pointer-events:none;width:8px;height:8px;border-radius:50%;background:#d5a86d;opacity:0}
+@media (orientation:portrait){#rotate{display:flex}#game{display:none}}
 </style>
 </head>
 <body>
-<canvas id="game"></canvas>
-<div id="rotate">RUOTA L’IPHONE IN ORIZZONTALE 📱↻<small>Capitolo I — La Voce nella Torre<br>📻 Stay on the air.</small></div>
-<div id="ui">
- <div id="joy"><div id="stick"></div></div>
- <div id="actions">
-  <button class="btn" id="radio" data-a="radio">📻</button>
-  <button class="btn" id="jump" data-a="jump">SALTO</button>
-  <button class="btn" id="shoot" data-a="shoot">SPARO</button>
-  <button class="btn" id="melee" data-a="melee">MAZZA</button>
- </div>
+<div id="rotate">📻 RUOTA L’iPHONE<br><br><small>ECO SOLITARIO si gioca in orizzontale.</small></div>
+<div id="game">
+  <div class="sky"></div><div class="haze"></div><div class="fore"></div>
+  <div id="hud"><div class="title">ECO SOLITARIO</div><div>VITA <span class="red">♥♥♥♥♥</span> &nbsp; MUNIZIONI <span id="ammo">12/12</span></div></div>
+  <div id="objective"><span class="red">OBIETTIVO:</span><br>SEGUI LA FREQUENZA <span class="cyan">47.3 FM</span></div>
+  <div id="radioBox"><b class="cyan">47.3 FM — RADIO ECO</b><br><br><span id="line">...C’è qualcuno?</span><div class="wave"></div></div>
+  <div id="player" class="idle"><div class="tail"></div><div class="hair"></div><div class="head"></div><div class="pack"></div><div class="body"></div><div class="leg l1"></div><div class="leg l2"></div><div class="shoe s1"></div><div class="shoe s2"></div></div>
+  <div id="joy"><div id="stick"></div></div>
+  <button class="btn" id="radio">📻</button><button class="btn" id="jump">SALTO</button><button class="btn" id="shoot">SPARO</button><button class="btn" id="hit">MAZZA</button>
+  <div id="tag">NAPOLI — ZONA EST · GIORNO ??? &nbsp; | &nbsp; STAY ON THE AIR</div><div id="dust"></div>
 </div>
 <script>
-const c=document.getElementById('game'),ctx=c.getContext('2d');
-let W,H,DPR=Math.min(devicePixelRatio||1,2),last=0,T=0,cam=0,move=0,dialog=-1,queue=[],shake=0,staticFx=0,ending=0,started=false;
-function resize(){W=innerWidth;H=innerHeight;c.width=W*DPR;c.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)} addEventListener('resize',resize);resize();
-const ground=()=>H*.73, world=6200;
-const P={x:150,y:0,w:30,h:58,vy:0,dir:1,on:true,hp:5,ammo:12,shootCD:0,meleeCD:0,radioFound:false,clue:false,runT:0,damageCD:0,tower:false};
-let bullets=[],particles=[];
-let enemies=[930,1500,2200,3180,3890,4700].map((q,i)=>({x:q,hp:i===4?4:2,live:true,dir:i%2?1:-1,type:i===4?'brute':'scav'}));
-
-const intro=[
-["JACK","...C’è qualcuno? Se mi senti, rispondi."],
-["DEXTER","Jack, se risponde magari è perché vuole spararci."],
-["JACK","Questa è Radio Eco. Non sei solo."],
-["ALTER","Non so se questa cosa mi rassicura."],
-["DEXTER","Ottimo. Ha senso dell’umorismo. Tienilo vivo."]
-];
-const clue=[
-["ALTER","Ho trovato un documento."],
-["JACK","Leggi solo il titolo."],
-["ALTER","“Protocollo Sole — Fase Finale”."],
-["DEXTER","Jack... dimmi che non è quello che penso."],
-["JACK","Continua verso la torre. E non perdere la frequenza."]
-];
-const tower=[
-["JACK","Alter… fermati."],
-["ALTER","Perché? Sono alla torre."],
-["DEXTER","Perché quella torre non sta trasmettendo il nostro segnale."],
-["JACK","Lo sta… ripetendo."],
-["ALTER","Come sarebbe a dire?"],
-["JACK","47.3 FM. Segnale duplicato."],
-["SCONOSCIUTO","Finalmente."]
-];
-
-function say(lines){queue=lines.slice();dialog=0;radioNoise(.12)}
-function nextDialog(){if(dialog<0)return;radioNoise(.06);dialog++;if(dialog>=queue.length){dialog=-1;if(P.tower&&!ending){ending=1;staticFx=1;setTimeout(()=>ending=2,1200)}}}
-c.addEventListener('pointerdown',()=>{if(dialog>=0)nextDialog();ensureAudio()});
-
-let AC=null,master=null,windNode=null;
-function ensureAudio(){
- if(started)return;started=true;
- try{
-  AC=new (window.AudioContext||window.webkitAudioContext)(); master=AC.createGain();master.gain.value=.14;master.connect(AC.destination);
-  // low post-apocalyptic drone
-  const o1=AC.createOscillator(),g1=AC.createGain();o1.type='sine';o1.frequency.value=55;g1.gain.value=.12;o1.connect(g1);g1.connect(master);o1.start();
-  const o2=AC.createOscillator(),g2=AC.createGain();o2.type='triangle';o2.frequency.value=82.4;g2.gain.value=.025;o2.connect(g2);g2.connect(master);o2.start();
-  // soft filtered noise / wind
-  const len=AC.sampleRate*2,b=AC.createBuffer(1,len,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*.15;
-  windNode=AC.createBufferSource();windNode.buffer=b;windNode.loop=true;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=420;const wg=AC.createGain();wg.gain.value=.08;windNode.connect(f);f.connect(wg);wg.connect(master);windNode.start();
- }catch(e){}
+const p=document.querySelector('#player'), sky=document.querySelector('.sky'), stick=document.querySelector('#stick');
+let x=18, ammo=12, dir=0, jumping=false, radioOpen=false;
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+function update(){
+ x=clamp(x+dir*.22,5,84); p.style.left=x+'%';
+ p.className=dir?'run':'idle';
+ p.style.transform=(dir<0?'scaleX(-1)':'scaleX(1)');
+ sky.style.backgroundPosition=(50-(x-18)*.08)+'% 44%';
+ requestAnimationFrame(update)
+} update();
+function joyMove(e){
+ const r=document.querySelector('#joy').getBoundingClientRect(), t=e.touches?e.touches[0]:e;
+ const dx=clamp(t.clientX-(r.left+r.width/2),-48,48); stick.style.transform=`translateX(${dx}px)`; dir=Math.abs(dx)>12?Math.sign(dx):0
 }
-function tone(freq,dur=.08,type='square',vol=.12){
- if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+dur);o.connect(g);g.connect(master);o.start();o.stop(AC.currentTime+dur)
-}
-function radioNoise(dur=.1){
- if(!AC)return;const n=AC.createBufferSource(),len=Math.max(1,AC.sampleRate*dur),b=AC.createBuffer(1,len,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;n.buffer=b;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1600;const g=AC.createGain();g.gain.value=.18;n.connect(f);f.connect(g);g.connect(master);n.start()
-}
-
-function btn(a){
- ensureAudio();
- if(a==='jump'&&P.on&&dialog<0&&!ending){P.vy=-580;P.on=false;emit(P.x,P.y+P.h,5,'dust');tone(130,.06,'triangle',.08)}
- if(a==='shoot'&&P.ammo>0&&P.shootCD<=0&&dialog<0&&!ending){P.ammo--;P.shootCD=.26;bullets.push({x:P.x+(P.dir>0?P.w+2:-8),y:P.y+24,v:P.dir*780,t:1.1});shake=3;tone(92,.07,'square',.18)}
- if(a==='melee'&&P.meleeCD<=0&&dialog<0&&!ending){P.meleeCD=.42;tone(72,.09,'triangle',.1);enemies.forEach(e=>{if(e.live&&Math.abs(e.x-P.x)<66){e.hp-=2;emit(e.x,ground()-28,8,'hit');shake=4;if(e.hp<=0)e.live=false}})}
- if(a==='radio'){if(dialog>=0)nextDialog();else if(P.radioFound)say([["JACK","47.3 FM. Restiamo in contatto."],["DEXTER","Che è già più di quanto faccia il resto del mondo."]])}
-}
-document.querySelectorAll('.btn').forEach(b=>b.onpointerdown=e=>{e.preventDefault();btn(b.dataset.a)});
-let joy=document.getElementById('joy'),stick=document.getElementById('stick'),jid=null;
-function joyMove(e){let r=joy.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),m=Math.min(33,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);stick.style.transform=`translate(${Math.cos(a)*m}px,${Math.sin(a)*m}px)`;move=Math.abs(dx)>9?Math.sign(dx):0}
-joy.onpointerdown=e=>{ensureAudio();jid=e.pointerId;joy.setPointerCapture(jid);joyMove(e)}
-joy.onpointermove=e=>{if(e.pointerId===jid)joyMove(e)}
-joy.onpointerup=joy.onpointercancel=()=>{jid=null;move=0;stick.style.transform='translate(0,0)'}
-
-function emit(x,y,n,type){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*(type==='hit'?220:90),vy:(Math.random()-.8)*(type==='hit'?220:80),t:.35+Math.random()*.25,type})}
-function rect(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
-function sky(){
- let gr=ctx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#12142a');gr.addColorStop(.55,'#81434d');gr.addColorStop(1,'#171922');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
- ctx.fillStyle='#efa15e';ctx.beginPath();ctx.arc(W*.78,H*.27,Math.max(24,H*.052),0,Math.PI*2);ctx.fill();
- const cols=['#2a2942','#24243a','#1c2130'];for(let l=0;l<3;l++){ctx.fillStyle=cols[l];for(let i=0;i<28;i++){let xx=i*126-(cam*(.05+l*.065)%126),hh=65+((i*37+l*29)%175);ctx.fillRect(xx,ground()-hh,76+l*9,hh)}}
- ctx.strokeStyle='#171821';ctx.lineWidth=2;for(let i=0;i<5;i++){let bx=(i*190+T*20)%W,by=90+(i%3)*27;ctx.beginPath();ctx.arc(bx,by,6,3.4,5.8);ctx.arc(bx+11,by,6,3.6,5.9);ctx.stroke()}
-}
-function worldDraw(){
- rect(0,ground(),world,H-ground(),'#312e35');rect(0,ground(),world,5,'#735044');
- for(let i=210;i<world;i+=640){
-  rect(i,ground()-172,230,172,'#39323a');rect(i+22,ground()-130,38,80,'#0e1418');rect(i+118,ground()-105,44,55,'#101519');rect(i+177,ground()-148,22,42,'#a34b43');
-  // bricks, pipes, broken trim
-  for(let b=0;b<5;b++)rect(i+12+b*39,ground()-20-(b%2)*18,25,3,'#4e4245');
-  ctx.strokeStyle='#26362f';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(i+205,ground());ctx.lineTo(i+196,ground()-78);ctx.lineTo(i+218,ground()-112);ctx.stroke()
- }
- ctx.strokeStyle='#2d2931';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,ground()-170);ctx.quadraticCurveTo(world*.22,ground()-118,world*.42,ground()-180);ctx.stroke();
- for(let i=520;i<world;i+=950){rect(i,ground()-150,6,150,'#292e31');rect(i-18,ground()-150,42,4,'#292e31');rect(i+14,ground()-144,10,14,'#d89a55')}
- for(let i=90;i<world;i+=145){let sway=Math.sin(T*1.8+i*.02)*5;ctx.strokeStyle='#284431';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(i,ground());ctx.quadraticCurveTo(i+8+sway,ground()-34,i+26+sway,ground()-57);ctx.stroke()}
- for(let i=800;i<world;i+=1200){rect(i,ground()+8,120,5,'#574b56');rect(i+15,ground()+9,70,2,'#c68d6e')}
- ctx.fillStyle='#803e43';ctx.font='bold 18px monospace';ctx.fillText('STAY ON THE AIR',650,ground()-85);
- ctx.fillStyle='#6b6267';ctx.font='bold 15px monospace';ctx.fillText('QUALCUNO ASCOLTA ANCORA?',3650,ground()-92);
- if(!P.clue){rect(2690,ground()-76,26,34,'#d9c89f');rect(2695,ground()-68,16,2,'#594b3e');rect(2695,ground()-61,14,2,'#594b3e')}
- enemies.forEach(e=>{if(!e.live)return;let y=ground()-50;ctx.save();ctx.translate(e.x,y);if(e.dir<0)ctx.scale(-1,1);rect(0,8,e.type==='brute'?34:28,42,e.type==='brute'?'#292c30':'#20242a');rect(7,-5,16,15,'#8d6b53');rect(4,-10,22,7,'#17191d');rect(21,22,30,5,'#742e31');if(e.type==='brute')rect(3,3,28,7,'#5b5556');ctx.restore()});
- bullets.forEach(b=>rect(b.x,b.y,10,3,'#ffd36b'));
- particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.t*2);rect(p.x,p.y,3,3,p.type==='hit'?'#d97055':'#c2936d');ctx.globalAlpha=1});
- let tx=5480;ctx.strokeStyle='#6b6970';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(tx,ground());ctx.lineTo(tx+48,ground()-330);ctx.lineTo(tx+96,ground());ctx.stroke();for(let y=ground()-300;y<ground()-20;y+=40){ctx.beginPath();ctx.moveTo(tx+42,y);ctx.lineTo(tx+72,y+28);ctx.moveTo(tx+70,y);ctx.lineTo(tx+34,y+28);ctx.stroke()}rect(tx+45,ground()-346,6,14,(Math.sin(T*7)>0?'#f26650':'#6d3435'));rect(tx-50,ground()-26,190,8,'#51484f');
-}
-function drawAlter(){
- const run=Math.abs(move)>0&&P.on,idle=!run&&P.on,phase=T*11,bob=run?Math.sin(phase)*2.2:Math.sin(T*2.2)*1.15,breath=idle?Math.sin(T*2.2)*1.2:0,leg=run?Math.sin(phase)*7.5:0,arm=run?Math.sin(phase+Math.PI)*4:0;
- ctx.save();ctx.translate(Math.round(P.x),Math.round(P.y+bob));if(P.dir<0)ctx.scale(-1,1);
- rect(-10,12,8,30,'#4d5b4c');rect(-12,16,3,18,'#22272a');rect(-8,8,6,5,'#5b6b59');
- rect(6,-14,15,15,'#d3ad8a');rect(2,-19,21,7,'#c8ad70');rect(19,-16,9,5,'#c8ad70');rect(27+Math.sin(T*5)*2,-14,10,4,'#c8ad70');rect(18,-7,2,2,'#312b27');
- rect(0,2,24,28+breath,'#8f2f39');rect(4,4,16,18+breath,'#b33d44');rect(21,8+arm,6,17,'#962f38');
- rect(2,30,9,13,'#d1b88b');rect(14,30,9,13,'#d1b88b');
- rect(3,42+leg,7,9,'#d3ad8a');rect(0,50+leg,12,5,'#ececec');rect(1,52+leg,10,2,'#a83a38');
- rect(16,42-leg,7,9,'#d3ad8a');rect(14,50-leg,13,5,'#ececec');rect(15,52-leg,11,2,'#a83a38');rect(23,18,18,5,'#24282c');ctx.restore()
-}
-function portrait(who,x,y){
- rect(x,y,60,60,'#211b1c');ctx.strokeStyle=who==='SCONOSCIUTO'?'#b64343':'#835342';ctx.strokeRect(x,y,60,60);
- if(who==='ALTER'){rect(x+17,y+12,28,9,'#c8ad70');rect(x+20,y+20,24,22,'#d3ad8a');rect(x+15,y+42,34,18,'#8f2f39')}
- else if(who==='SCONOSCIUTO'){rect(x+12,y+10,36,45,'#08090d');rect(x+21,y+27,5,2,'#c64c46');rect(x+35,y+27,5,2,'#c64c46')}
- else {rect(x+16,y+12,30,8,'#594136');rect(x+19,y+20,25,23,'#ba8e70');rect(x+14,y+43,36,17,'#1a1d22')}
-}
-function wrap(text,x,y,max,lh){let words=text.split(' '),line='';for(const w of words){let test=line+w+' ';if(ctx.measureText(test).width>max){ctx.fillText(line,x,y);line=w+' ';y+=lh}else line=test}ctx.fillText(line,x,y)}
-function hud(){
- const top=14,left=18;rect(left,top,250,62,'#07090dd7');ctx.strokeStyle='#55454a';ctx.strokeRect(left,top,250,62);ctx.fillStyle='#edd09a';ctx.font='700 17px monospace';ctx.fillText('ECO SOLITARIO',left+14,top+24);ctx.fillStyle='#eee';ctx.font='11px monospace';ctx.fillText('VITA '+'♥'.repeat(P.hp),left+14,top+47);ctx.fillText('MUNIZIONI '+P.ammo+'/12',left+122,top+47);
- const ow=Math.min(320,W*.38);rect(W-ow-18,top,ow,42,'#07090dd7');ctx.fillStyle='#e4a55f';ctx.fillText('OBIETTIVO:',W-ow,top+18);ctx.fillStyle='#ddd';ctx.fillText(P.tower?'SEGNALE DUPLICATO':P.clue?'RAGGIUNGI LA TORRE':'SEGUI LA FREQUENZA 47.3 FM',W-ow,top+34);
- if(dialog>=0){const [who,text]=queue[dialog],bw=Math.min(W*.62,700),bh=96,bx=(W-bw)/2,by=H-bh-18;rect(bx,by,bw,bh,'#07090def');ctx.strokeStyle=who==='SCONOSCIUTO'?'#b64343':'#965843';ctx.strokeRect(bx,by,bw,bh);portrait(who,bx+14,by+18);ctx.fillStyle=who==='DEXTER'?'#df7354':who==='SCONOSCIUTO'?'#e0544e':'#65c0bd';ctx.font='700 13px monospace';ctx.fillText(who,bx+86,by+29);ctx.fillStyle='#eee';ctx.font='12px monospace';wrap(text,bx+86,by+50,bw-110,17);ctx.fillStyle='#5bb8ad';ctx.fillText('▂▅▃▇▂▆▃  47.3 FM',bx+86,by+79)}
- if(ending===2){rect(0,0,W,H,'#05060af2');ctx.textAlign='center';ctx.fillStyle='#d14e49';ctx.font='700 15px monospace';ctx.fillText('47.3 FM — SEGNALE DUPLICATO',W/2,H*.42);ctx.fillStyle='#efd5a4';ctx.font='700 27px monospace';ctx.fillText('LA VOCE NELLA TORRE',W/2,H*.51);ctx.fillStyle='#9a9a9e';ctx.font='12px monospace';ctx.fillText('FINE DELLA PRIMA SEZIONE',W/2,H*.59);ctx.fillStyle='#66bdb4';ctx.fillText('📻 STAY ON THE AIR',W/2,H*.67);ctx.textAlign='left'}
-}
-function staticOverlay(){
- if(staticFx<=0)return;ctx.globalAlpha=Math.min(.55,staticFx*.6);for(let i=0;i<70;i++){let y=Math.random()*H;rect(0,y,W,Math.random()*2+1,Math.random()>.5?'#ddd':'#3b9b92')}ctx.globalAlpha=1;staticFx=Math.max(0,staticFx-.02)
-}
-function update(dt){
- if(dialog>=0||ending)return;
- P.shootCD=Math.max(0,P.shootCD-dt);P.meleeCD=Math.max(0,P.meleeCD-dt);P.damageCD=Math.max(0,P.damageCD-dt);
- P.x+=move*245*dt;if(move){P.dir=move;P.runT+=dt;if(P.on&&Math.random()<dt*9)emit(P.x,P.y+P.h,1,'dust')}
- P.vy+=1360*dt;P.y+=P.vy*dt;if(P.y+P.h>=ground()){P.y=ground()-P.h;P.vy=0;P.on=true}else P.on=false;P.x=Math.max(20,Math.min(world-40,P.x));
- bullets.forEach(b=>{b.x+=b.v*dt;b.t-=dt;enemies.forEach(e=>{if(e.live&&Math.abs(b.x-e.x)<22&&Math.abs(b.y-(ground()-25))<34){e.hp--;b.t=0;emit(e.x,ground()-27,7,'hit');if(e.hp<=0)e.live=false}})});bullets=bullets.filter(b=>b.t>0);
- particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=360*dt;p.t-=dt});particles=particles.filter(p=>p.t>0);
- enemies.forEach(e=>{if(!e.live)return;e.x+=e.dir*20*dt;if(P.damageCD<=0&&Math.abs(P.x-e.x)<28&&Math.abs((P.y+P.h)-ground())<70){P.hp=Math.max(0,P.hp-1);P.damageCD=.9;P.x-=P.dir*35;shake=6;tone(55,.12,'sawtooth',.1)}});
- if(P.x>520&&!P.radioFound){P.radioFound=true;say(intro)}
- if(P.x>2580&&!P.clue){P.clue=true;say(clue)}
- if(P.x>5360&&!P.tower){P.tower=true;staticFx=.35;radioNoise(.4);say(tower)}
- cam+=(P.x-W*.38-cam)*Math.min(1,dt*5);cam=Math.max(0,Math.min(world-W,cam));shake*=.85
-}
-function loop(ms){const dt=Math.min(.032,(ms-last)/1000||0);last=ms;T=ms/1000;update(dt);sky();ctx.save();ctx.translate(-cam+(Math.random()-.5)*shake,0);worldDraw();drawAlter();ctx.restore();hud();staticOverlay();requestAnimationFrame(loop)}
-P.y=ground()-P.h;requestAnimationFrame(loop);
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+const joy=document.querySelector('#joy');
+joy.addEventListener('touchstart',e=>{e.preventDefault();joyMove(e)},{passive:false});
+joy.addEventListener('touchmove',e=>{e.preventDefault();joyMove(e)},{passive:false});
+joy.addEventListener('touchend',()=>{dir=0;stick.style.transform='translateX(0)'});
+document.querySelector('#jump').ontouchstart=()=>{
+ if(jumping)return;jumping=true;p.animate([{bottom:'19%'},{bottom:'39%'},{bottom:'19%'}],{duration:620,easing:'ease-out'}).onfinish=()=>jumping=false
+};
+document.querySelector('#shoot').ontouchstart=()=>{if(ammo>0){ammo--;document.querySelector('#ammo').textContent=ammo+'/12';p.style.filter='brightness(1.8)';setTimeout(()=>p.style.filter='',70)}};
+document.querySelector('#hit').ontouchstart=()=>p.animate([{rotate:'0deg'},{rotate:'-5deg'},{rotate:'0deg'}],{duration:180});
+const lines=["...C’è qualcuno?","Se mi senti, rispondi...","Questa è Radio Eco.","Non sei solo.","Alter... resta sulla frequenza."];
+let li=0;
+document.querySelector('#radio').ontouchstart=()=>{radioOpen=!radioOpen;document.querySelector('#radioBox').style.display=radioOpen?'block':'none';if(radioOpen){document.querySelector('#line').textContent=lines[li++%lines.length]}};
+document.body.addEventListener('touchstart',()=>{try{navigator.vibrate?.(8)}catch(e){}},{once:true});
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 </script>
 </body></html>

@@ -1,9 +1,9 @@
 {
-  "name": "Eco Solitario — La Voce nella Torre",
-  "short_name": "Eco Solitario",
-  "start_url": "./",
-  "display": "standalone",
-  "orientation": "landscape",
-  "background_color": "#070810",
-  "theme_color": "#070810"
+  "name":"Eco Solitario – Capitolo I",
+  "short_name":"Eco Solitario",
+  "start_url":"./",
+  "display":"standalone",
+  "orientation":"landscape",
+  "background_color":"#080b10",
+  "theme_color":"#080b10"
 }
