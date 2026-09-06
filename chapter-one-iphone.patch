@@ -1,0 +1,2277 @@
+diff --git a/APPLICA_PATCH.txt b/APPLICA_PATCH.txt
+index 0cf2115..82e730a 100644
+--- a/APPLICA_PATCH.txt
++++ b/APPLICA_PATCH.txt
+@@ -1,41 +1,5 @@
+-ECO SOLITARIO v0.9.8 — ALTER MOTION LOCK
++ISTRUZIONI AGGIORNATE — CAPITOLO I
+ 
+-Questa cartella contiene SOLO i file da sostituire nel repository Alter93/Eco-Solitario.
+-Gli asset PNG del repository non cambiano e devono restare dove sono.
+-
+-SOSTITUIRE SU main:
+-- index.html
+-- game.js
+-- sw.js
+-- README.txt
+-- motion.test.cjs
+-
+-FIX ATTIVI:
+-- idle = frame 0 fisso, senza oscillazioni
+-- canvas 96x128 con ritaglio di una singola cella dello sprite sheet
+-- nessun frame laterale può sbordare durante il movimento
+-- fisica fixed-step 120 Hz + rendering interpolato
+-- camminata/corsa legate alla distanza percorsa
+-- gait phase continua tra walk e run
+-- joystick analogico con dead-zone
+-- accelerazione, frenata e inversione separate
+-- flip del personaggio solo quando la velocità reale cambia verso
+-- snap ai pixel fisici del display per ridurre shimmer su iPhone
+-- stop a velocità esatta 0
+-- salto/aria/caduta/atterraggio separati
+-- cache PWA aggiornata a eco-v098-alter-motion-lock
+-
+-TEST ESEGUITI LOCALMENTE:
+-node --check game.js
+-node --check motion.test.cjs
+-node --test motion.test.cjs
+-RISULTATO: 13/13 PASS
+-
+-Dopo l'upload, se Safari/PWA mostra ancora la versione vecchia, chiudere completamente la pagina/app web e riaprirla. La nuova cache ha un nome diverso e sostituisce le vecchie cache eco-v*.
+-
+-ORDINE SUCCESSIVO:
+-1. conferma visiva Alter
+-2. world scrolling/camera
+-3. Dexter e Jack via radio
+-
+-STAY ON THE AIR.
++Leggi README.txt. Le istruzioni precedenti v0.9.6/v0.9.8 sono superate.
++Avvio: index.html + game.js della stessa versione.
++Non applicare eco-motion-fix.patch.
+diff --git a/DIAGNOSI.md b/DIAGNOSI.md
+new file mode 100644
+index 0000000..ce55cf9
+--- /dev/null
++++ b/DIAGNOSI.md
+@@ -0,0 +1,44 @@
++# Diagnosi e correzione del Capitolo I
++
++Analizzato il branch main al commit `2efc209`, upload del 6 settembre 2026,
++oltre agli upload del 5 settembre. Non è stato possibile scrivere su GitHub:
++l’integrazione restituisce 403 Resource not accessible by integration.
++
++| File | Stato trovato | Risultato della correzione |
++| --- | --- | --- |
++| index.html | Gioco completo incorporato, senza riferimento a game.js | Unico ingresso, carica il motore condiviso |
++| game.js | Demo con DOM player/joy assente nel Capitolo I | Motore del Capitolo I con mondo, radio e combattimento |
++| alter-motion-v2/v3/v4.html | Demo indipendenti, movimento limitato allo schermo | Collegamenti alla build canonica |
++| INSTALLA.txt / APPLICA_PATCH.txt | Istruzioni per versioni diverse dall’index corrente | Istruzioni coerenti con la nuova build |
++| sw.js | Cache v098, asset e script della vecchia demo | Cache del Capitolo I, script versionato, niente ignoreSearch sul codice |
++
++## Problemi confermati nel codice
++
++- La tastiera non impostava started=true nel Capitolo I.
++- pointerup cercava il comando dalla posizione finale del dito, non dal pointerId.
++- Nessuna pulizia dell’input su blur/visibilitychange nel Capitolo I.
++- Accelerazione, frenata, consumo stamina e inseguimento nemici dipendevano dal frame rate.
++- drawPlayer disegnava sempre la stessa posa: lo sprite non veniva usato.
++- Tenere premuto salto provocava nuovi salti a ogni atterraggio.
++- Le demo e la patch game.js non condividevano il motore del gioco principale.
++
++## Intervento
++
++Avvio da pulsante, tocco o tastiera; controlli DOM da almeno 48 px con safe area;
++multitocco indipendente, rilascio/cancellazione/capture loss; pausa dopo cambio app;
++passo fisso a 120 Hz con interpolazione del personaggio e della camera;
++camminata/corsa legate alla distanza, idle fermo, salto e armi separati.
++Ritaglio preciso di una cella 96x128 dello sprite originale con piedi ancorati.
++Nessuna nuova immagine generata o fotogramma miscelato.
++In caso di immagine mancante resta il personaggio procedurale giocabile.
++Conservati mappa, piattaforme, salute, stamina, munizioni, nemici, pickup e dialoghi.
++
++## Verifica e limiti
++
++13 test automatici sul codice effettivo, inclusi boot/contratto HTML, asset,
++30/60/120 fps, multitocco, perdita capture, salto, sospensione, rotazione,
++ritaglio sprite, immagini mancanti, collisioni, armi e completamento/riavvio.
++Controllo sintattico JavaScript e controllo whitespace Git.
++Il browser remoto non può raggiungere il server locale di prova: nessuna verifica
++visiva nel browser o su un iPhone fisico viene dichiarata.
++La fluidità artistica resta limitata ai fotogrammi originali disponibili.
+diff --git a/INSTALLA.txt b/INSTALLA.txt
+index 340f7a2..82e730a 100644
+--- a/INSTALLA.txt
++++ b/INSTALLA.txt
+@@ -1,27 +1,5 @@
+-ECO SOLITARIO v0.9.6 — ALTER PERFECT MOTION
++ISTRUZIONI AGGIORNATE — CAPITOLO I
+ 
+-File da sostituire nella ROOT del repository:
+-- game.js
+-- index.html
+-- sw.js
+-- motion.test.cjs
+-- README.txt
+-
+-IMPORTANTE:
+-- NON sostituire alter_master_sheet.png.
+-- Le immagini e gli asset originali restano invariati.
+-- Questa build usa il foglio sprite originale ma ritaglia ogni frame singolarmente su canvas.
+-- Il versionamento ?v=096 forza Safari/PWA a non riutilizzare il vecchio game.js.
+-
+-Verifiche eseguite:
+-- node --check game.js
+-- node --test motion.test.cjs
+-- 13/13 test superati
+-
+-GitHub:
+-Il collegamento ChatGPT riesce a leggere Alter93/Eco-Solitario e vede permessi push,
+-ma le API di scrittura dell'integrazione GitHub restituiscono 403
+-"Resource not accessible by integration". Per questo i file non sono stati
+-pubblicati automaticamente sul branch main.
+-
+-STAY ON THE AIR.
++Leggi README.txt. Le istruzioni precedenti v0.9.6/v0.9.8 sono superate.
++Avvio: index.html + game.js della stessa versione.
++Non applicare eco-motion-fix.patch.
+diff --git a/ISTRUZIONI.txt b/ISTRUZIONI.txt
+index 07cfc10..82e730a 100644
+--- a/ISTRUZIONI.txt
++++ b/ISTRUZIONI.txt
+@@ -1,22 +1,5 @@
+-Eco Solitario v0.9.5 — correzione del blocco e del movimento
++ISTRUZIONI AGGIORNATE — CAPITOLO I
+ 
+-Queste modifiche NON sono state caricate su GitHub: il collegamento ha restituito
+-403 Resource not accessible by integration durante il tentativo di salvataggio.
+-Base: Alter93/Eco-Solitario, commit b031f454b94933a4cc6150bf3dd1d383e172b025.
+-
+-Applicazione con Git, dalla cartella del repository alla versione indicata:
+-1. git switch -c fix/alter-motion-v095
+-2. git apply --check /percorso/eco-motion-fix.patch
+-3. git apply /percorso/eco-motion-fix.patch
+-4. node --test tests/motion.test.cjs
+-5. Esaminare e salvare le modifiche nel proprio repository.
+-
+-In alternativa, files/ contiene i cinque file pronti da caricare nel repository,
+-conservando i percorsi. Non rimuovere le immagini o gli altri file del progetto.
+-Dopo eventuali modifiche successive sul repository, confrontare i file prima
+-di sostituirli per evitare di sovrascrivere lavoro più recente.
+-
+-Verifica eseguita: 9 test automatici passati, sintassi JavaScript valida.
+-Non è stata eseguita una prova su iPhone. Le pose delle immagini sono originali;
+-questa correzione riguarda avvio, temporizzazione, transizioni e input.
+-Dopo la pubblicazione, ricaricare il gioco online e verificare la scritta v0.9.5.
++Leggi README.txt. Le istruzioni precedenti v0.9.6/v0.9.8 sono superate.
++Avvio: index.html + game.js della stessa versione.
++Non applicare eco-motion-fix.patch.
+diff --git a/README.txt b/README.txt
+index 66a8187..dd11d87 100644
+--- a/README.txt
++++ b/README.txt
+@@ -1,20 +1,40 @@
+-ECO SOLITARIO V2
++ECO SOLITARIO — CAPITOLO I CORRETTO — 6 SETTEMBRE 2026
+ 
+-COME GIOCARE
+-Desktop:
+-- A/D o frecce = movimento
+-- W / Freccia su / Spazio = salto
+-- Shift = corsa
+-- J = pistola
+-- K = mazza
+-- E = radio
+-- P = pausa
+-- R = ricomincia a fine partita
++AVVIO UNICO: index.html, che carica game.js?v=chapter1-20260906.
++Le pagine alter-motion-v2/v3/v4.html rimandano ora al Capitolo I.
++capitolo-2.html resta una pagina separata, non è il punto di avvio.
+ 
+-iPhone / iPad:
+-- usa i pulsanti touch sullo schermo
+-- per una vera esperienza "link web", pubblica index.html con GitHub Pages
++Su iPhone: apri l’URL HTTPS del sito in Safari e tocca Inizia.
++Usa più dita per movimento + salto/arma/corsa. Pausa/Riprendi è in alto.
++La vista orizzontale offre più spazio; i comandi funzionano anche in verticale.
++Non aprire l’anteprima dello ZIP o del file HTML nell’app File per giocare.
+ 
+-NOTA
+-Alcune app non eseguono direttamente file HTML aperti da un link sandbox.
+-Il file è comunque completo e autosufficiente.
++Tastiera: Invio avvia; A/D o frecce muovono; W, freccia su o Spazio saltano;
++Shift corre; J spara; K usa la mazza; E radio; P/Esc pausa; R riavvia a fine partita.
++
++INSTALLAZIONE NEL REPOSITORY
++Carica i file estratti nella root del repository, sostituendo gli omonimi.
++Non caricare soltanto lo ZIP: GitHub Pages non ne estrae il contenuto.
++Mantieni gli asset PNG e gli altri file del repository.
++Per GitHub Pages, la cartella pubblicata deve contenere questo index.html.
++Non è necessario npm o un processo di compilazione.
++
++Le vecchie istruzioni v0.9.6/v0.9.8 e eco-motion-fix.patch sono superate.
++Non applicare vecchie patch dopo questa versione.
++Per un checkout Git, il pacchetto contiene anche chapter-one-iphone.patch:
++  git apply --check chapter-one-iphone.patch
++  git apply chapter-one-iphone.patch
++Usare la patch OPPURE sostituire i file, non entrambi.
++
++TEST LOCALI
++  node --check game.js
++  node --check sw.js
++  node --test motion.test.cjs
++I test esercitano il codice effettivo in un ambiente DOM/canvas simulato.
++Non equivalgono a una prova fisica su iPhone/Safari.
++
++OFFLINE / AGGIORNAMENTI
++Il nuovo service worker usa una cache dedicata e strategie network-first.
++Apri una volta online per installare la cache. Se la vecchia app era rimasta
++aperta, chiudila e riaprila online. Il caricamento offline è disponibile dopo
++l’installazione riuscita del service worker; richiede HTTPS (o localhost).
+diff --git a/alter-motion-v2.html b/alter-motion-v2.html
+index 7486563..eb71b99 100644
+--- a/alter-motion-v2.html
++++ b/alter-motion-v2.html
+@@ -1,97 +1 @@
+-<!doctype html>
+-<html lang="it">
+-<head>
+-<meta charset="utf-8">
+-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+-<title>Eco Solitario · Alter Motion V2</title>
+-<style>
+-*{box-sizing:border-box;-webkit-user-select:none;user-select:none}
+-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c0f15;color:#eef;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+-#stage{position:fixed;inset:0;overflow:hidden;touch-action:none;background:linear-gradient(#151a24 0 76%,#10141b 76%)}
+-#floor{position:absolute;left:0;right:0;bottom:0;height:84px;background:#282e39;border-top:3px solid #737b89}
+-#player{position:absolute;width:96px;height:128px;left:0;top:0;image-rendering:pixelated;transform-origin:50% 100%;will-change:transform}
+-#shadow{position:absolute;width:48px;height:8px;border-radius:50%;background:#0008;filter:blur(2px)}
+-#hud{position:absolute;left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));z-index:4;padding:9px 11px;border:1px solid #48505e;border-radius:8px;background:#080b10c9;font-size:11px;line-height:1.55}
+-#hud b{font-size:13px} #mode{color:#72e5db}
+-#joy{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));width:126px;height:126px;border:2px solid #69717f;border-radius:50%;background:#080b10b8;z-index:5}
+-#stick{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px;border-radius:50%;background:#d3d7dfaa;will-change:transform}
+-#note{position:absolute;right:max(14px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));font-size:10px;color:#8e96a5;text-align:right}
+-</style>
+-</head>
+-<body>
+-<div id="stage">
+- <div id="hud"><b>ALTER MOTION V2</b><br><span id="mode">IDLE</span><br>movimento continuo · niente mondo</div>
+- <div id="note">Eco Solitario<br>test camminata</div>
+- <div id="shadow"></div>
+- <canvas id="player" width="96" height="128"></canvas>
+- <div id="floor"></div>
+- <div id="joy"><div id="stick"></div></div>
+-</div>
+-<script>
+-const SHEET="alter_motion_v2_sheet.png";
+-const stage=document.querySelector("#stage"), canvas=document.querySelector("#player"), ctx=canvas.getContext("2d");
+-const joy=document.querySelector("#joy"), stick=document.querySelector("#stick"), shadow=document.querySelector("#shadow"), mode=document.querySelector("#mode");
+-ctx.imageSmoothingEnabled=false;
+-const img=new Image(); let ready=false; img.onload=()=>{ready=true; drawPose(0,0)}; img.src=SHEET;
+-const FW=96,FH=128;
+-let x=120,prevX=120,vx=0,face=1,axis=0,pointer=null,last=performance.now(),phase=0;
+-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+-function approach(v,t,d){return v<t?Math.min(v+d,t):v>t?Math.max(v-d,t):t}
+-function groundY(){return stage.clientHeight-84-FH}
+-function drawFrame(index,alpha){
+-  ctx.globalAlpha=alpha;
+-  ctx.drawImage(img,index*FW,0,FW,FH,0,0,FW,FH);
+-}
+-function drawPose(a,b,t=0){
+-  if(!ready)return;
+-  ctx.clearRect(0,0,FW,FH);
+-  // Cross-fade adjacent hand-drawn poses. Position/velocity are continuous,
+-  // so the body no longer "teleports" at a frame boundary.
+-  if(a===b){drawFrame(a,1);return}
+-  drawFrame(a,1-t); drawFrame(b,t);
+-  ctx.globalAlpha=1;
+-}
+-function gaitPose(){
+-  // compact sheet: 0 idle, 1..6 walk
+-  const n=6, p=(phase%1+1)%1*n, base=Math.floor(p), t=p-base;
+-  // smoothstep softens the transition between key poses
+-  const s=t*t*(3-2*t);
+-  return [1+base,1+((base+1)%n),s];
+-}
+-function tick(now){
+-  const dt=Math.min((now-last)/1000,.033);last=now;
+-  prevX=x;
+-  const target=axis*225;
+-  const reversing=axis&&vx&&Math.sign(axis)!==Math.sign(vx);
+-  vx=approach(vx,target,(axis?(reversing?1900:1250):1700)*dt);
+-  if(Math.abs(vx)<.2&&!axis)vx=0;
+-  if(Math.abs(vx)>8)face=Math.sign(vx);
+-  x+=vx*dt;
+-  x=clamp(x,22,Math.max(22,stage.clientWidth-FW-22));
+-  if(x===22||x===stage.clientWidth-FW-22)vx=0;
+-  const speed=Math.abs(vx);
+-  if(speed>3){
+-    phase=(phase+Math.abs(x-prevX)/116)%1;
+-    const [a,b,t]=gaitPose(); drawPose(a,b,t); mode.textContent="WALK · "+Math.round(speed);
+-  }else{
+-    phase=0; drawPose(0,0); mode.textContent="IDLE";
+-  }
+-  const y=groundY();
+-  canvas.style.transform=`translate3d(${x.toFixed(2)}px,${y}px,0) scaleX(${face})`;
+-  shadow.style.transform=`translate3d(${(x+24).toFixed(2)}px,${y+FH-4}px,0)`;
+-  requestAnimationFrame(tick);
+-}
+-function joyMove(e){
+-  const r=joy.getBoundingClientRect(), dx=clamp(e.clientX-(r.left+r.width/2),-43,43);
+-  stick.style.transform=`translate3d(${dx}px,0,0)`;
+-  const raw=dx/43, dead=.1;
+-  axis=Math.abs(raw)<=dead?0:Math.sign(raw)*(Math.abs(raw)-dead)/(1-dead);
+-}
+-joy.onpointerdown=e=>{e.preventDefault();pointer=e.pointerId;joy.setPointerCapture(pointer);joyMove(e)}
+-joy.onpointermove=e=>{if(e.pointerId===pointer){e.preventDefault();joyMove(e)}}
+-function release(e){if(e.pointerId===pointer){pointer=null;axis=0;stick.style.transform="translate3d(0,0,0)"}}
+-joy.onpointerup=release;joy.onpointercancel=release;joy.onlostpointercapture=release;
+-window.onblur=()=>{axis=0;stick.style.transform="translate3d(0,0,0)"};
+-requestAnimationFrame(tick);
+-</script>
+-</body></html>
+\ No newline at end of file
++<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./index.html"><title>Eco Solitario</title><p>La versione aggiornata include il Capitolo I e l’animazione di Alter.</p><a href="./index.html">Apri Eco Solitario</a></html>
+\ No newline at end of file
+diff --git a/alter-motion-v3.html b/alter-motion-v3.html
+index 833d370..eb71b99 100644
+--- a/alter-motion-v3.html
++++ b/alter-motion-v3.html
+@@ -1,112 +1 @@
+-<!doctype html>
+-<html lang="it">
+-<head>
+-<meta charset="utf-8">
+-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+-<title>Eco Solitario · Alter Motion V3</title>
+-<style>
+-*{box-sizing:border-box;-webkit-user-select:none;user-select:none}
+-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c1017;color:#eef;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+-#stage{position:fixed;inset:0;overflow:hidden;touch-action:none;background:linear-gradient(#161b25 0 76%,#10141b 76%)}
+-#floor{position:absolute;left:0;right:0;bottom:0;height:84px;background:#292f39;border-top:3px solid #747c8a}
+-#p{position:absolute;left:0;top:0;width:96px;height:128px;image-rendering:pixelated;transform-origin:50% 100%;will-change:transform}
+-#shadow{position:absolute;width:50px;height:8px;border-radius:50%;background:#0008;filter:blur(2px)}
+-#hud{position:absolute;z-index:5;left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));padding:10px 12px;border:1px solid #4a5260;border-radius:8px;background:#080b10d9;font-size:11px;line-height:1.55}
+-#hud b{font-size:14px} #status{color:#71e4dd}
+-#note{position:absolute;right:max(14px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));font-size:10px;color:#9299a7;text-align:right}
+-#joy{position:absolute;z-index:5;left:max(18px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));width:126px;height:126px;border:2px solid #6c7482;border-radius:50%;background:#080b10ba}
+-#stick{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px;border-radius:50%;background:#d2d6dfaa;will-change:transform}
+-</style>
+-</head>
+-<body>
+-<div id="stage">
+- <div id="hud"><b>ALTER MOTION V3</b><br><span id="status">IDLE</span><br>FRAME CLEAN: ON<br>GHOSTING: OFF<br>WORLD: OFF</div>
+- <div id="note">Eco Solitario<br>Alter only</div>
+- <div id="shadow"></div>
+- <canvas id="p" width="96" height="128"></canvas>
+- <div id="floor"></div>
+- <div id="joy"><div id="stick"></div></div>
+-</div>
+-<script>
+-'use strict';
+-const stage=document.querySelector('#stage');
+-const p=document.querySelector('#p');
+-const ctx=p.getContext('2d',{alpha:true,desynchronized:true});
+-const joy=document.querySelector('#joy'),stick=document.querySelector('#stick'),shadow=document.querySelector('#shadow'),status=document.querySelector('#status');
+-ctx.imageSmoothingEnabled=false;
+-
+-const img=new Image();
+-let ready=false,lastFrame=-1;
+-img.onload=()=>{ready=true;draw(0)};
+-img.src='./alter_walk_clean_v3.png';
+-
+-const FW=96,FH=128,STEP=1/120,STRIDE=122;
+-let x=120,px=120,vx=0,axis=0,face=1,gait=0,ptr=null,last=null,acc=0;
+-
+-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+-function approach(v,t,d){return v<t?Math.min(v+d,t):v>t?Math.max(v-d,t):t}
+-function groundY(){return stage.clientHeight-84-FH}
+-
+-function draw(f){
+-  if(!ready||f===lastFrame)return;
+-  ctx.clearRect(0,0,FW,FH);
+-  ctx.drawImage(img,f*FW,0,FW,FH,0,0,FW,FH);
+-  lastFrame=f;
+-}
+-function simulate(dt){
+-  px=x;
+-  const target=axis*230;
+-  const reversing=axis&&vx&&Math.sign(axis)!==Math.sign(vx);
+-  vx=approach(vx,target,(axis?(reversing?2200:1450):2100)*dt);
+-  if(!axis&&Math.abs(vx)<.35)vx=0;
+-  if(Math.abs(vx)>8)face=Math.sign(vx);
+-
+-  const before=x;
+-  x+=vx*dt;
+-  x=clamp(x,22,Math.max(22,stage.clientWidth-FW-22));
+-  if(x===22||x===stage.clientWidth-FW-22)vx=0;
+-
+-  if(Math.abs(vx)>2) gait=(gait+Math.abs(x-before)/STRIDE)%1;
+-  else gait=0;
+-}
+-function render(a){
+-  const rx=px+(x-px)*a;
+-  const y=groundY();
+-
+-  // Continuous body transport at display refresh rate.
+-  p.style.transform=`translate3d(${rx.toFixed(3)}px,${y}px,0) scaleX(${face})`;
+-  shadow.style.transform=`translate3d(${(rx+23).toFixed(3)}px,${y+FH-4}px,0)`;
+-
+-  const moving=Math.abs(vx)>2;
+-  if(moving){
+-    const f=Math.floor(gait*6)%6;
+-    draw(f);
+-    status.textContent='WALK · '+Math.round(Math.abs(vx));
+-  }else{
+-    draw(0);
+-    status.textContent='IDLE';
+-  }
+-}
+-function loop(t){
+-  requestAnimationFrame(loop);
+-  if(last===null)last=t;
+-  acc+=Math.min(Math.max((t-last)/1000,0),.08);last=t;
+-  while(acc>=STEP){simulate(STEP);acc-=STEP}
+-  render(acc/STEP);
+-}
+-
+-function moveJoy(e){
+- const r=joy.getBoundingClientRect();
+- const dx=clamp(e.clientX-(r.left+r.width/2),-43,43);
+- stick.style.transform=`translate3d(${dx}px,0,0)`;
+- const raw=dx/43,d=.11;
+- axis=Math.abs(raw)<=d?0:Math.sign(raw)*(Math.abs(raw)-d)/(1-d);
+-}
+-joy.onpointerdown=e=>{e.preventDefault();ptr=e.pointerId;joy.setPointerCapture(ptr);moveJoy(e)}
+-joy.onpointermove=e=>{if(e.pointerId===ptr){e.preventDefault();moveJoy(e)}}
+-function rel(e){if(e.pointerId===ptr){ptr=null;axis=0;stick.style.transform='translate3d(0,0,0)'}}
+-joy.onpointerup=rel;joy.onpointercancel=rel;joy.onlostpointercapture=rel;
+-window.onblur=()=>{axis=0;stick.style.transform='translate3d(0,0,0)'};
+-requestAnimationFrame(loop);
+-</script>
+-</body></html>
+\ No newline at end of file
++<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./index.html"><title>Eco Solitario</title><p>La versione aggiornata include il Capitolo I e l’animazione di Alter.</p><a href="./index.html">Apri Eco Solitario</a></html>
+\ No newline at end of file
+diff --git a/alter-motion-v4.html b/alter-motion-v4.html
+index 1b7edc3..eb71b99 100644
+--- a/alter-motion-v4.html
++++ b/alter-motion-v4.html
+@@ -1,59 +1 @@
+-<!doctype html>
+-<html lang="it">
+-<head>
+-<meta charset="utf-8">
+-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+-<title>Eco Solitario · Alter Motion V4</title>
+-<style>
+-*{box-sizing:border-box;-webkit-user-select:none;user-select:none}
+-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c1017;color:#eef;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+-#stage{position:fixed;inset:0;overflow:hidden;touch-action:none;background:linear-gradient(#161b25 0 76%,#10141b 76%)}
+-#floor{position:absolute;left:0;right:0;bottom:0;height:84px;background:#292f39;border-top:3px solid #747c8a}
+-#p{position:absolute;width:96px;height:128px;image-rendering:pixelated;transform-origin:50% 100%;will-change:transform}
+-#shadow{position:absolute;width:50px;height:8px;border-radius:50%;background:#0008;filter:blur(2px)}
+-#hud{position:absolute;z-index:5;left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));padding:10px 12px;border:1px solid #4a5260;border-radius:8px;background:#080b10d9;font-size:11px;line-height:1.55}
+-#hud b{font-size:14px} #status{color:#71e4dd}
+-#joy{position:absolute;z-index:5;left:max(18px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));width:126px;height:126px;border:2px solid #6c7482;border-radius:50%;background:#080b10ba}
+-#stick{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px;border-radius:50%;background:#d2d6dfaa;will-change:transform}
+-#note{position:absolute;right:14px;top:12px;font-size:10px;color:#9299a7;text-align:right}
+-</style></head>
+-<body><div id="stage">
+-<div id="hud"><b>ALTER MOTION V4</b><br><span id="status">IDLE</span><br>WALK: 12 FRAMES<br>GHOSTING: OFF<br>WORLD: OFF</div>
+-<div id="note">Eco Solitario<br>leg cycle refinement</div>
+-<div id="shadow"></div><canvas id="p" width="96" height="128"></canvas><div id="floor"></div>
+-<div id="joy"><div id="stick"></div></div>
+-</div><script>
+-'use strict';
+-const stage=document.querySelector('#stage'),p=document.querySelector('#p'),ctx=p.getContext('2d',{alpha:true,desynchronized:true});
+-const joy=document.querySelector('#joy'),stick=document.querySelector('#stick'),shadow=document.querySelector('#shadow'),status=document.querySelector('#status');
+-ctx.imageSmoothingEnabled=false;
+-const img=new Image();let ready=false,lastFrame=-1;img.onload=()=>{ready=true;draw(0)};img.src='./alter_walk_v4_12f.png';
+-const FW=96,FH=128,STEP=1/120,STRIDE=132,N=12;
+-let x=120,px=120,vx=0,axis=0,face=1,gait=0,ptr=null,last=null,acc=0;
+-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+-function approach(v,t,d){return v<t?Math.min(v+d,t):v>t?Math.max(v-d,t):t}
+-function groundY(){return stage.clientHeight-84-FH}
+-function draw(f){if(!ready||f===lastFrame)return;ctx.clearRect(0,0,FW,FH);ctx.drawImage(img,f*FW,0,FW,FH,0,0,FW,FH);lastFrame=f}
+-function simulate(dt){
+- px=x; const target=axis*220; const reversing=axis&&vx&&Math.sign(axis)!==Math.sign(vx);
+- vx=approach(vx,target,(axis?(reversing?2250:1400):2050)*dt);
+- if(!axis&&Math.abs(vx)<.3)vx=0;if(Math.abs(vx)>7)face=Math.sign(vx);
+- const before=x;x+=vx*dt;x=clamp(x,22,Math.max(22,stage.clientWidth-FW-22));
+- if(Math.abs(vx)>2)gait=(gait+Math.abs(x-before)/STRIDE)%1;else gait=0;
+-}
+-function render(a){
+- const rx=px+(x-px)*a,y=groundY();
+- p.style.transform=`translate3d(${rx.toFixed(3)}px,${y}px,0) scaleX(${face})`;
+- shadow.style.transform=`translate3d(${(rx+23).toFixed(3)}px,${y+FH-4}px,0)`;
+- if(Math.abs(vx)>2){draw(Math.floor(gait*N)%N);status.textContent='WALK · '+Math.round(Math.abs(vx))}
+- else{draw(0);status.textContent='IDLE'}
+-}
+-function loop(t){requestAnimationFrame(loop);if(last===null)last=t;acc+=Math.min(Math.max((t-last)/1000,0),.08);last=t;while(acc>=STEP){simulate(STEP);acc-=STEP}render(acc/STEP)}
+-function moveJoy(e){const r=joy.getBoundingClientRect(),dx=clamp(e.clientX-(r.left+r.width/2),-43,43);stick.style.transform=`translate3d(${dx}px,0,0)`;const raw=dx/43,d=.11;axis=Math.abs(raw)<=d?0:Math.sign(raw)*(Math.abs(raw)-d)/(1-d)}
+-joy.onpointerdown=e=>{e.preventDefault();ptr=e.pointerId;joy.setPointerCapture(ptr);moveJoy(e)}
+-joy.onpointermove=e=>{if(e.pointerId===ptr){e.preventDefault();moveJoy(e)}}
+-function rel(e){if(e.pointerId===ptr){ptr=null;axis=0;stick.style.transform='translate3d(0,0,0)'}}
+-joy.onpointerup=rel;joy.onpointercancel=rel;joy.onlostpointercapture=rel;
+-window.onblur=()=>{axis=0;stick.style.transform='translate3d(0,0,0)'};
+-requestAnimationFrame(loop);
+-</script></body></html>
+\ No newline at end of file
++<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=./index.html"><title>Eco Solitario</title><p>La versione aggiornata include il Capitolo I e l’animazione di Alter.</p><a href="./index.html">Apri Eco Solitario</a></html>
+\ No newline at end of file
+diff --git a/game.js b/game.js
+index ccf2b5d..2538471 100644
+--- a/game.js
++++ b/game.js
+@@ -1,366 +1,498 @@
+-'use strict';
+-
+-const stage = document.getElementById('stage');
+-const player = document.getElementById('player');
+-const shadow = document.getElementById('shadow');
+-const joy = document.getElementById('joy');
+-const stick = document.getElementById('stick');
+-const stateLabel = document.getElementById('state');
+-const speedLabel = document.getElementById('speed');
+-const frameLabel = document.getElementById('frame');
+-
+-const ctx = player.getContext('2d', {alpha: true, desynchronized: true});
+-ctx.imageSmoothingEnabled = false;
+-
+-const W = 96, H = 128, CELL = 96, FRAME_COUNT = 54;
+-const GRAV = 1650;
+-const MAX_SPEED = 255;
+-const JUMP_SPEED = -650;
+-const STEP = 1 / 120;
+-const STOP_EPSILON = 0.35;
+-const FACE_EPSILON = 7;
+-const JOY_RADIUS = 42;
+-const JOY_DEADZONE = 0.12;
+-const RUN_THRESHOLD = 188;
+-
+-const anim = {
+-  idle:   {frames: [0]},
+-  walk:   {frames: [6, 7, 8, 9, 10, 11], stride: 116},
+-  run:    {frames: [12, 13, 14, 15, 16, 17, 18, 19], stride: 156},
+-  jump:   {frames: [20, 21, 22, 23], fps: 14, once: true},
+-  air:    {frames: [24, 25, 26, 27], fps: 12},
+-  fall:   {frames: [28, 29, 30, 31], fps: 11},
+-  land:   {frames: [32, 33, 34, 35, 36, 37], fps: 16, once: true},
+-  shoot:  {frames: [38, 39, 40, 41, 42, 43], fps: 18, once: true},
+-  bat:    {frames: [44, 45, 46, 47, 48, 49], fps: 16, once: true},
+-  damage: {frames: [50, 51, 52, 53], fps: 12, once: true}
+-};
+ 
+-const sprite = new Image();
+-let spriteReady = false;
+-let lastFrame = -1;
+-let pendingFrame = 0;
+-sprite.onload = () => {
+-  spriteReady = true;
+-  if (sprite.naturalWidth && (sprite.naturalWidth !== FRAME_COUNT * CELL || sprite.naturalHeight !== H)) {
+-    console.warn(`Sprite sheet inatteso: ${sprite.naturalWidth}x${sprite.naturalHeight}`);
+-  }
+-  lastFrame = -1;
+-  drawFrame(pendingFrame);
+-};
+-sprite.onerror = () => console.warn('Sprite di Alter non disponibile.');
+-sprite.decoding = 'async';
+-sprite.src = './alter_master_sheet.png?v=098';
++(()=> {
++"use strict";
+ 
+-let x = 120, y = 0, previousX = 120, previousY = 0;
+-let vx = 0, vy = 0, face = 1;
+-let grounded = true;
+-let state = 'idle', animTime = 0, gaitPhase = 0, actionLeft = 0;
+-let joyAxis = 0, joyPointer = null, jumpQueued = false;
+-let last = null, accumulator = 0;
+-const keys = new Set();
++const C = document.getElementById("game");
++const X = C.getContext("2d");
++X.imageSmoothingEnabled = false;
+ 
+-function clamp(value, min, max) {
+-  return Math.max(min, Math.min(max, value));
+-}
++const W=1280,H=720,FLOOR=575,WORLD=6200;
++let scaleX=1,scaleY=1,rect=null,last=null,started=false,paused=false,gameOver=false,complete=false;
++let cam=0,t=0,radioCooldown=0,dialogT=0,dialogSpeaker="",dialogText="",screenShake=0;
+ 
+-function approach(current, target, delta) {
+-  if (current < target) return Math.min(current + delta, target);
+-  if (current > target) return Math.max(current - delta, target);
+-  return target;
+-}
++const keys=Object.create(null);
++const pointers=new Map();
++let jumpQueued=false, jumpHeld=false, accumulator=0;
++const STEP=1/120;
++let previousX=210,previousY=430,previousCam=0,renderAlpha=1,gait=0;
++const touch={left:false,right:false,jump:false,shoot:false,bat:false,run:false,radio:false};
+ 
+-function deadzone(value) {
+-  const magnitude = Math.abs(value);
+-  if (magnitude <= JOY_DEADZONE) return 0;
+-  return Math.sign(value) * clamp((magnitude - JOY_DEADZONE) / (1 - JOY_DEADZONE), 0, 1);
+-}
++const P={
++ x:210,y:430,w:34,h:64,vx:0,vy:0,dir:1,onGround:false,
++ hp:100,stamina:100,ammo:12,maxAmmo:12,shootCd:0,batCd:0,hurt:0,
++ radioParts:0,docs:0
++};
+ 
+-function snapToDevicePixel(value) {
+-  const dpr = Math.max(1, Number(window.devicePixelRatio) || 1);
+-  return Math.round(value * dpr) / dpr;
++let bullets=[],particles=[],enemies=[],pickups=[],platforms=[];
++
++const RADIO=[
++ ["JACK","...C'è qualcuno? Questa volta ho sentito qualcosa."],
++ ["DEXTER","Non è il vento, Jack. Quella è una persona."],
++ ["JACK","Alter, se ci senti, segui la frequenza 17.8."],
++ ["DEXTER","E se trovi del caffè, segnala anche quello."],
++ ["JACK","La torre è a est. Le luci rosse sono ancora accese."],
++ ["DEXTER","Questa è la parte dove diciamo: non morire."],
++ ["JACK","C'è un segnale che entra ogni tredici secondi. Non è nostro."],
++ ["DEXTER","Perfetto. Anche l'apocalisse ha lo spam."]
++];
++let radioIdx=0;
++
++function resize(){
++  clearInput();
++  const bounds=document.getElementById("stage").getBoundingClientRect();
++  const width=bounds.width,height=bounds.height;
++  const a=width/height,b=W/H;
++  if(a>b){
++    C.style.height=height+"px";
++    C.style.width=(height*b)+"px";
++  }else{
++    C.style.width=width+"px";
++    C.style.height=(width/b)+"px";
++  }
++  rect=C.getBoundingClientRect();
++  scaleX=W/rect.width; scaleY=H/rect.height;
+ }
++addEventListener("resize",resize,{passive:true});
+ 
+-function groundY() {
+-  return stage.clientHeight - 92 - H;
++function box(x,y,w,h,fill,stroke){
++  X.fillStyle=fill; X.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));
++  if(stroke){X.strokeStyle=stroke;X.lineWidth=1;X.strokeRect(Math.round(x)+.5,Math.round(y)+.5,Math.round(w)-1,Math.round(h)-1)}
+ }
+-
+-function drawFrame(frame) {
+-  frame = clamp(Math.floor(frame), 0, FRAME_COUNT - 1);
+-  pendingFrame = frame;
+-  if (!spriteReady || frame === lastFrame) return;
+-
+-  ctx.clearRect(0, 0, W, H);
+-  ctx.imageSmoothingEnabled = false;
+-
+-  // One source cell only. No CSS background-position, no neighbour-frame bleed.
+-  ctx.drawImage(sprite, frame * CELL, 0, CELL, H, 0, 0, W, H);
+-  lastFrame = frame;
++function txt(s,x,y,size=18,color="#f1dfbd",align="left"){
++  X.font=`${size}px Menlo,Consolas,monospace`; X.fillStyle=color; X.textAlign=align; X.textBaseline="alphabetic"; X.fillText(s,x,y);
+ }
+-
+-function isGait(name) {
+-  return name === 'walk' || name === 'run';
++function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
++function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
++function near(v,a,b){return v>=a&&v<=b}
++function lineWrap(str,max){
++  const words=str.split(" "); let lines=[],line="";
++  for(const w of words){
++    const test=line?line+" "+w:w;
++    if(test.length>max){if(line)lines.push(line);line=w}else line=test;
++  }
++  if(line)lines.push(line); return lines;
+ }
+-
+-function setState(next) {
+-  if (state === next) return;
+-  const wasGait = isGait(state);
+-  const nextIsGait = isGait(next);
+-
+-  state = next;
+-  animTime = 0;
+-
+-  // Preserve the exact gait phase between walk and run.
+-  if (!wasGait && nextIsGait) gaitPhase = 0;
+-  if (next === 'idle') gaitPhase = 0;
++function say(speaker,text,secs=5){
++  dialogSpeaker=speaker;dialogText=text;dialogT=secs;
+ }
+-
+-function startAction(next) {
+-  if (actionLeft > 0) return;
+-  setState(next);
+-  const sequence = anim[next];
+-  actionLeft = sequence.frames.length / sequence.fps + STEP;
++function burst(x,y,color="#e76958",n=12){
++  for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*280,vy:-50-Math.random()*240,life:.25+Math.random()*.35,color});
+ }
+ 
+-function currentAxis() {
+-  const keyboard =
+-    Number(keys.has('ArrowRight') || keys.has('KeyD')) -
+-    Number(keys.has('ArrowLeft') || keys.has('KeyA'));
+-  return keyboard || joyAxis;
++function seed(){
++ enemies=[
++  mob(950,0),mob(1390,1),mob(1950,0),mob(2520,1),mob(3200,2),
++  mob(3780,0),mob(4300,1),mob(4920,0),mob(5480,2)
++ ];
++ pickups=[
++  item(700,"med"),item(1180,"ammo"),item(1720,"doc"),item(2270,"radio"),
++  item(2900,"med"),item(3520,"ammo"),item(4050,"doc"),item(4660,"radio"),
++  item(5230,"med"),item(5750,"doc")
++ ];
++ platforms=[
++  {x:1280,y:470,w:210,h:18},{x:2120,y:450,w:190,h:18},{x:2860,y:500,w:220,h:18},
++  {x:3970,y:455,w:220,h:18},{x:5100,y:480,w:230,h:18}
++ ];
+ }
+-
+-function chooseLocomotion() {
+-  if (!grounded) {
+-    setState(vy < -150 ? 'jump' : vy < 110 ? 'air' : 'fall');
+-    return;
+-  }
+-
+-  const speed = Math.abs(vx);
+-  if (speed < 6) setState('idle');
+-  else if (speed >= RUN_THRESHOLD) setState('run');
+-  else setState('walk');
++function mob(x,type){
++ return {x,y:FLOOR-(type===2?76:62),w:type===2?50:40,h:type===2?76:62,hp:type===2?120:type===1?70:50,maxHp:type===2?120:type===1?70:50,vx:0,dir:-1,cd:0,type,dead:false};
+ }
++function item(x,type){return{x,y:FLOOR-40,w:34,h:34,type,taken:false,phase:Math.random()*6.28}}
++seed();
+ 
+-function advanceGait(distance) {
+-  if (!isGait(state) || !grounded || distance <= 0) return;
+-  gaitPhase = (gaitPhase + distance / anim[state].stride) % 1;
++function reset(){
++ Object.assign(P,{x:210,y:430,vx:0,vy:0,dir:1,onGround:false,hp:100,stamina:100,ammo:12,shootCd:0,batCd:0,hurt:0,radioParts:0,docs:0});
++ clearInput();gait=0;radioCooldown=0;t=0;last=null;accumulator=0;previousX=P.x;previousY=P.y;previousCam=0;
++ bullets=[];particles=[];radioIdx=0;cam=0;gameOver=false;complete=false;paused=false;screenShake=0;seed();say("JACK","Alter? Se ci senti, muoviti verso la torre.",4);
+ }
+ 
+-function frameForState() {
+-  const sequence = anim[state];
+-
+-  if (state === 'idle') return sequence.frames[0];
+-
+-  if (isGait(state)) {
+-    const index = Math.floor(gaitPhase * sequence.frames.length + 1e-9) % sequence.frames.length;
+-    return sequence.frames[index];
+-  }
+-
+-  const n = Math.floor((animTime + 1e-9) * sequence.fps);
+-  const index = sequence.once
+-    ? Math.min(n, sequence.frames.length - 1)
+-    : n % sequence.frames.length;
+-  return sequence.frames[index];
++function shoot(){
++ if(P.shootCd>0||P.ammo<=0||gameOver||complete)return;
++ P.shootCd=.19;P.ammo--;
++ const bx=P.x+P.w/2+(P.dir>0?23:-23);
++ bullets.push({x:bx,y:P.y+25,w:12,h:4,vx:P.dir*850,life:1.1});
++ burst(bx,P.y+26,"#ffd58a",5); screenShake=2;
+ }
+-
+-function simulate(dt) {
+-  previousX = x;
+-  previousY = y;
+-  animTime += dt;
+-  actionLeft = Math.max(0, actionLeft - dt);
+-
+-  const axis = currentAxis();
+-
+-  if (actionLeft <= 0) {
+-    const target = axis * MAX_SPEED;
+-    const reversing = axis && vx && Math.sign(axis) !== Math.sign(vx);
+-    const acceleration = axis ? (reversing ? 2850 : 1780) : 2500;
+-    vx = approach(vx, target, acceleration * dt);
+-
+-    if (!axis && Math.abs(vx) <= STOP_EPSILON) vx = 0;
+-    if (Math.abs(vx) > FACE_EPSILON) face = Math.sign(vx);
+-  } else {
+-    vx *= Math.pow(0.10, dt);
+-    if (Math.abs(vx) <= STOP_EPSILON) vx = 0;
+-  }
+-
+-  if (jumpQueued && grounded && actionLeft <= 0) {
+-    vy = JUMP_SPEED;
+-    grounded = false;
+-    setState('jump');
+-  }
+-  jumpQueued = false;
+-
+-  const beforeX = x;
+-  x += vx * dt;
+-  y += vy * dt;
+-  vy += GRAV * dt;
+-
+-  const minX = 26;
+-  const maxX = Math.max(minX, stage.clientWidth - W - 26);
+-  if (x < minX) {
+-    x = minX;
+-    vx = Math.max(0, vx);
+-  }
+-  if (x > maxX) {
+-    x = maxX;
+-    vx = Math.min(0, vx);
+-  }
+-
+-  const gy = groundY();
+-  if (y >= gy) {
+-    const landed = !grounded && vy > 0;
+-    y = gy;
+-    vy = 0;
+-    grounded = true;
+-    if (landed && actionLeft <= 0) startAction('land');
+-  } else {
+-    grounded = false;
+-  }
+-
+-  if (actionLeft <= 0) {
+-    chooseLocomotion();
+-    advanceGait(Math.abs(x - beforeX));
+-  }
++function bat(){
++ if(P.batCd>0||gameOver||complete)return;
++ P.batCd=.42;
++ const hb={x:P.dir>0?P.x+P.w:P.x-52,y:P.y+8,w:52,h:52};
++ for(const e of enemies){
++   if(!e.dead&&hit(hb,e)){e.hp-=34;e.vx=P.dir*260;burst(e.x+e.w/2,e.y+25);screenShake=5;if(e.hp<=0)e.dead=true}
++ }
+ }
+-
+-function render(alpha) {
+-  const rx = previousX + (x - previousX) * alpha;
+-  const ry = previousY + (y - previousY) * alpha;
+-  const drawX = snapToDevicePixel(rx);
+-  const drawY = snapToDevicePixel(ry);
+-
+-  player.style.transform = `translate3d(${drawX}px,${drawY}px,0) scaleX(${face})`;
+-  shadow.style.transform = `translate3d(${snapToDevicePixel(rx + 22)}px,${snapToDevicePixel(groundY() + H - 5)}px,0)`;
+-  shadow.style.opacity = grounded ? '0.55' : '0.22';
+-
+-  const frame = frameForState();
+-  drawFrame(frame);
+-  stateLabel.textContent = state.toUpperCase();
+-  speedLabel.textContent = Math.round(Math.abs(vx));
+-  frameLabel.textContent = frame;
++function damage(n,fromDir){
++ if(P.hurt>0||gameOver)return;
++ P.hp=Math.max(0,P.hp-n);P.hurt=.7;P.vx=fromDir*240;P.vy=-230;burst(P.x+17,P.y+25,"#f45d5d",14);screenShake=8;
++ if(P.hp<=0){gameOver=true;say("SYSTEM","ALTER È CADUTO. Tocca lo schermo per ricominciare.",999)}
++}
++function radio(){
++ if(radioCooldown>0)return;
++ radioCooldown=.45;
++ const [s,l]=RADIO[radioIdx++%RADIO.length];say(s,l,5);
+ }
+ 
+-function loop(now) {
+-  requestAnimationFrame(loop);
+-
+-  if (document.hidden || !stage.clientWidth || !stage.clientHeight) {
+-    last = null;
+-    return;
+-  }
+-
+-  if (last === null) last = now;
+-  accumulator += Math.min(Math.max((now - last) / 1000, 0), 0.1);
+-  last = now;
+-
+-  while (accumulator + 1e-9 >= STEP) {
+-    simulate(STEP);
+-    accumulator = Math.max(0, accumulator - STEP);
+-  }
+-
+-  render(accumulator / STEP);
+-}
+-
+-function resetInput() {
+-  const pointer = joyPointer;
+-  joyPointer = null;
+-  if (pointer !== null && joy.hasPointerCapture(pointer)) joy.releasePointerCapture(pointer);
+-  joyAxis = 0;
+-  jumpQueued = false;
+-  keys.clear();
+-  stick.style.transform = 'translate3d(0,0,0)';
+-}
+-
+-function resetPosition() {
+-  resetInput();
+-  x = Math.max(40, stage.clientWidth * 0.22);
+-  y = groundY();
+-  previousX = x;
+-  previousY = y;
+-  vx = 0;
+-  vy = 0;
+-  face = 1;
+-  grounded = true;
+-  state = 'idle';
+-  animTime = 0;
+-  gaitPhase = 0;
+-  actionLeft = 0;
+-  accumulator = 0;
+-  last = null;
+-  lastFrame = -1;
+-  drawFrame(0);
+-  render(1);
+-}
+-
+-function moveJoystick(event) {
+-  const rect = joy.getBoundingClientRect();
+-  const raw = event.clientX - rect.left - rect.width / 2;
+-  const dx = clamp(raw, -JOY_RADIUS, JOY_RADIUS);
+-  stick.style.transform = `translate3d(${dx}px,0,0)`;
+-  joyAxis = deadzone(dx / JOY_RADIUS);
+-}
+-
+-joy.addEventListener('pointerdown', event => {
+-  if (joyPointer !== null) return;
+-  event.preventDefault();
+-  joyPointer = event.pointerId;
+-  joy.setPointerCapture(event.pointerId);
+-  moveJoystick(event);
+-});
++function approach(value,target,amount){
++ return value<target?Math.min(value+amount,target):Math.max(value-amount,target);
++}
++function input(dt){
++ const L=keys.a||keys.arrowleft||touch.left;
++ const R=keys.d||keys.arrowright||touch.right;
++ const axis=Number(!!R)-Number(!!L);
++ const run=(keys.shift||touch.run)&&P.stamina>0;
++ const speed=run?285:185;
++ const reversing=axis&&P.vx&&Math.sign(axis)!==Math.sign(P.vx);
++ P.vx=approach(P.vx,axis*speed,(axis?(reversing?2600:1500):2100)*dt);
++ if(Math.abs(P.vx)>7)P.dir=Math.sign(P.vx);
++ if(run&&axis)P.stamina=Math.max(0,P.stamina-24*dt);
++ else P.stamina=Math.min(100,P.stamina+18*dt);
++ if(jumpQueued&&P.onGround){P.vy=-620;P.onGround=false}
++ jumpQueued=false;
++ if(keys.j||touch.shoot)shoot();
++ if(keys.k||touch.bat)bat();
++ if(keys.e||touch.radio)radio();
++}
+ 
+-joy.addEventListener('pointermove', event => {
+-  if (event.pointerId === joyPointer) {
+-    event.preventDefault();
+-    moveJoystick(event);
+-  }
+-});
++function update(dt){
++ if(!started||paused)return;
++ t+=dt;radioCooldown=Math.max(0,radioCooldown-dt);dialogT=Math.max(0,dialogT-dt);
++ P.shootCd=Math.max(0,P.shootCd-dt);P.batCd=Math.max(0,P.batCd-dt);P.hurt=Math.max(0,P.hurt-dt);
++ if(gameOver||complete){particlesStep(dt);return}
++
++ previousX=P.x;previousY=P.y;previousCam=cam;
++ input(dt);
++ const prevBottom=P.y+P.h;
++
++ P.vy+=1900*dt;
++ P.x+=P.vx*dt;P.y+=P.vy*dt;
++ P.onGround=false;
++
++ // floor
++ if(P.y+P.h>=FLOOR){P.y=FLOOR-P.h;P.vy=0;P.onGround=true}
++
++ // platforms, land only from above
++ for(const pl of platforms){
++   if(P.vy>=0 && prevBottom<=pl.y+4 && P.y+P.h>=pl.y && P.x+P.w>pl.x && P.x<pl.x+pl.w){
++      P.y=pl.y-P.h;P.vy=0;P.onGround=true;
++   }
++ }
++ P.x=clamp(P.x,0,WORLD-P.w);
++ if(P.x===0||P.x===WORLD-P.w)P.vx=0;
++ if(P.onGround&&Math.abs(P.x-previousX)>0.001)gait=(gait+Math.abs(P.x-previousX)/132)%1;
++ else if(Math.abs(P.vx)<1)gait=0;
++
++ // bullets
++ bullets.forEach(b=>{b.x+=b.vx*dt;b.life-=dt});
++ bullets=bullets.filter(b=>{
++   for(const e of enemies){
++     if(!e.dead&&hit(b,e)){e.hp-=26;burst(b.x,b.y,"#ffcf79",7);screenShake=3;if(e.hp<=0)e.dead=true;return false}
++   }
++   return b.life>0;
++ });
++
++ // enemies
++ for(const e of enemies){
++   if(e.dead)continue;
++   e.cd=Math.max(0,e.cd-dt);
++   const dx=P.x-e.x,dist=Math.abs(dx);
++   if(dist<480){e.dir=dx>=0?1:-1;e.vx=approach(e.vx,e.dir*(e.type===2?135:105),650*dt)}
++   else e.vx=approach(e.vx,0,850*dt);
++   const max=e.type===2?135:105;e.vx=clamp(e.vx,-max,max);e.x+=e.vx*dt;
++   if(dist<55 && Math.abs((P.y+30)-(e.y+30))<58 && e.cd<=0){e.cd=e.type===2?1.0:.85;damage(e.type===2?22:13,-e.dir)}
++ }
++
++ // pickups
++ for(const p of pickups){
++   if(p.taken)continue;
++   if(hit(P,p)){
++     p.taken=true;
++     if(p.type==="med"){P.hp=Math.min(100,P.hp+35);say("SYSTEM","MEDIKIT +35",2)}
++     if(p.type==="ammo"){P.ammo=P.maxAmmo;say("SYSTEM","MUNIZIONI RIPRISTINATE",2)}
++     if(p.type==="doc"){P.docs++;say("DOCUMENTO",`Pagina ${P.docs}: "La frequenza 17.8 non dovrebbe esistere."`,4)}
++     if(p.type==="radio"){P.radioParts++;say("JACK",`Hai trovato un modulo radio. ${P.radioParts}/2`,3)}
++   }
++ }
++
++ if(P.x>5920){
++   complete=true;
++   say("JACK","Ti vediamo, Alter. Sei arrivato alla torre.",999);
++ }
++
++ cam+=(P.x-W*.40-cam)*Math.min(1,dt*5);
++ cam=clamp(cam,0,WORLD-W);
++ particlesStep(dt);
++ screenShake*=Math.pow(.82,dt*60);
++}
++function particlesStep(dt){
++ for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=500*dt;p.life-=dt}
++ particles=particles.filter(p=>p.life>0);
++}
+ 
+-for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+-  joy.addEventListener(type, event => {
+-    if (event.pointerId === joyPointer) resetInput();
+-  });
++function skyline(layer,base,ratio,fill){
++ X.save();X.globalAlpha=layer===0?.48:.72;
++ const off=(cam*ratio)%280;
++ for(let i=-2;i<7;i++){
++   const seed=(i+20)*71+layer*99;
++   const x=i*280-off;
++   const h=100+(seed%170);
++   const w=130+((seed*3)%90);
++   box(x,base-h,w,h,fill);
++   for(let yy=base-h+20;yy<base-18;yy+=26)
++     for(let xx=x+16;xx<x+w-12;xx+=24)
++       if(((xx+yy+seed)>>4)%7===0)box(xx,yy,4,7,"#cf6b42");
++ }
++ X.restore();
+ }
+ 
+-function bindAction(id, action) {
+-  document.getElementById(id).addEventListener('pointerdown', event => {
+-    event.preventDefault();
+-    action();
+-  });
++function worldDraw(){
++ // sunset
++ const g=X.createLinearGradient(0,0,0,H);
++ g.addColorStop(0,"#201931");g.addColorStop(.36,"#703646");g.addColorStop(.62,"#d56b4f");g.addColorStop(.83,"#f0a060");g.addColorStop(1,"#14232b");
++ X.fillStyle=g;X.fillRect(0,0,W,H);
++
++ X.globalAlpha=.68;X.fillStyle="#ffd892";X.beginPath();X.arc(810-cam*.08,260,52,0,Math.PI*2);X.fill();X.globalAlpha=1;
++ skyline(0,465,.08,"#1e2430");skyline(1,520,.2,"#20232a");
++
++ X.save();X.translate(-(previousCam+(cam-previousCam)*renderAlpha),0);
++
++ // distant cables
++ X.strokeStyle="#1b1a1e";X.lineWidth=3;
++ for(let x=300;x<WORLD;x+=780){
++   X.beginPath();X.moveTo(x,165);X.quadraticCurveTo(x+250,210,x+520,170);X.stroke();
++ }
++
++ // ruins
++ box(0,FLOOR,WORLD,H-FLOOR,"#0a1217");
++ for(let x=0;x<WORLD;x+=120){
++   box(x,FLOOR-13,82+(x%70),13,"#273438");
++   if((x/120|0)%2===0){box(x+15,FLOOR-34,6,21,"#426249");box(x+22,FLOOR-27,5,14,"#31523b")}
++ }
++
++ // structures
++ for(let x=560;x<WORLD;x+=910){
++   box(x,255,12,FLOOR-255,"#273036");
++   box(x+88,220,12,FLOOR-220,"#273036");
++   X.strokeStyle="#6b4940";X.lineWidth=3;
++   for(let y=260;y<FLOOR;y+=42){
++     X.beginPath();X.moveTo(x,y);X.lineTo(x+96,y+38);X.moveTo(x+96,y);X.lineTo(x,y+38);X.stroke();
++   }
++ }
++ // neon/signs
++ for(let x=1080;x<WORLD;x+=1370){
++   box(x,390,140,72,"#131a1f","#6b5544");
++   txt(x%2===0?"KEEP LISTENING":"STILL HUMAN?",x+70,420,15,"#c9bca7","center");
++   txt("17.8",x+70,446,20,"#e28e62","center");
++ }
++ // radio tower
++ box(5790,160,18,415,"#49343a");box(5890,125,16,450,"#49343a");
++ X.strokeStyle="#9d5148";X.lineWidth=4;
++ for(let y=170;y<550;y+=36){X.beginPath();X.moveTo(5798,y);X.lineTo(5898,y+30);X.moveTo(5898,y);X.lineTo(5798,y+30);X.stroke()}
++ txt("17.8",5848,106,30,"#f0c17e","center");
++
++ // platforms
++ for(const p of platforms){
++   box(p.x,p.y,p.w,p.h,"#253238","#795b47");
++   for(let xx=p.x+8;xx<p.x+p.w;xx+=24)box(xx,p.y-7,5,7,"#416548");
++ }
++
++ // pickups
++ for(const p of pickups){
++   if(p.taken)continue;
++   const yy=p.y+Math.sin(t*3+p.phase)*5;
++   const col=p.type==="med"?"#cf4e4b":p.type==="ammo"?"#d6a55e":p.type==="doc"?"#d7c6a4":"#77b8ad";
++   box(p.x,yy,34,34,col,"#171717");
++   txt(p.type==="med"?"+":p.type==="ammo"?"A":p.type==="doc"?"?":"R",p.x+17,yy+25,20,"#10161a","center");
++ }
++
++ // bullets
++ for(const b of bullets)box(b.x,b.y,b.w,b.h,"#ffdf8d");
++
++ // enemies
++ for(const e of enemies) if(!e.dead) drawEnemy(e);
++
++ drawPlayer();
++
++ for(const p of particles){X.globalAlpha=Math.max(0,p.life*2);box(p.x,p.y,4,4,p.color);X.globalAlpha=1}
++
++ X.restore();
+ }
+ 
+-bindAction('jump', () => { jumpQueued = true; });
+-bindAction('shoot', () => startAction('shoot'));
+-bindAction('bat', () => startAction('bat'));
+-bindAction('damage', () => startAction('damage'));
+-document.getElementById('reset').addEventListener('click', resetPosition);
++function drawEnemy(e){
++ const body=e.type===2?"#4c4a4a":e.type===1?"#654139":"#34484d";
++ box(e.x,e.y+18,e.w,e.h-18,body,"#111");
++ box(e.x+6,e.y,e.w-12,22,"#b98563","#111");
++ box(e.x+(e.dir>0?e.w-3:-17),e.y+28,20,6,"#989b9a","#111");
++ box(e.x+5,e.y+e.h-16,10,16,"#1d2328");box(e.x+e.w-15,e.y+e.h-16,10,16,"#1d2328");
++ box(e.x,e.y-9,e.w,4,"#3b1e20");
++ box(e.x,e.y-9,e.w*(e.hp/e.maxHp),4,e.type===2?"#e07b55":"#d95355");
++}
+ 
+-window.addEventListener('keydown', event => {
+-  const handled = ['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD', 'Space', 'KeyJ', 'KeyK', 'KeyH'];
+-  if (handled.includes(event.code)) event.preventDefault();
+-  keys.add(event.code);
++const master=new Image();
++let masterReady=false;
++master.onload=()=>{masterReady=master.naturalWidth===5184&&master.naturalHeight===128};
++master.onerror=()=>{document.getElementById('note').textContent='Grafica ridotta: puoi continuare a giocare.'};
++master.src='./alter_master_sheet.png';
++function spriteFrame(){
++ if(P.batCd>0)return {sheet:master,ready:masterReady,frame:44+Math.min(5,Math.floor((.42-P.batCd)*16))};
++ if(P.shootCd>0)return {sheet:master,ready:masterReady,frame:38+Math.min(5,Math.floor((.19-P.shootCd)*30))};
++ if(!P.onGround)return {sheet:master,ready:masterReady,frame:P.vy<-150?22:P.vy<110?25:29};
++ if(Math.abs(P.vx)>1&&Math.abs(P.x-previousX)>.001){
++   const running=Math.abs(P.vx)>220;
++   return {sheet:master,ready:masterReady,frame:running?12+Math.floor(gait*8)%8:6+Math.floor(gait*6)%6};
++ }
++ return {sheet:master,ready:masterReady,frame:0};
++}
++function drawPlayer(){
++ const x=previousX+(P.x-previousX)*renderAlpha,y=previousY+(P.y-previousY)*renderAlpha;
++ const sprite=spriteFrame();
++ if(sprite.ready){
++   X.save();X.translate(x+P.w/2,y+P.h);X.scale(P.dir,1);
++   if(P.hurt>0&&Math.floor(t*18)%2)X.globalAlpha=.45;
++   // Exact 96x128 source cell. All existing sheets have feet at row 122.
++   X.drawImage(sprite.sheet,sprite.frame*96,0,96,128,-36,-92.25,72,96);
++   X.restore();return;
++ }
++ X.save();X.translate(x+P.w/2,y);X.scale(P.dir,1);X.translate(-P.w/2,0);
++ // backpack
++ box(-8,20,14,31,"#55493b","#151515");box(-11,26,5,20,"#87704c");
++ // Procedural fallback still animates if the image is unavailable.
++ const step=P.onGround&&Math.abs(P.vx)>1?Math.sin(gait*Math.PI*2)*5:0;
++ X.save();X.translate(0,step);
++ box(7,44,9,18,"#d8b487");box(21,44,9,18,"#d8b487");
++ box(5,60,13,5,"#ece9df");box(20,60,13,5,"#ece9df");
++ X.restore();
++ // hoodie
++ const red=P.hurt>0&&Math.floor(t*18)%2?"#f2b7ad":"#a83339";
++ box(5,18,25,30,red,"#151515");box(0,23,9,21,red);
++ // head
++ box(9,3,18,18,"#d6a072","#151515");box(8,-2,21,8,"#513326");box(24,1,9,10,"#513326");box(25,8,7,6,"#513326");
++ // weapon pose
++ if(P.batCd>.20){X.strokeStyle="#b47a45";X.lineWidth=6;X.beginPath();X.moveTo(28,27);X.lineTo(52,5);X.stroke()}
++ else box(28,24,17,6,"#a7acab","#111");
++ X.restore();
++}
+ 
+-  if (!event.repeat) {
+-    if (event.code === 'Space') jumpQueued = true;
+-    if (event.code === 'KeyJ') startAction('shoot');
+-    if (event.code === 'KeyK') startAction('bat');
+-    if (event.code === 'KeyH') startAction('damage');
+-  }
+-});
++function hud(){
++ // top-left card
++ box(18,18,310,92,"rgba(5,12,18,.84)","#7c5f48");
++ txt("ALTER",34,44,18,"#e4aa67");
++ txt("SALUTE",34,67,12,"#cbbfa9");box(96,57,172,12,"#302228");box(96,57,172*P.hp/100,12,"#d84c51");
++ txt("STAMINA",34,91,12,"#cbbfa9");box(96,81,172,10,"#1f3035");box(96,81,172*P.stamina/100,10,"#6db8ae");
++ txt(`${P.ammo}/${P.maxAmmo}`,292,67,16,"#f1d7a5","center");
++ txt(`DOC ${P.docs}/3`,292,92,12,"#9bbfc0","center");
++
++ // radio panel
++ box(W-330,18,312,92,"rgba(5,12,18,.84)","#7c5f48");
++ txt("RADIO 17.8",W-312,47,18,"#e4aa67");
++ txt(`MODULI ${P.radioParts}/2`,W-312,73,13,"#9fc5c1");
++ txt("E / pulsante radio",W-312,95,12,"#c9bda7");
++
++ // objective
++ box(W/2-170,118,340,36,"rgba(6,12,18,.72)","#6d5748");
++ txt("OBIETTIVO: RAGGIUNGI LA TORRE",W/2,142,14,"#ecd8b5","center");
++
++ if(dialogT>0){
++   box(175,H-132,W-350,96,"rgba(4,9,13,.92)","#8a684d");
++   txt(dialogSpeaker,198,H-102,15,"#e2a360");
++   const lines=lineWrap(dialogText,72);
++   lines.slice(0,2).forEach((l,i)=>txt(l,198,H-77+i*23,17,"#f0e4cb"));
++ }
++
++
++
++ if(complete){
++   box(370,205,540,220,"rgba(4,8,12,.95)","#a37753");
++   txt("CAPITOLO I COMPLETATO",640,265,30,"#f0c984","center");
++   txt("La torre trasmette ancora.",640,310,19,"#f0e4cb","center");
++   txt(`Documenti trovati: ${P.docs}/3`,640,347,16,"#9fc5c1","center");
++   txt("Tocca per ricominciare",640,393,14,"#cabca7","center");
++ }
++}
+ 
+-window.addEventListener('keyup', event => keys.delete(event.code));
+-window.addEventListener('blur', resetInput);
+-window.addEventListener('resize', resetPosition);
+-document.addEventListener('visibilitychange', () => {
+-  resetInput();
+-  last = null;
+-  accumulator = 0;
++function syncTouch(){
++ const wasJump=jumpHeld;
++ for(const key in touch)touch[key]=false;
++ for(const action of pointers.values())if(action)touch[action]=true;
++ jumpHeld=!!(touch.jump||keys.w||keys.arrowup||keys[' ']);
++ if(jumpHeld&&!wasJump)jumpQueued=true;
++ for(const button of document.querySelectorAll('[data-action]'))button.classList.toggle('held',!!touch[button.dataset.action]);
++}
++function clearInput(){
++ pointers.clear();for(const key in keys)delete keys[key];
++ for(const key in touch)touch[key]=false;
++ jumpQueued=false;jumpHeld=false;
++ for(const button of document.querySelectorAll('[data-action]'))button.classList.remove('held');
++}
++function start(){
++ if(gameOver||complete)reset();
++ started=true;paused=false;last=null;accumulator=0;
++ document.getElementById('welcome').hidden=true;
++ document.getElementById('pause').textContent='Pausa';
++ document.getElementById('note').textContent='Capitolo I · La frequenza';
++ say('JACK','Alter? Se ci senti, muoviti verso la torre.',4);
++}
++function togglePause(){
++ if(!started)return;
++ paused=!paused;clearInput();last=null;accumulator=0;
++ previousX=P.x;previousY=P.y;previousCam=cam;
++ document.getElementById('pause').textContent=paused?'Riprendi':'Pausa';
++ document.getElementById('note').textContent=paused?'In pausa · tocca Riprendi':'Capitolo I · La frequenza';
++}
++for(const button of document.querySelectorAll('[data-action]')){
++ button.addEventListener('pointerdown',e=>{
++  e.preventDefault();if(!started||gameOver||complete)start();if(paused)return;
++  pointers.set(e.pointerId,button.dataset.action);syncTouch();
++  try{button.setPointerCapture(e.pointerId)}catch{}
++ },{passive:false});
++ const release=e=>{pointers.delete(e.pointerId);syncTouch()};
++ for(const event of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(event,release);
++ button.addEventListener('contextmenu',e=>e.preventDefault());
++}
++addEventListener('pointerup',e=>{pointers.delete(e.pointerId);syncTouch()});
++addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);syncTouch()});
++C.addEventListener('pointerdown',e=>{e.preventDefault();if(!started||gameOver||complete)start()},{passive:false});
++document.getElementById('start').addEventListener('click',start);
++document.getElementById('pause').addEventListener('click',togglePause);
++const handled=['a','d','w','arrowleft','arrowright','arrowup',' ','shift','j','k','e','p','escape','enter','r'];
++addEventListener('keydown',e=>{
++ const k=e.key.toLowerCase();if(!handled.includes(k))return;
++ e.preventDefault();if(e.repeat)return;
++ if(!started){start();if(k==='enter'||k===' ')return}
++ if(gameOver||complete){if(k==='r'||k==='enter'||k===' ')start();return}
++ if(k==='p'||k==='escape'){togglePause();return}
++ if(paused)return;
++ keys[k]=true;syncTouch();
+ });
+-
+-if ('serviceWorker' in navigator) {
+-  navigator.serviceWorker.register('./sw.js').catch(error =>
+-    console.warn('Modalità offline non disponibile:', error)
+-  );
++addEventListener('keyup',e=>{delete keys[e.key.toLowerCase()];syncTouch()});
++function suspend(){
++ clearInput();last=null;accumulator=0;
++ if(started&&!paused&&!gameOver&&!complete)togglePause();
++}
++addEventListener('blur',suspend);
++document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();else{last=null;accumulator=0}});
++resize();
++
++function draw(){
++ X.save();
++ const sx=screenShake?(Math.random()-.5)*screenShake:0,sy=screenShake?(Math.random()-.5)*screenShake:0;
++ X.translate(sx,sy);
++ worldDraw();hud();
++ X.restore();
+ }
+ 
+-resetPosition();
++function loop(now){
++ if(last===null)last=now;
++ const elapsed=Math.min(.1,Math.max(0,(now-last)/1000));last=now;
++ if(!document.hidden&&started&&!paused){
++  accumulator+=elapsed;
++  while(accumulator+1e-9>=STEP){update(STEP);accumulator=Math.max(0,accumulator-STEP)}
++ }else accumulator=0;
++ renderAlpha=gameOver||complete||paused?1:accumulator/STEP;
++ draw();
++ requestAnimationFrame(loop);
++}
++if('serviceWorker' in navigator&&location.protocol!=='file:'){
++ navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});
++}
+ requestAnimationFrame(loop);
++})();
+diff --git a/index.html b/index.html
+index 9b7dbee..48f7dc1 100644
+--- a/index.html
++++ b/index.html
+@@ -2,467 +2,49 @@
+ <html lang="it">
+ <head>
+ <meta charset="utf-8">
+-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
++<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+-<title>Eco Solitario - Capitolo I</title>
++<meta name="theme-color" content="#080b10">
++<link rel="manifest" href="./manifest.json">
++<link rel="apple-touch-icon" href="./icon-192.png">
++<title>Eco Solitario · Capitolo I</title>
+ <style>
+-:root{
+-  --bg:#071016; --panel:#0d1820; --line:#8c6d51; --cream:#f0dfbd; --orange:#e19a5e;
+-}
+-*{box-sizing:border-box}
+-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050b10;color:var(--cream);font-family:Menlo,Consolas,monospace}
+-body{touch-action:none;-webkit-user-select:none;user-select:none}
+-#stage{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,#1b2230 0,#091119 60%,#05090e 100%)}
+-canvas{display:block;max-width:100vw;max-height:100vh;image-rendering:pixelated;image-rendering:crisp-edges;box-shadow:0 0 0 1px #172530}
+-#note{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);font-size:11px;opacity:.55;pointer-events:none;white-space:nowrap}
++*{box-sizing:border-box} [hidden]{display:none!important}
++html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050b10;color:#f0dfbd;font-family:Menlo,Consolas,monospace}
++body{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
++#stage{position:fixed;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);display:grid;place-items:center}
++canvas{display:block;image-rendering:pixelated;max-width:100%;max-height:100%}
++button{font:inherit;color:#f0dfbd;background:#101c29ed;border:1px solid #a48a69;border-radius:14px;min-width:48px;min-height:48px;touch-action:none;cursor:pointer}
++button:focus-visible{outline:3px solid #71d1c2;outline-offset:3px}
++button.held,button:active{background:#72553f}
++.controls{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:8px;align-items:end}
++#movement{left:max(12px,env(safe-area-inset-left))} #actions{right:max(12px,env(safe-area-inset-right));display:grid;grid-template-columns:repeat(2,58px)}
++#movement button{width:58px;height:58px;font-size:22px} #movement [data-action=run]{font-size:12px}
++#actions button{font-size:12px;height:48px}
++#pause{position:fixed;top:max(6px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);min-height:34px;font-size:12px;padding:4px 16px}
++#note{position:fixed;left:50%;bottom:max(2px,env(safe-area-inset-bottom));transform:translateX(-50%);font-size:10px;color:#b7b9ae;pointer-events:none;text-align:center}
++#welcome{position:fixed;inset:0;display:grid;place-items:center;background:#03090ba8;padding:20px}
++.card{max-width:540px;text-align:center;border:1px solid #9b704e;background:#080e17f5;padding:24px;border-radius:18px}
++h1{font-size:clamp(24px,5vw,40px);color:#f0c57e;margin:0 0 12px} h2{font-size:16px;color:#df8f75} p{line-height:1.6;font-size:13px}
++#start{padding:12px 30px;background:#26544f;font-weight:bold;font-size:18px}
++#boot-error{position:fixed;inset:25%;background:#0d1820;padding:24px;border:1px solid #e19a5e;z-index:10}
++@media(orientation:portrait){#stage{bottom:150px;top:max(50px,env(safe-area-inset-top))}#note{bottom:128px;width:95%}#movement{gap:5px}#movement button{width:50px}#actions{grid-template-columns:repeat(2,52px);gap:6px}}
++@media(max-height:430px){.card{padding:12px 24px}.card p{margin:8px 0}.card h2{margin:8px 0}#note{display:none}}
+ </style>
+ </head>
+ <body>
+-<div id="stage"><canvas id="game" width="1280" height="720"></canvas></div>
+-<div id="note">Eco Solitario • tocca lo schermo per iniziare</div>
+-<script>
+-(()=> {
+-"use strict";
+-
+-const C = document.getElementById("game");
+-const X = C.getContext("2d");
+-X.imageSmoothingEnabled = false;
+-
+-const W=1280,H=720,FLOOR=575,WORLD=6200;
+-let scaleX=1,scaleY=1,rect=null,last=performance.now(),started=false,paused=false,gameOver=false,complete=false;
+-let cam=0,t=0,radioCooldown=0,dialogT=0,dialogSpeaker="",dialogText="",screenShake=0;
+-
+-const keys=Object.create(null);
+-const touch={left:false,right:false,jump:false,shoot:false,bat:false,run:false,radio:false};
+-
+-const P={
+- x:210,y:430,w:34,h:64,vx:0,vy:0,dir:1,onGround:false,
+- hp:100,stamina:100,ammo:12,maxAmmo:12,shootCd:0,batCd:0,hurt:0,
+- radioParts:0,docs:0
+-};
+-
+-let bullets=[],particles=[],enemies=[],pickups=[],platforms=[];
+-
+-const RADIO=[
+- ["JACK","...C'è qualcuno? Questa volta ho sentito qualcosa."],
+- ["DEXTER","Non è il vento, Jack. Quella è una persona."],
+- ["JACK","Alter, se ci senti, segui la frequenza 17.8."],
+- ["DEXTER","E se trovi del caffè, segnala anche quello."],
+- ["JACK","La torre è a est. Le luci rosse sono ancora accese."],
+- ["DEXTER","Questa è la parte dove diciamo: non morire."],
+- ["JACK","C'è un segnale che entra ogni tredici secondi. Non è nostro."],
+- ["DEXTER","Perfetto. Anche l'apocalisse ha lo spam."]
+-];
+-let radioIdx=0;
+-
+-function resize(){
+-  const a=innerWidth/innerHeight,b=W/H;
+-  if(a>b){
+-    C.style.height=innerHeight+"px";
+-    C.style.width=(innerHeight*b)+"px";
+-  }else{
+-    C.style.width=innerWidth+"px";
+-    C.style.height=(innerWidth/b)+"px";
+-  }
+-  rect=C.getBoundingClientRect();
+-  scaleX=W/rect.width; scaleY=H/rect.height;
+-}
+-addEventListener("resize",resize,{passive:true}); resize();
+-
+-function box(x,y,w,h,fill,stroke){
+-  X.fillStyle=fill; X.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));
+-  if(stroke){X.strokeStyle=stroke;X.lineWidth=1;X.strokeRect(Math.round(x)+.5,Math.round(y)+.5,Math.round(w)-1,Math.round(h)-1)}
+-}
+-function txt(s,x,y,size=18,color="#f1dfbd",align="left"){
+-  X.font=`${size}px Menlo,Consolas,monospace`; X.fillStyle=color; X.textAlign=align; X.textBaseline="alphabetic"; X.fillText(s,x,y);
+-}
+-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+-function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+-function near(v,a,b){return v>=a&&v<=b}
+-function lineWrap(str,max){
+-  const words=str.split(" "); let lines=[],line="";
+-  for(const w of words){
+-    const test=line?line+" "+w:w;
+-    if(test.length>max){if(line)lines.push(line);line=w}else line=test;
+-  }
+-  if(line)lines.push(line); return lines;
+-}
+-function say(speaker,text,secs=5){
+-  dialogSpeaker=speaker;dialogText=text;dialogT=secs;
+-}
+-function burst(x,y,color="#e76958",n=12){
+-  for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*280,vy:-50-Math.random()*240,life:.25+Math.random()*.35,color});
+-}
+-
+-function seed(){
+- enemies=[
+-  mob(950,0),mob(1390,1),mob(1950,0),mob(2520,1),mob(3200,2),
+-  mob(3780,0),mob(4300,1),mob(4920,0),mob(5480,2)
+- ];
+- pickups=[
+-  item(700,"med"),item(1180,"ammo"),item(1720,"doc"),item(2270,"radio"),
+-  item(2900,"med"),item(3520,"ammo"),item(4050,"doc"),item(4660,"radio"),
+-  item(5230,"med"),item(5750,"doc")
+- ];
+- platforms=[
+-  {x:1280,y:470,w:210,h:18},{x:2120,y:450,w:190,h:18},{x:2860,y:500,w:220,h:18},
+-  {x:3970,y:455,w:220,h:18},{x:5100,y:480,w:230,h:18}
+- ];
+-}
+-function mob(x,type){
+- return {x,y:FLOOR-(type===2?76:62),w:type===2?50:40,h:type===2?76:62,hp:type===2?120:type===1?70:50,maxHp:type===2?120:type===1?70:50,vx:0,dir:-1,cd:0,type,dead:false};
+-}
+-function item(x,type){return{x,y:FLOOR-40,w:34,h:34,type,taken:false,phase:Math.random()*6.28}}
+-seed();
+-
+-function reset(){
+- Object.assign(P,{x:210,y:430,vx:0,vy:0,dir:1,onGround:false,hp:100,stamina:100,ammo:12,shootCd:0,batCd:0,hurt:0,radioParts:0,docs:0});
+- bullets=[];particles=[];radioIdx=0;cam=0;gameOver=false;complete=false;paused=false;screenShake=0;seed();say("JACK","Alter? Se ci senti, muoviti verso la torre.",4);
+-}
+-
+-function shoot(){
+- if(P.shootCd>0||P.ammo<=0||gameOver||complete)return;
+- P.shootCd=.19;P.ammo--;
+- const bx=P.x+P.w/2+(P.dir>0?23:-23);
+- bullets.push({x:bx,y:P.y+25,w:12,h:4,vx:P.dir*850,life:1.1});
+- burst(bx,P.y+26,"#ffd58a",5); screenShake=2;
+-}
+-function bat(){
+- if(P.batCd>0||gameOver||complete)return;
+- P.batCd=.42;
+- const hb={x:P.dir>0?P.x+P.w:P.x-52,y:P.y+8,w:52,h:52};
+- for(const e of enemies){
+-   if(!e.dead&&hit(hb,e)){e.hp-=34;e.vx=P.dir*260;burst(e.x+e.w/2,e.y+25);screenShake=5;if(e.hp<=0)e.dead=true}
+- }
+-}
+-function damage(n,fromDir){
+- if(P.hurt>0||gameOver)return;
+- P.hp=Math.max(0,P.hp-n);P.hurt=.7;P.vx=fromDir*240;P.vy=-230;burst(P.x+17,P.y+25,"#f45d5d",14);screenShake=8;
+- if(P.hp<=0){gameOver=true;say("SYSTEM","ALTER È CADUTO. Tocca lo schermo per ricominciare.",999)}
+-}
+-function radio(){
+- if(radioCooldown>0)return;
+- radioCooldown=.45;
+- const [s,l]=RADIO[radioIdx++%RADIO.length];say(s,l,5);
+-}
+-
+-function input(){
+- const L=keys.a||keys.arrowleft||touch.left;
+- const R=keys.d||keys.arrowright||touch.right;
+- const run=keys.shift||touch.run;
+- const jump=keys.w||keys.arrowup||keys[" "]||touch.jump;
+- const sp=run&&P.stamina>0?285:185;
+- const target=(R?1:0)-(L?1:0);
+- P.vx += target*65;
+- P.vx *= target?0.82:0.72;
+- P.vx=clamp(P.vx,-sp,sp);
+- if(L)P.dir=-1;if(R)P.dir=1;
+- if(run&&target)P.stamina=Math.max(0,P.stamina-.8);else P.stamina=Math.min(100,P.stamina+.45);
+- if(jump&&P.onGround){P.vy=-620;P.onGround=false}
+- if(keys.j||touch.shoot)shoot();
+- if(keys.k||touch.bat)bat();
+- if(keys.e||touch.radio)radio();
+-}
+-
+-function update(dt){
+- if(!started||paused)return;
+- t+=dt;radioCooldown=Math.max(0,radioCooldown-dt);dialogT=Math.max(0,dialogT-dt);
+- P.shootCd=Math.max(0,P.shootCd-dt);P.batCd=Math.max(0,P.batCd-dt);P.hurt=Math.max(0,P.hurt-dt);
+- if(gameOver||complete){particlesStep(dt);return}
+-
+- input();
+-
+- P.vy+=1900*dt;
+- P.x+=P.vx*dt;P.y+=P.vy*dt;
+- P.onGround=false;
+-
+- // floor
+- if(P.y+P.h>=FLOOR){P.y=FLOOR-P.h;P.vy=0;P.onGround=true}
+-
+- // platforms, land only from above
+- for(const pl of platforms){
+-   const prevBottom=P.y+P.h-P.vy*dt;
+-   if(P.vy>=0 && prevBottom<=pl.y+4 && P.y+P.h>=pl.y && P.x+P.w>pl.x && P.x<pl.x+pl.w){
+-      P.y=pl.y-P.h;P.vy=0;P.onGround=true;
+-   }
+- }
+- P.x=clamp(P.x,0,WORLD-P.w);
+-
+- // bullets
+- bullets.forEach(b=>{b.x+=b.vx*dt;b.life-=dt});
+- bullets=bullets.filter(b=>{
+-   for(const e of enemies){
+-     if(!e.dead&&hit(b,e)){e.hp-=26;burst(b.x,b.y,"#ffcf79",7);screenShake=3;if(e.hp<=0)e.dead=true;return false}
+-   }
+-   return b.life>0;
+- });
+-
+- // enemies
+- for(const e of enemies){
+-   if(e.dead)continue;
+-   e.cd=Math.max(0,e.cd-dt);
+-   const dx=P.x-e.x,dist=Math.abs(dx);
+-   if(dist<480){e.dir=dx>=0?1:-1;e.vx+=e.dir*(e.type===2?32:24);e.vx*=.86}
+-   else e.vx*=.75;
+-   const max=e.type===2?135:105;e.vx=clamp(e.vx,-max,max);e.x+=e.vx*dt;
+-   if(dist<55 && Math.abs((P.y+30)-(e.y+30))<58 && e.cd<=0){e.cd=e.type===2?1.0:.85;damage(e.type===2?22:13,-e.dir)}
+- }
+-
+- // pickups
+- for(const p of pickups){
+-   if(p.taken)continue;
+-   if(hit(P,p)){
+-     p.taken=true;
+-     if(p.type==="med"){P.hp=Math.min(100,P.hp+35);say("SYSTEM","MEDIKIT +35",2)}
+-     if(p.type==="ammo"){P.ammo=P.maxAmmo;say("SYSTEM","MUNIZIONI RIPRISTINATE",2)}
+-     if(p.type==="doc"){P.docs++;say("DOCUMENTO",`Pagina ${P.docs}: "La frequenza 17.8 non dovrebbe esistere."`,4)}
+-     if(p.type==="radio"){P.radioParts++;say("JACK",`Hai trovato un modulo radio. ${P.radioParts}/2`,3)}
+-   }
+- }
+-
+- if(P.x>5920){
+-   complete=true;
+-   say("JACK","Ti vediamo, Alter. Sei arrivato alla torre.",999);
+- }
+-
+- cam+=(P.x-W*.40-cam)*Math.min(1,dt*5);
+- cam=clamp(cam,0,WORLD-W);
+- particlesStep(dt);
+- screenShake*=.82;
+-}
+-function particlesStep(dt){
+- for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=500*dt;p.life-=dt}
+- particles=particles.filter(p=>p.life>0);
+-}
+-
+-function skyline(layer,base,ratio,fill){
+- X.save();X.globalAlpha=layer===0?.48:.72;
+- const off=(cam*ratio)%280;
+- for(let i=-2;i<7;i++){
+-   const seed=(i+20)*71+layer*99;
+-   const x=i*280-off;
+-   const h=100+(seed%170);
+-   const w=130+((seed*3)%90);
+-   box(x,base-h,w,h,fill);
+-   for(let yy=base-h+20;yy<base-18;yy+=26)
+-     for(let xx=x+16;xx<x+w-12;xx+=24)
+-       if(((xx+yy+seed)>>4)%7===0)box(xx,yy,4,7,"#cf6b42");
+- }
+- X.restore();
+-}
+-
+-function worldDraw(){
+- // sunset
+- const g=X.createLinearGradient(0,0,0,H);
+- g.addColorStop(0,"#201931");g.addColorStop(.36,"#703646");g.addColorStop(.62,"#d56b4f");g.addColorStop(.83,"#f0a060");g.addColorStop(1,"#14232b");
+- X.fillStyle=g;X.fillRect(0,0,W,H);
+-
+- X.globalAlpha=.68;X.fillStyle="#ffd892";X.beginPath();X.arc(810-cam*.08,260,52,0,Math.PI*2);X.fill();X.globalAlpha=1;
+- skyline(0,465,.08,"#1e2430");skyline(1,520,.2,"#20232a");
+-
+- X.save();X.translate(-Math.round(cam),0);
+-
+- // distant cables
+- X.strokeStyle="#1b1a1e";X.lineWidth=3;
+- for(let x=300;x<WORLD;x+=780){
+-   X.beginPath();X.moveTo(x,165);X.quadraticCurveTo(x+250,210,x+520,170);X.stroke();
+- }
+-
+- // ruins
+- box(0,FLOOR,WORLD,H-FLOOR,"#0a1217");
+- for(let x=0;x<WORLD;x+=120){
+-   box(x,FLOOR-13,82+(x%70),13,"#273438");
+-   if((x/120|0)%2===0){box(x+15,FLOOR-34,6,21,"#426249");box(x+22,FLOOR-27,5,14,"#31523b")}
+- }
+-
+- // structures
+- for(let x=560;x<WORLD;x+=910){
+-   box(x,255,12,FLOOR-255,"#273036");
+-   box(x+88,220,12,FLOOR-220,"#273036");
+-   X.strokeStyle="#6b4940";X.lineWidth=3;
+-   for(let y=260;y<FLOOR;y+=42){
+-     X.beginPath();X.moveTo(x,y);X.lineTo(x+96,y+38);X.moveTo(x+96,y);X.lineTo(x,y+38);X.stroke();
+-   }
+- }
+- // neon/signs
+- for(let x=1080;x<WORLD;x+=1370){
+-   box(x,390,140,72,"#131a1f","#6b5544");
+-   txt(x%2===0?"KEEP LISTENING":"STILL HUMAN?",x+70,420,15,"#c9bca7","center");
+-   txt("17.8",x+70,446,20,"#e28e62","center");
+- }
+- // radio tower
+- box(5790,160,18,415,"#49343a");box(5890,125,16,450,"#49343a");
+- X.strokeStyle="#9d5148";X.lineWidth=4;
+- for(let y=170;y<550;y+=36){X.beginPath();X.moveTo(5798,y);X.lineTo(5898,y+30);X.moveTo(5898,y);X.lineTo(5798,y+30);X.stroke()}
+- txt("17.8",5848,106,30,"#f0c17e","center");
+-
+- // platforms
+- for(const p of platforms){
+-   box(p.x,p.y,p.w,p.h,"#253238","#795b47");
+-   for(let xx=p.x+8;xx<p.x+p.w;xx+=24)box(xx,p.y-7,5,7,"#416548");
+- }
+-
+- // pickups
+- for(const p of pickups){
+-   if(p.taken)continue;
+-   const yy=p.y+Math.sin(t*3+p.phase)*5;
+-   const col=p.type==="med"?"#cf4e4b":p.type==="ammo"?"#d6a55e":p.type==="doc"?"#d7c6a4":"#77b8ad";
+-   box(p.x,yy,34,34,col,"#171717");
+-   txt(p.type==="med"?"+":p.type==="ammo"?"A":p.type==="doc"?"?":"R",p.x+17,yy+25,20,"#10161a","center");
+- }
+-
+- // bullets
+- for(const b of bullets)box(b.x,b.y,b.w,b.h,"#ffdf8d");
+-
+- // enemies
+- for(const e of enemies) if(!e.dead) drawEnemy(e);
+-
+- drawPlayer();
+-
+- for(const p of particles){X.globalAlpha=Math.max(0,p.life*2);box(p.x,p.y,4,4,p.color);X.globalAlpha=1}
+-
+- X.restore();
+-}
+-
+-function drawEnemy(e){
+- const body=e.type===2?"#4c4a4a":e.type===1?"#654139":"#34484d";
+- box(e.x,e.y+18,e.w,e.h-18,body,"#111");
+- box(e.x+6,e.y,e.w-12,22,"#b98563","#111");
+- box(e.x+(e.dir>0?e.w-3:-17),e.y+28,20,6,"#989b9a","#111");
+- box(e.x+5,e.y+e.h-16,10,16,"#1d2328");box(e.x+e.w-15,e.y+e.h-16,10,16,"#1d2328");
+- box(e.x,e.y-9,e.w,4,"#3b1e20");
+- box(e.x,e.y-9,e.w*(e.hp/e.maxHp),4,e.type===2?"#e07b55":"#d95355");
+-}
+-
+-function drawPlayer(){
+- const x=P.x,y=P.y;
+- X.save();X.translate(x+P.w/2,y);X.scale(P.dir,1);X.translate(-P.w/2,0);
+- // backpack
+- box(-8,20,14,31,"#55493b","#151515");box(-11,26,5,20,"#87704c");
+- // legs
+- box(7,44,9,18,"#d8b487");box(21,44,9,18,"#d8b487");
+- box(5,60,13,5,"#ece9df");box(20,60,13,5,"#ece9df");
+- // hoodie
+- const red=P.hurt>0&&Math.floor(t*18)%2?"#f2b7ad":"#a83339";
+- box(5,18,25,30,red,"#151515");box(0,23,9,21,red);
+- // head
+- box(9,3,18,18,"#d6a072","#151515");box(8,-2,21,8,"#513326");box(24,1,9,10,"#513326");box(25,8,7,6,"#513326");
+- // weapon pose
+- if(P.batCd>.20){X.strokeStyle="#b47a45";X.lineWidth=6;X.beginPath();X.moveTo(28,27);X.lineTo(52,5);X.stroke()}
+- else box(28,24,17,6,"#a7acab","#111");
+- X.restore();
+-}
+-
+-function hud(){
+- // top-left card
+- box(18,18,310,92,"rgba(5,12,18,.84)","#7c5f48");
+- txt("ALTER",34,44,18,"#e4aa67");
+- txt("SALUTE",34,67,12,"#cbbfa9");box(96,57,172,12,"#302228");box(96,57,172*P.hp/100,12,"#d84c51");
+- txt("STAMINA",34,91,12,"#cbbfa9");box(96,81,172,10,"#1f3035");box(96,81,172*P.stamina/100,10,"#6db8ae");
+- txt(`${P.ammo}/${P.maxAmmo}`,292,67,16,"#f1d7a5","center");
+- txt(`DOC ${P.docs}/3`,292,92,12,"#9bbfc0","center");
+-
+- // radio panel
+- box(W-330,18,312,92,"rgba(5,12,18,.84)","#7c5f48");
+- txt("RADIO 17.8",W-312,47,18,"#e4aa67");
+- txt(`MODULI ${P.radioParts}/2`,W-312,73,13,"#9fc5c1");
+- txt("E / pulsante radio",W-312,95,12,"#c9bda7");
+-
+- // objective
+- box(W/2-170,18,340,36,"rgba(6,12,18,.72)","#6d5748");
+- txt("OBIETTIVO: RAGGIUNGI LA TORRE",W/2,42,14,"#ecd8b5","center");
+-
+- if(dialogT>0){
+-   box(175,H-132,W-350,96,"rgba(4,9,13,.92)","#8a684d");
+-   txt(dialogSpeaker,198,H-102,15,"#e2a360");
+-   const lines=lineWrap(dialogText,72);
+-   lines.slice(0,2).forEach((l,i)=>txt(l,198,H-77+i*23,17,"#f0e4cb"));
+- }
+-
+- controls();
+-
+- if(!started){
+-   box(330,175,620,355,"rgba(4,8,12,.94)","#9b704e");
+-   txt("ECO SOLITARIO",640,245,42,"#f0c57e","center");
+-   txt("CAPITOLO I • LA FREQUENZA",640,285,20,"#d86a55","center");
+-   txt("Esplora. Sopravvivi. Ascolta.",640,335,18,"#ded0b5","center");
+-   txt("CONTROLLI",640,385,16,"#e6a563","center");
+-   txt("Sinistra/Destra • Salto • RUN",640,418,14,"#c9c0ae","center");
+-   txt("J = pistola • K = mazza • E = radio",640,447,14,"#c9c0ae","center");
+-   txt("TOCCA PER INIZIARE",640,495,20,"#8ec3bd","center");
+- }
+- if(paused&&started){
+-   box(470,285,340,120,"rgba(4,8,12,.94)","#8c6a50");
+-   txt("PAUSA",640,337,28,"#efcb8c","center");txt("Premi P per continuare",640,373,14,"#cfc6b4","center");
+- }
+- if(complete){
+-   box(370,205,540,220,"rgba(4,8,12,.95)","#a37753");
+-   txt("CAPITOLO I COMPLETATO",640,265,30,"#f0c984","center");
+-   txt("La torre trasmette ancora.",640,310,19,"#f0e4cb","center");
+-   txt(`Documenti trovati: ${P.docs}/3`,640,347,16,"#9fc5c1","center");
+-   txt("Tocca per ricominciare",640,393,14,"#cabca7","center");
+- }
+-}
+-
+-function controlButton(cx,cy,r,label,on){
+- X.globalAlpha=.83;X.beginPath();X.arc(cx,cy,r,0,Math.PI*2);X.fillStyle=on?"#72553f":"#101820";X.fill();X.strokeStyle="#9e9585";X.lineWidth=2;X.stroke();X.globalAlpha=1;txt(label,cx,cy+7,label==="RUN"?15:23,"#f0e7d6","center");
+-}
+-function controls(){
+- controlButton(90,H-84,48,"◀",touch.left);controlButton(195,H-84,48,"▶",touch.right);
+- controlButton(90,H-184,34,"RUN",touch.run);
+- controlButton(W-94,H-88,43,"J",touch.shoot);
+- controlButton(W-188,H-66,38,"K",touch.bat);
+- controlButton(W-184,H-160,38,"↑",touch.jump);
+- controlButton(W-282,H-160,34,"R",touch.radio);
+-}
+-
+-function mapPointer(clientX,clientY){
+- rect=C.getBoundingClientRect();return{x:(clientX-rect.left)*W/rect.width,y:(clientY-rect.top)*H/rect.height};
+-}
+-function setTouchAt(px,py,on){
+- const d=(cx,cy,r)=>Math.hypot(px-cx,py-cy)<=r;
+- if(d(90,H-84,60))touch.left=on;
+- if(d(195,H-84,60))touch.right=on;
+- if(d(90,H-184,44))touch.run=on;
+- if(d(W-94,H-88,54))touch.shoot=on;
+- if(d(W-188,H-66,48))touch.bat=on;
+- if(d(W-184,H-160,48))touch.jump=on;
+- if(d(W-282,H-160,44))touch.radio=on;
+-}
+-C.addEventListener("pointerdown",e=>{
+- e.preventDefault();
+- const p=mapPointer(e.clientX,e.clientY);
+- if(!started){started=true;say("JACK","Alter? Se ci senti, muoviti verso la torre.",4);return}
+- if(gameOver||complete){reset();return}
+- setTouchAt(p.x,p.y,true);
+- try{C.setPointerCapture(e.pointerId)}catch{}
+-},{passive:false});
+-C.addEventListener("pointerup",e=>{e.preventDefault();const p=mapPointer(e.clientX,e.clientY);setTouchAt(p.x,p.y,false)},{passive:false});
+-C.addEventListener("pointercancel",()=>{for(const k in touch)touch[k]=false});
+-
+-addEventListener("keydown",e=>{
+- const k=e.key.toLowerCase();keys[k]=true;
+- if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();
+- if(k==="p"&&started)paused=!paused;
+- if(k==="r"&&(gameOver||complete))reset();
+-});
+-addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+-
+-function draw(){
+- X.save();
+- const sx=screenShake?(Math.random()-.5)*screenShake:0,sy=screenShake?(Math.random()-.5)*screenShake:0;
+- X.translate(sx,sy);
+- worldDraw();hud();
+- X.restore();
+-}
+-
+-function loop(now){
+- const dt=Math.min(.033,(now-last)/1000);last=now;
+- update(dt);draw();requestAnimationFrame(loop);
+-}
+-requestAnimationFrame(loop);
+-})();
+-</script>
+-</body>
+-</html>
+\ No newline at end of file
++<div id="stage"><canvas id="game" width="1280" height="720" aria-label="Eco Solitario, Capitolo I"></canvas></div>
++<div id="movement" class="controls" aria-label="Movimento">
++<button data-action="left" aria-label="Sinistra">◀</button><button data-action="right" aria-label="Destra">▶</button><button data-action="run" aria-label="Corri">CORRI</button>
++</div>
++<div id="actions" class="controls" aria-label="Azioni">
++<button data-action="radio" aria-label="Radio">Radio</button><button data-action="jump" aria-label="Salta">Salta</button><button data-action="bat" aria-label="Mazza">Mazza</button><button data-action="shoot" aria-label="Pistola">Pistola</button>
++</div>
++<button id="pause" aria-label="Pausa o riprendi">Pausa</button>
++<div id="note" role="status">Capitolo I · La frequenza</div>
++<div id="welcome"><div class="card"><h1>ECO SOLITARIO</h1><h2>CAPITOLO I · LA FREQUENZA</h2><p>Raggiungi la torre. Sopravvivi. Ascolta Jack e Dexter.</p><p>Su iPhone usa i pulsanti, anche con più dita.<br>Ruota il telefono per una visuale più ampia.</p><p>Tastiera: A/D o frecce · Spazio: salto · Shift: corsa<br>J: pistola · K: mazza · E: radio · P: pausa</p><button id="start">Inizia</button></div></div>
++<div id="boot-error" role="alert" hidden>Il gioco non è stato caricato. Controlla la connessione e <a href="./index.html?retry=1">riapri il gioco</a>.</div>
++<noscript>Per giocare devi abilitare JavaScript in Safari.</noscript>
++<script src="./game.js?v=chapter1-20260906" defer onerror="document.getElementById('boot-error').hidden=false"></script>
++</body></html>
+diff --git a/manifest.json b/manifest.json
+index ec93fa0..79df0c8 100644
+--- a/manifest.json
++++ b/manifest.json
+@@ -1,9 +1,23 @@
+ {
+-  "name":"Eco Solitario – Capitolo I",
+-  "short_name":"Eco Solitario",
+-  "start_url":"./",
+-  "display":"standalone",
+-  "orientation":"landscape",
+-  "background_color":"#080b10",
+-  "theme_color":"#080b10"
+-}
+\ No newline at end of file
++  "name": "Eco Solitario – Capitolo I",
++  "short_name": "Eco Solitario",
++  "start_url": "./index.html",
++  "display": "standalone",
++  "orientation": "landscape",
++  "background_color": "#080b10",
++  "theme_color": "#080b10",
++  "id": "./",
++  "scope": "./",
++  "icons": [
++    {
++      "src": "./icon-192.png",
++      "sizes": "192x192",
++      "type": "image/png"
++    },
++    {
++      "src": "./icon-512.png",
++      "sizes": "512x512",
++      "type": "image/png"
++    }
++  ]
++}
+diff --git a/motion.test.cjs b/motion.test.cjs
+index ad948d2..b2462a2 100644
+--- a/motion.test.cjs
++++ b/motion.test.cjs
+@@ -1,236 +1,98 @@
+-const {test} = require('node:test');
+-const assert = require('node:assert/strict');
+-const fs = require('node:fs');
+-const path = require('node:path');
+-const vm = require('node:vm');
+-
+-const root = __dirname;
+-const source = fs.readFileSync(path.join(root, 'game.js'), 'utf8');
+-
+-function boot({dpr = 3} = {}) {
+-  let now = 0;
+-  let frames = [];
+-  const drawCalls = [];
+-
+-  function element(rect = {}) {
+-    const listeners = {};
+-    const captured = new Set();
+-    return {
+-      style: {},
+-      textContent: '',
+-      clientWidth: rect.clientWidth ?? 1000,
+-      clientHeight: rect.clientHeight ?? 500,
+-      addEventListener(type, fn) { (listeners[type] ||= []).push(fn); },
+-      emit(type, data = {}) {
+-        for (const fn of listeners[type] || []) fn({preventDefault() {}, detail: 1, ...data});
+-      },
+-      getBoundingClientRect() { return {left: 0, top: 0, width: 1000, height: 500, ...rect}; },
+-      setPointerCapture(id) { captured.add(id); },
+-      hasPointerCapture(id) { return captured.has(id); },
+-      releasePointerCapture(id) { captured.delete(id); }
+-    };
+-  }
+-
+-  const ids = ['stage','player','shadow','joy','stick','state','speed','frame','jump','shoot','bat','damage','reset'];
+-  const nodes = Object.fromEntries(ids.map(id => [id, element()]));
+-  nodes.joy = element({left: 30, top: 350, width: 124, height: 124});
+-
+-  const ctx = {
+-    imageSmoothingEnabled: true,
+-    clearRect() {},
+-    drawImage(...args) { drawCalls.push(args); }
+-  };
+-  nodes.player.getContext = () => ctx;
+-
+-  const document = Object.assign(element(), {
+-    hidden: false,
+-    getElementById: id => nodes[id],
+-    addEventListener(type, fn) { this._listeners ||= {}; (this._listeners[type] ||= []).push(fn); },
+-    emit(type, data = {}) { for (const fn of this._listeners?.[type] || []) fn(data); }
+-  });
+-
+-  const window = Object.assign(element(), {devicePixelRatio: dpr});
+-
+-  class MockImage {
+-    constructor() {
+-      this.onload = null;
+-      this.onerror = null;
+-      this.decoding = '';
+-      this.naturalWidth = 54 * 96;
+-      this.naturalHeight = 128;
+-      this._src = '';
+-    }
+-    set src(value) {
+-      this._src = value;
+-      if (this.onload) this.onload();
+-    }
+-    get src() { return this._src; }
+-  }
+-
+-  const context = vm.createContext({
+-    document,
+-    window,
+-    navigator: {},
+-    console,
+-    Image: MockImage,
+-    requestAnimationFrame: fn => frames.push(fn)
+-  });
+-
+-  vm.runInContext(source, context);
+-
+-  function tick(dt) {
+-    now += dt;
+-    const pending = frames;
+-    frames = [];
+-    pending.forEach(fn => fn(now));
+-  }
+-
+-  tick(0);
+-
+-  return {
+-    nodes,
+-    document,
+-    window,
+-    drawCalls,
+-    tick,
+-    run: code => vm.runInContext(code, context),
+-    advance(seconds, hz = 60) {
+-      for (let i = 0; i < Math.round(seconds * hz); i++) tick(1000 / hz);
+-    }
+-  };
++const {test}=require('node:test');
++const assert=require('node:assert/strict');
++const fs=require('node:fs');
++const vm=require('node:vm');
++const path=require('node:path');
++const root=__dirname;
++const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
++const source=fs.readFileSync(path.join(root,'game.js'),'utf8');
++function boot({images=true,width=852,height=393}={}){
++ const draws=[];let queue=[],now=0;
++ function node(){const handlers={};return {style:{},dataset:{},hidden:false,textContent:'',classList:{toggle(){},remove(){}},
++ addEventListener(type,fn){(handlers[type]??=[]).push(fn)},
++ emit(type,event={}){for(const fn of handlers[type]||[])fn({preventDefault(){},...event})},
++ getBoundingClientRect(){return {left:0,top:0,width,height}},setPointerCapture(){},
++ getContext(){return new Proxy({drawImage(...args){draws.push(args)},createLinearGradient(){return {addColorStop(){}}}}, {get:(o,k)=>k in o?o[k]:(()=>{})})}}}
++ const nodes=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],node()]));
++ const buttons=Object.fromEntries([...html.matchAll(/data-action="([^"]+)"/g)].map(m=>{const n=node();n.dataset.action=m[1];return [m[1],n]}));
++ const doc=Object.assign(node(),{hidden:false,getElementById:id=>nodes[id]??null,querySelectorAll:()=>Object.values(buttons)});
++ const win=node();
++ class Image{set src(s){this.naturalWidth=s.includes('master')?5184:1152;this.naturalHeight=128;if(images)this.onload?.();else this.onerror?.()}}
++ const context=vm.createContext({document:doc,window:win,location:{protocol:'http:'},navigator:{},Image,console,performance:{now:()=>now},requestAnimationFrame:fn=>queue.push(fn),innerWidth:width,innerHeight:height,addEventListener:win.addEventListener.bind(win)});
++ const injection=`\nthis.__test={P,keys,touch,buttons:null,start,reset,update,draw,spriteFrame,loop,STEP,get state(){return {started,paused,gameOver,complete,cam,gait,jumpQueued,bullets,enemies,platforms}}};\n`;
++ vm.runInContext(source.replace(/\}\)\(\);\s*$/,injection+'})();'),context);
++ const game=context.__test;
++ function frames(seconds,hz=60){for(let i=0;i<Math.round(seconds*hz);i++){now+=1000/hz;const pending=queue;queue=[];for(const fn of pending)fn(now)}}
++ const key=(type,k,repeat=false)=>win.emit(type,{key:k,repeat});
++ return {game,nodes,buttons,doc,win,draws,key,frames};
+ }
+-
+-test('active build is external v0.9.8 canvas motion engine', () => {
+-  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+-  assert.match(html, /<canvas id="player" width="96" height="128"/);
+-  assert.match(html, /<script src="game\.js\?v=098"><\/script>/);
+-  assert.doesNotMatch(html, /background-image\s*:\s*url\([^)]*alter_master_sheet/);
++test('entry point loads exactly the chapter engine and required DOM',()=>{
++ assert.match(html,/<script src="\.\/game\.js\?v=chapter1-20260906"/);
++ assert.equal((html.match(/<script/g)||[]).length,1);
++ for(const v of [2,3,4])assert.match(fs.readFileSync(path.join(root,`alter-motion-v${v}.html`),'utf8'),/url=\.\/index.html/);
++ const b=boot();b.frames(.1);assert.equal(b.game.state.started,false);
+ });
+-
+-test('canvas crops exactly one 96x128 source cell', () => {
+-  const app = boot();
+-  app.run("setState('walk'); gaitPhase = .5; render(1)");
+-  const args = app.drawCalls.at(-1);
+-  assert.equal(args[1] % 96, 0);
+-  assert.equal(args[2], 0);
+-  assert.equal(args[3], 96);
+-  assert.equal(args[4], 128);
+-  assert.equal(args[5], 0);
+-  assert.equal(args[6], 0);
+-  assert.equal(args[7], 96);
+-  assert.equal(args[8], 128);
++test('all declared offline assets exist; actual sprite dimensions match cell layout',()=>{
++ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
++ const assets=sw.match(/const ASSETS=(\[[\s\S]*?\]);/)[1];
++ for(const asset of vm.runInNewContext(assets)){const file=asset==='./'?'index.html':asset.split('?')[0];assert.ok(fs.existsSync(path.join(root,file)),file)}
++ const png=fs.readFileSync(path.join(root,'alter_master_sheet.png'));assert.equal(png.readUInt32BE(16),54*96);assert.equal(png.readUInt32BE(20),128);
+ });
+-
+-test('idle is one fixed frame and exact zero velocity', () => {
+-  const app = boot();
+-  app.advance(2, 120);
+-  assert.equal(app.run('state'), 'idle');
+-  assert.equal(app.run('frameForState()'), 0);
+-  assert.equal(app.run('vx'), 0);
++test('Enter starts and keyboard movement advances both player and camera',()=>{
++ const b=boot();b.key('keydown','Enter');b.frames(1);const x=b.game.P.x;
++ b.key('keydown','d');b.frames(2);b.key('keyup','d');b.frames(.3);
++ assert.ok(b.game.P.x>x+300);assert.ok(b.game.state.cam>0);assert.equal(b.game.P.vx,0);
+ });
+-
+-test('movement distance is refresh-rate independent at 30, 60 and 120 Hz', () => {
+-  const results = [30, 60, 120].map(hz => {
+-    const app = boot();
+-    app.window.emit('keydown', {code: 'ArrowRight'});
+-    app.advance(1, hz);
+-    return app.run('x');
+-  });
+-  assert.ok(results[0] > 300);
+-  assert.ok(Math.max(...results) - Math.min(...results) < .001, results.join(', '));
++test('frame-rate independent movement and stamina at 30/60/120 Hz',()=>{
++ const states=[30,60,120].map(hz=>{const b=boot();b.game.start();b.frames(1,hz);b.key('keydown','d');b.key('keydown','Shift');b.frames(1,hz);return b.game.P});
++ for(const p of states.slice(1)){assert.ok(Math.abs(p.x-states[0].x)<.001);assert.ok(Math.abs(p.stamina-states[0].stamina)<.001)}
+ });
+-
+-test('gait phase is refresh-rate independent', () => {
+-  const results = [30, 60, 120].map(hz => {
+-    const app = boot();
+-    app.window.emit('keydown', {code: 'ArrowRight'});
+-    app.advance(.8, hz);
+-    return [app.run('gaitPhase'), app.run('frameForState()')];
+-  });
+-  assert.ok(Math.max(...results.map(x => x[0])) - Math.min(...results.map(x => x[0])) < .001);
+-  assert.equal(new Set(results.map(x => x[1])).size, 1);
++test('pointer release outside original button clears that finger only',()=>{
++ const b=boot();b.game.start();b.frames(1);
++ b.buttons.right.emit('pointerdown',{pointerId:1});b.buttons.run.emit('pointerdown',{pointerId:2});b.frames(.4);
++ b.buttons.right.emit('pointerup',{pointerId:1,clientX:-100,clientY:-100});
++ assert.equal(b.game.touch.right,false);assert.equal(b.game.touch.run,true);b.frames(.3);assert.equal(b.game.P.vx,0);
++ b.buttons.run.emit('pointercancel',{pointerId:2});assert.equal(b.game.touch.run,false);
+ });
+-
+-test('walk to run transition preserves gait phase', () => {
+-  const app = boot();
+-  app.run("state='walk'; gaitPhase=.63; setState('run')");
+-  assert.equal(app.run('gaitPhase'), .63);
++test('two fingers on one button, capture loss and simultaneous jump',()=>{
++ const b=boot();b.game.start();b.frames(1);
++ b.buttons.right.emit('pointerdown',{pointerId:1});b.buttons.right.emit('pointerdown',{pointerId:2});
++ b.buttons.right.emit('lostpointercapture',{pointerId:1});assert.equal(b.game.touch.right,true);
++ b.buttons.jump.emit('pointerdown',{pointerId:3});b.frames(.2);assert.ok(b.game.P.vy<0);assert.ok(b.game.P.vx>0);
++ b.win.emit('pointercancel',{pointerId:2});assert.equal(b.game.touch.right,false);assert.equal(b.game.touch.jump,true);
+ });
+-
+-test('release brakes to zero and returns to idle frame 0', () => {
+-  const app = boot();
+-  app.window.emit('keydown', {code: 'ArrowRight'});
+-  app.advance(.45);
+-  app.window.emit('keyup', {code: 'ArrowRight'});
+-  app.advance(.35);
+-  assert.equal(app.run('vx'), 0);
+-  assert.equal(app.run('state'), 'idle');
+-  assert.equal(app.run('frameForState()'), 0);
++test('held jump does not repeatedly bounce; new press jumps again',()=>{
++ const b=boot();b.game.start();b.frames(1);b.key('keydown',' ');b.frames(1.5);
++ assert.equal(b.game.P.onGround,true);assert.equal(b.game.P.vy,0);
++ b.key('keyup',' ');b.key('keydown',' ');b.frames(.15);assert.ok(b.game.P.vy<0);
+ });
+-
+-test('direction flip follows real velocity during reversal', () => {
+-  const app = boot();
+-  app.window.emit('keydown', {code: 'ArrowRight'});
+-  app.advance(.3);
+-  assert.equal(app.run('face'), 1);
+-  app.window.emit('keyup', {code: 'ArrowRight'});
+-  app.window.emit('keydown', {code: 'ArrowLeft'});
+-  app.advance(.03);
+-  assert.equal(app.run('face'), 1);
+-  app.advance(.2);
+-  assert.equal(app.run('face'), -1);
+-  assert.ok(app.run('vx') < 0);
++test('blur and background clear inputs and pause; resume has no time jump',()=>{
++ const b=boot();b.game.start();b.frames(1);b.key('keydown','d');b.frames(.3);b.win.emit('blur');
++ const x=b.game.P.x;assert.equal(b.game.state.paused,true);assert.equal(b.game.keys.d,undefined);
++ b.doc.hidden=true;b.doc.emit('visibilitychange');b.frames(10);assert.equal(b.game.P.x,x);
++ b.doc.hidden=false;b.doc.emit('visibilitychange');b.nodes.pause.emit('click');b.frames(.1);assert.ok(Math.abs(b.game.P.x-x)<30);
+ });
+-
+-test('joystick has deadzone, analog range and releases cleanly', () => {
+-  const app = boot();
+-  const center = 30 + 124 / 2;
+-  app.nodes.joy.emit('pointerdown', {pointerId: 1, clientX: center + 3});
+-  assert.equal(app.run('joyAxis'), 0);
+-  app.nodes.joy.emit('pointermove', {pointerId: 1, clientX: center + 22});
+-  assert.ok(app.run('joyAxis') > 0 && app.run('joyAxis') < 1);
+-  app.advance(.2);
+-  assert.ok(app.run('vx') > 0 && app.run('vx') < app.run('MAX_SPEED'));
+-  app.nodes.joy.emit('pointercancel', {pointerId: 1});
+-  app.advance(.3);
+-  assert.equal(app.run('joyPointer'), null);
+-  assert.equal(app.run('vx'), 0);
++test('pause repeat ignored and viewport rotation preserves world position',()=>{
++ const b=boot();b.game.start();b.frames(1);b.key('keydown','p');b.key('keydown','p',true);assert.equal(b.game.state.paused,true);
++ b.key('keydown','p');assert.equal(b.game.state.paused,false);const x=b.game.P.x;b.win.emit('resize');assert.equal(b.game.P.x,x);
+ });
+-
+-test('jump rises, lands and does not get stuck', () => {
+-  const app = boot();
+-  const start = app.run('y');
+-  app.nodes.jump.emit('pointerdown', {pointerId: 2});
+-  app.advance(.2);
+-  assert.ok(app.run('y') < start - 60);
+-  assert.equal(app.run('grounded'), false);
+-  app.advance(1.5);
+-  assert.equal(app.run('grounded'), true);
+-  app.advance(.5);
+-  assert.equal(app.run('state'), 'idle');
++test('single cells, idle stable, gait changes with travel and mirrored direction',()=>{
++ const b=boot();b.game.start();b.frames(1);assert.equal(b.game.spriteFrame().frame,0);
++ b.frames(.5);assert.equal(b.game.spriteFrame().frame,0);b.key('keydown','d');b.frames(.2);const phase=b.game.state.gait;b.frames(.2);assert.notEqual(b.game.state.gait,phase);
++ b.key('keyup','d');b.key('keydown','a');b.frames(.4);assert.equal(b.game.P.dir,-1);
++ assert.ok(b.draws.length>0);for(const args of b.draws){assert.equal(args[3],96);assert.equal(args[4],128);assert.equal(args[1]%96,0);assert.ok(args[1]>=0&&args[1]<5184)}
+ });
+-
+-test('one-shot action sequences expose every declared frame', () => {
+-  for (const action of ['land', 'shoot', 'bat', 'damage']) {
+-    const app = boot();
+-    const seen = new Set();
+-    app.run(`startAction('${action}')`);
+-    for (let i = 0; i < 120; i++) {
+-      app.tick(1000 / 120);
+-      if (app.run('state') === action) seen.add(app.run('frameForState()'));
+-    }
+-    assert.deepEqual([...seen], Array.from(app.run(`anim.${action}.frames`)), action);
+-  }
++test('missing sprite does not prevent starting, drawing or movement',()=>{
++ const b=boot({images:false});b.game.start();b.frames(1);b.key('keydown','d');b.frames(.5);assert.ok(b.game.P.x>250);assert.equal(b.draws.length,0);assert.match(b.nodes.note.textContent,/Capitolo/);
+ });
+-
+-test('device pixel snapping uses DPR', () => {
+-  const app = boot({dpr: 3});
+-  assert.equal(app.run('snapToDevicePixel(10.2)'), 10 + 1 / 3);
+-  assert.equal(app.run('snapToDevicePixel(10.55)'), 10 + 2 / 3);
++test('platform landing from above and world boundaries',()=>{
++ const b=boot();b.game.start();Object.assign(b.game.P,{x:1300,y:390,vy:50});b.frames(.4);assert.equal(b.game.P.y,470-64);assert.equal(b.game.P.onGround,true);
++ Object.assign(b.game.P,{x:0,vx:-20});b.key('keydown','a');b.frames(.4);assert.equal(b.game.P.x,0);assert.equal(b.game.P.vx,0);
+ });
+-
+-test('service worker cache is v0.9.8 and caches active script', async () => {
+-  const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+-  assert.match(sw, /eco-v098-alter-motion-lock/);
+-  assert.match(sw, /game\.js\?v=098/);
++test('weapons consume ammo and damage mobs; chapter can complete and restart',()=>{
++ const b=boot();b.game.start();b.frames(1);const e=b.game.state.enemies[0];e.x=b.game.P.x+70;
++ b.key('keydown','j');b.frames(.15);b.key('keyup','j');assert.equal(b.game.P.ammo,11);assert.ok(e.hp<e.maxHp);
++ e.x=b.game.P.x+36;b.key('keydown','k');b.frames(.03);assert.ok(e.dead);
++ b.game.P.x=5930;b.frames(.1);assert.equal(b.game.state.complete,true);
++ b.key('keydown','r');assert.equal(b.game.state.complete,false);assert.equal(b.game.P.x,210);assert.equal(b.game.P.ammo,12);
+ });
+diff --git a/sw.js b/sw.js
+index bcd6b4f..fa78286 100644
+--- a/sw.js
++++ b/sw.js
+@@ -1,20 +1,25 @@
+-const C='eco-v098-alter-motion-lock';
+-const A=['./','./index.html','./game.js?v=098','./manifest.json','./alter_master_sheet.png?v=098'];
+-self.addEventListener('install',e=>e.waitUntil(
+-  caches.open(C).then(c=>c.addAll(A)).then(()=>self.skipWaiting())
++// One coherent chapter, including offline launches from historical URLs.
++const CACHE='eco-v100-chapter1-20260906';
++const ASSETS=['./','./index.html','./game.js?v=chapter1-20260906','./manifest.json',
++ './alter_master_sheet.png','./icon-192.png','./icon-512.png',
++ './alter-motion-v2.html','./alter-motion-v3.html','./alter-motion-v4.html'];
++self.addEventListener('install',event=>event.waitUntil(
++ caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())
+ ));
+-self.addEventListener('activate',e=>e.waitUntil(Promise.all([
+-  self.clients.claim(),
+-  caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('eco-v')&&k!==C).map(k=>caches.delete(k))))
+-])));
+-self.addEventListener('fetch',e=>{
+-  if(e.request.method!=='GET')return;
+-  e.respondWith(
+-    fetch(e.request).then(response=>{
+-      if(!response||!response.ok)return response;
+-      const copy=response.clone();
+-      caches.open(C).then(c=>c.put(e.request,copy)).catch(()=>{});
+-      return response;
+-    }).catch(()=>caches.open(C).then(c=>c.match(e.request,{ignoreSearch:true})).then(r=>r||Response.error()))
+-  );
++self.addEventListener('activate',event=>event.waitUntil(
++ caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('eco-v')&&key!==CACHE).map(key=>caches.delete(key))))
++ .then(()=>self.clients.claim())
++));
++self.addEventListener('fetch',event=>{
++ const url=new URL(event.request.url);
++ if(event.request.method!=='GET'||url.origin!==self.location.origin||!url.href.startsWith(self.registration.scope))return;
++ event.respondWith(fetch(event.request).then(response=>{
++  if(response.ok){const copy=response.clone();event.waitUntil(caches.open(CACHE).then(cache=>cache.put(event.request,copy)).catch(()=>{}))}
++  return response;
++ }).catch(async()=>{
++  const cache=await caches.open(CACHE);
++  // Never use ignoreSearch for JS: old HTML must not receive a different engine.
++  return await cache.match(event.request)||
++   (event.request.mode==='navigate'?await cache.match('./index.html'):null)||Response.error();
++ }));
+ });

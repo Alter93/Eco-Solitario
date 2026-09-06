@@ -1,22 +1,5 @@
-Eco Solitario v0.9.5 — correzione del blocco e del movimento
+ISTRUZIONI AGGIORNATE — CAPITOLO I
 
-Queste modifiche NON sono state caricate su GitHub: il collegamento ha restituito
-403 Resource not accessible by integration durante il tentativo di salvataggio.
-Base: Alter93/Eco-Solitario, commit b031f454b94933a4cc6150bf3dd1d383e172b025.
-
-Applicazione con Git, dalla cartella del repository alla versione indicata:
-1. git switch -c fix/alter-motion-v095
-2. git apply --check /percorso/eco-motion-fix.patch
-3. git apply /percorso/eco-motion-fix.patch
-4. node --test tests/motion.test.cjs
-5. Esaminare e salvare le modifiche nel proprio repository.
-
-In alternativa, files/ contiene i cinque file pronti da caricare nel repository,
-conservando i percorsi. Non rimuovere le immagini o gli altri file del progetto.
-Dopo eventuali modifiche successive sul repository, confrontare i file prima
-di sostituirli per evitare di sovrascrivere lavoro più recente.
-
-Verifica eseguita: 9 test automatici passati, sintassi JavaScript valida.
-Non è stata eseguita una prova su iPhone. Le pose delle immagini sono originali;
-questa correzione riguarda avvio, temporizzazione, transizioni e input.
-Dopo la pubblicazione, ricaricare il gioco online e verificare la scritta v0.9.5.
+Leggi README.txt. Le istruzioni precedenti v0.9.6/v0.9.8 sono superate.
+Avvio: index.html + game.js della stessa versione.
+Non applicare eco-motion-fix.patch.
