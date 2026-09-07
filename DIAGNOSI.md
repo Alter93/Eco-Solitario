@@ -1,10 +1,17 @@
-# Aggiornamento v1.1 — successivo alla diagnosi qui sotto
+# Aggiornamento 7 settembre 2026
 
-Implementati corsa automatica, estrazione delle figure complete dal nuovo atlante,
-32 pose, armi in movimento, banditi animati e dialoghi automatici con ritratti.
-La diagnosi precedente e la patch chapter-one-iphone.patch documentano la v1.0;
-non costituiscono istruzioni di installazione per la versione attuale.
-Vedi README.txt e ASSETS.md. Test attuali: 17/17 superati.
+Base: `4b5b519`, pubblicata da GitHub Pages il 6 settembre.
+Il 403 descritto sotto riguarda il tentativo storico, non lo stato del deployment.
+La schermata iniziale aveva già `[hidden]{display:none!important}`: nessun fix
+CSS necessario; il sospetto di sovrapposizione era un falso allarme nell'analisi.
+
+La patch corrente introduce corsa automatica con recupero stamina, pulizia runtime
+delle componenti laterali, allineamento dei piedi, banditi animati e ritratti
+procedurali di Jack/Dexter con dialoghi di percorso. Il numero dei test passa a 15,
+compreso il completamento senza modificare posizione o salute del personaggio.
+
+Resta aperta la valutazione artistica delle pose troncate negli originali,
+la sostituzione dei ritratti provvisori con quelli approvati e il collaudo fisico iPhone.
 
 ---
 

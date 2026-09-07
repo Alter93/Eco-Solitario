@@ -20,9 +20,9 @@ button:focus-visible{outline:3px solid #71d1c2;outline-offset:3px}
 button.held,button:active{background:#72553f}
 .controls{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:8px;align-items:end}
 #movement{left:max(12px,env(safe-area-inset-left))} #actions{right:max(12px,env(safe-area-inset-right));display:grid;grid-template-columns:repeat(2,58px)}
-#movement button{width:66px;height:62px;font-size:22px}
+#movement button{width:58px;height:58px;font-size:22px}
 #actions button{font-size:12px;height:48px}
-#pause{position:fixed;top:max(6px,env(safe-area-inset-top));left:40%;transform:translateX(-50%);min-height:48px;font-size:12px;padding:4px 16px}
+#pause{position:fixed;top:max(6px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);min-height:34px;font-size:12px;padding:4px 16px}
 #note{position:fixed;left:50%;bottom:max(2px,env(safe-area-inset-bottom));transform:translateX(-50%);font-size:10px;color:#b7b9ae;pointer-events:none;text-align:center}
 #welcome{position:fixed;inset:0;display:grid;place-items:center;background:#03090ba8;padding:20px}
 .card{max-width:540px;text-align:center;border:1px solid #9b704e;background:#080e17f5;padding:24px;border-radius:18px}
@@ -31,26 +31,20 @@ h1{font-size:clamp(24px,5vw,40px);color:#f0c57e;margin:0 0 12px} h2{font-size:16
 #boot-error{position:fixed;inset:25%;background:#0d1820;padding:24px;border:1px solid #e19a5e;z-index:10}
 @media(orientation:portrait){#stage{bottom:150px;top:max(50px,env(safe-area-inset-top))}#note{bottom:128px;width:95%}#movement{gap:5px}#movement button{width:50px}#actions{grid-template-columns:repeat(2,52px);gap:6px}}
 @media(max-height:430px){.card{padding:12px 24px}.card p{margin:8px 0}.card h2{margin:8px 0}#note{display:none}}
-#radio-panel{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));width:min(410px,45vw);padding:8px 10px;background:#09131ded;border:1px solid #876a50;border-radius:10px;pointer-events:none}
-.hosts{display:flex;align-items:center;gap:9px}.host{display:flex;align-items:center;gap:6px;opacity:.62;transition:opacity .15s;color:#adc5ca;font-size:12px}.host.speaking{opacity:1;color:#f6c885}.host canvas{width:42px;height:42px;border:1px solid #45606b;border-radius:4px;background:#152330}.host.speaking canvas{border-color:#f0bc73}.frequency{margin-left:auto;font-size:11px;color:#83bcb6}
-#radio-text{font-size:14px;line-height:1.35;margin:7px 0 1px;min-height:2.7em;color:#f0e4cf}
-@media(orientation:portrait){#stage{top:max(150px,env(safe-area-inset-top))}#movement{gap:8px}#movement button{width:60px}#actions{grid-template-columns:repeat(2,58px)}#radio-panel{left:10px;right:76px;width:auto}#pause{left:auto;right:10px;transform:none;font-size:11px;padding:4px 7px}.frequency{font-size:10px}}
 </style>
 </head>
 <body>
 <div id="stage"><canvas id="game" width="1280" height="720" aria-label="Eco Solitario, Capitolo I"></canvas></div>
 <div id="movement" class="controls" aria-label="Movimento">
-<button data-action="left" aria-label="Corri a sinistra">◀</button><button data-action="right" aria-label="Corri a destra">▶</button>
+<button data-action="left" aria-label="Sinistra">◀</button><button data-action="right" aria-label="Destra">▶</button>
 </div>
 <div id="actions" class="controls" aria-label="Azioni">
-<button data-action="radio" aria-label="Radio">Radio</button><button data-action="jump" aria-label="Salta">Salta</button><button data-action="bat" aria-label="Bastone">Bastone</button><button data-action="shoot" aria-label="Pistola">Pistola</button>
+<button data-action="radio" aria-label="Radio">Radio</button><button data-action="jump" aria-label="Salta">Salta</button><button data-action="bat" aria-label="Mazza">Mazza</button><button data-action="shoot" aria-label="Pistola">Pistola</button>
 </div>
-<aside id="radio-panel" aria-label="Jack e Dexter, Radio 17.8"><div class="hosts"><div id="host-jack" class="host"><canvas id="face-jack" width="64" height="64" aria-label="Jack"></canvas><span>JACK</span></div><div id="host-dexter" class="host"><canvas id="face-dexter" width="64" height="64" aria-label="Dexter"></canvas><span>DEXTER</span></div><span class="frequency">17.8 FM</span></div><p id="radio-text" aria-live="polite">Jack e Dexter sono in ascolto.</p></aside>
 <button id="pause" aria-label="Pausa o riprendi">Pausa</button>
 <div id="note" role="status">Capitolo I · La frequenza</div>
-<div id="welcome"><div class="card"><h1>ECO SOLITARIO</h1><h2>CAPITOLO I · LA FREQUENZA</h2><p>Raggiungi la torre. Jack e Dexter ti accompagnano via radio.</p><p>Tieni premuto ◀ o ▶ per correre. Rilascia per fermarti.<br>Salta, spara e usa il bastone anche in movimento.</p><p>Tastiera: A/D o frecce · Spazio: salto<br>J: pistola · K: bastone · E: radio · P: pausa</p><button id="start">Inizia</button></div></div>
+<div id="welcome"><div class="card"><h1>ECO SOLITARIO</h1><h2>CAPITOLO I · LA FREQUENZA</h2><p>Raggiungi la torre. Sopravvivi. Ascolta Jack e Dexter.</p><p>Su iPhone usa i pulsanti, anche con più dita.<br>Ruota il telefono per una visuale più ampia.</p><p>Tastiera: A/D o frecce · Spazio: salto · Corsa automatica<br>J: pistola · K: mazza · E: radio · P: pausa</p><button id="start">Inizia</button></div></div>
 <div id="boot-error" role="alert" hidden>Il gioco non è stato caricato. Controlla la connessione e <a href="./index.html?retry=1">riapri il gioco</a>.</div>
 <noscript>Per giocare devi abilitare JavaScript in Safari.</noscript>
-<script src="./characters.js?v=chapter1-20260906b" defer onerror="document.getElementById('boot-error').hidden=false"></script>
-<script src="./game.js?v=chapter1-20260906b" defer onerror="document.getElementById('boot-error').hidden=false"></script>
+<script src="./game.js?v=chapter1-20260907" defer onerror="document.getElementById('boot-error').hidden=false"></script>
 </body></html>

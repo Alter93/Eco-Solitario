@@ -1,0 +1,12 @@
+PATCH 7 SETTEMBRE 2026 — NON ANCORA PUBBLICATA
+
+GitHub ha rifiutato il salvataggio con 403 Resource not accessible by integration.
+Estrai lo ZIP e carica i file contenuti nella root di Alter93/Eco-Solitario,
+sostituendo gli omonimi. Non caricare il solo ZIP. Non eliminare altri asset.
+Non applicare le vecchie patch.
+Dopo GitHub Pages, chiudi e riapri il gioco online in Safari.
+La scritta Capitolo I · 07.09 identifica questa versione.
+
+15 test automatici passano. Nessun collaudo su iPhone fisico.
+Corsa basata sulle 3 pose originali complete: ulteriori frame vanno ridisegnati.
+Jack e Dexter hanno ritratti provvisori. Leggi README.txt per tutti i limiti.
