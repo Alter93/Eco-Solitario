@@ -13,9 +13,11 @@ let cam=0,t=0,radioCooldown=0,dialogT=0,dialogSpeaker="",dialogText="",screenSha
 const keys=Object.create(null);
 const pointers=new Map();
 let jumpQueued=false, jumpHeld=false, accumulator=0;
+let weapon="none",landing=0,wasGround=false,storyIndex=0,furthestX=210;
+let radioQueue=[],radioTime=0,radioSpeaker="",radioLine="",finalRadio=false;
 const STEP=1/120;
 let previousX=210,previousY=430,previousCam=0,renderAlpha=1,gait=0;
-const touch={left:false,right:false,jump:false,shoot:false,bat:false,run:false,radio:false};
+const touch={left:false,right:false,jump:false,shoot:false,bat:false,radio:false};
 
 const P={
  x:210,y:430,w:34,h:64,vx:0,vy:0,dir:1,onGround:false,
@@ -36,6 +38,28 @@ const RADIO=[
  ["DEXTER","Perfetto. Anche l'apocalisse ha lo spam."]
 ];
 let radioIdx=0;
+// Distance milestones are visited once, even if Alter doubles back.
+const STORY=[
+ [240,'JACK','Alter, ci sei. La torre è a est.'],
+ [850,'DEXTER','Ottimo. Il comitato di benvenuto è armato.'],
+ [1550,'JACK','Non fermarti. Ti teniamo compagnia.'],
+ [2250,'DEXTER','È il nostro servizio premium: ansia inclusa.'],
+ [3050,'JACK','Le finestre sono buie. La radio è ancora qui.'],
+ [3850,'DEXTER','Come noi. Con meno caffè del previsto.'],
+ [4650,'JACK','La luce rossa! Quella è la nostra torre.'],
+ [5500,'DEXTER','Ancora pochi passi. Poi ti offriamo il silenzio.']
+];
+function queueRadio(speaker,text){radioQueue.push({speaker,text})}
+function radioStep(dt){
+ radioTime=Math.max(0,radioTime-dt);
+ if(!radioTime&&radioQueue.length){
+  const next=radioQueue.shift();radioSpeaker=next.speaker;radioLine=next.text;
+  radioTime=Math.max(2.6,Math.min(4.5,radioLine.length/19));
+  document.getElementById('radio-text').textContent=radioLine;
+ }
+ for(const name of ['jack','dexter'])document.getElementById('host-'+name).classList.toggle('speaking',radioTime>0&&radioSpeaker.toLowerCase()===name);
+}
+
 
 function resize(){
   clearInput();
@@ -73,6 +97,7 @@ function lineWrap(str,max){
   if(line)lines.push(line); return lines;
 }
 function say(speaker,text,secs=5){
+  if(speaker==='JACK'||speaker==='DEXTER'){queueRadio(speaker,text);return}
   dialogSpeaker=speaker;dialogText=text;dialogT=secs;
 }
 function burst(x,y,color="#e76958",n=12){
@@ -95,30 +120,30 @@ function seed(){
  ];
 }
 function mob(x,type){
- return {x,y:FLOOR-(type===2?76:62),w:type===2?50:40,h:type===2?76:62,hp:type===2?120:type===1?70:50,maxHp:type===2?120:type===1?70:50,vx:0,dir:-1,cd:0,type,dead:false};
+ return {x,y:FLOOR-(type===2?76:62),w:type===2?50:40,h:type===2?76:62,hp:type===2?120:type===1?70:50,maxHp:type===2?120:type===1?70:50,vx:0,dir:-1,cd:0,type,dead:false,previousX:x,gait:0,attack:0,attackDone:false,hurt:0,fade:.35};
 }
 function item(x,type){return{x,y:FLOOR-40,w:34,h:34,type,taken:false,phase:Math.random()*6.28}}
 seed();
 
 function reset(){
  Object.assign(P,{x:210,y:430,vx:0,vy:0,dir:1,onGround:false,hp:100,stamina:100,ammo:12,shootCd:0,batCd:0,hurt:0,radioParts:0,docs:0});
- clearInput();gait=0;radioCooldown=0;t=0;last=null;accumulator=0;previousX=P.x;previousY=P.y;previousCam=0;
- bullets=[];particles=[];radioIdx=0;cam=0;gameOver=false;complete=false;paused=false;screenShake=0;seed();say("JACK","Alter? Se ci senti, muoviti verso la torre.",4);
+ clearInput();gait=0;radioCooldown=0;t=0;weapon="none";landing=0;wasGround=false;storyIndex=0;furthestX=210;radioQueue=[];radioTime=0;radioSpeaker="";radioLine="";finalRadio=false;last=null;accumulator=0;previousX=P.x;previousY=P.y;previousCam=0;
+ bullets=[];particles=[];radioIdx=0;cam=0;gameOver=false;complete=false;paused=false;screenShake=0;seed();
 }
 
 function shoot(){
  if(P.shootCd>0||P.ammo<=0||gameOver||complete)return;
- P.shootCd=.19;P.ammo--;
- const bx=P.x+P.w/2+(P.dir>0?23:-23);
- bullets.push({x:bx,y:P.y+25,w:12,h:4,vx:P.dir*850,life:1.1});
- burst(bx,P.y+26,"#ffd58a",5); screenShake=2;
+ P.shootCd=.19;P.ammo--;weapon="pistol";
+ const bx=P.x+P.w/2+P.dir*44,by=P.y+P.h-60;
+ bullets.push({x:bx,y:by,w:12,h:4,vx:P.dir*850,life:1.1});
+ burst(bx,by+1,"#ffd58a",5); screenShake=2;
 }
 function bat(){
- if(P.batCd>0||gameOver||complete)return;
- P.batCd=.42;
+ if(P.batCd>0||P.stamina<12||gameOver||complete)return;
+ P.batCd=.42;P.stamina-=12;weapon="baton";
  const hb={x:P.dir>0?P.x+P.w:P.x-52,y:P.y+8,w:52,h:52};
  for(const e of enemies){
-   if(!e.dead&&hit(hb,e)){e.hp-=34;e.vx=P.dir*260;burst(e.x+e.w/2,e.y+25);screenShake=5;if(e.hp<=0)e.dead=true}
+   if(!e.dead&&hit(hb,e)){e.hp-=34;e.hurt=.18;e.vx=P.dir*260;burst(e.x+e.w/2,e.y+25);screenShake=5;if(e.hp<=0)e.dead=true}
  }
 }
 function damage(n,fromDir){
@@ -129,7 +154,8 @@ function damage(n,fromDir){
 function radio(){
  if(radioCooldown>0)return;
  radioCooldown=.45;
- const [s,l]=RADIO[radioIdx++%RADIO.length];say(s,l,5);
+ if(radioQueue.length||radioTime>0)return;
+ const [s,l]=RADIO[radioIdx++%RADIO.length];queueRadio(s,l);
 }
 
 function approach(value,target,amount){
@@ -139,13 +165,11 @@ function input(dt){
  const L=keys.a||keys.arrowleft||touch.left;
  const R=keys.d||keys.arrowright||touch.right;
  const axis=Number(!!R)-Number(!!L);
- const run=(keys.shift||touch.run)&&P.stamina>0;
- const speed=run?285:185;
+ const speed=285;
  const reversing=axis&&P.vx&&Math.sign(axis)!==Math.sign(P.vx);
  P.vx=approach(P.vx,axis*speed,(axis?(reversing?2600:1500):2100)*dt);
  if(Math.abs(P.vx)>7)P.dir=Math.sign(P.vx);
- if(run&&axis)P.stamina=Math.max(0,P.stamina-24*dt);
- else P.stamina=Math.min(100,P.stamina+18*dt);
+ if(P.batCd<=0)P.stamina=Math.min(100,P.stamina+18*dt);
  if(jumpQueued&&P.onGround){P.vy=-620;P.onGround=false}
  jumpQueued=false;
  if(keys.j||touch.shoot)shoot();
@@ -155,11 +179,11 @@ function input(dt){
 
 function update(dt){
  if(!started||paused)return;
- t+=dt;radioCooldown=Math.max(0,radioCooldown-dt);dialogT=Math.max(0,dialogT-dt);
+ t+=dt;radioStep(dt);radioCooldown=Math.max(0,radioCooldown-dt);dialogT=Math.max(0,dialogT-dt);
  P.shootCd=Math.max(0,P.shootCd-dt);P.batCd=Math.max(0,P.batCd-dt);P.hurt=Math.max(0,P.hurt-dt);
- if(gameOver||complete){particlesStep(dt);return}
+ if(gameOver||complete){particlesStep(dt);screenShake*=Math.pow(.82,dt*60);return}
 
- previousX=P.x;previousY=P.y;previousCam=cam;
+ previousX=P.x;previousY=P.y;previousCam=cam;wasGround=P.onGround;landing=Math.max(0,landing-dt);
  input(dt);
  const prevBottom=P.y+P.h;
 
@@ -176,29 +200,46 @@ function update(dt){
       P.y=pl.y-P.h;P.vy=0;P.onGround=true;
    }
  }
+ if(P.onGround&&!wasGround)landing=.1;
  P.x=clamp(P.x,0,WORLD-P.w);
  if(P.x===0||P.x===WORLD-P.w)P.vx=0;
  if(P.onGround&&Math.abs(P.x-previousX)>0.001)gait=(gait+Math.abs(P.x-previousX)/132)%1;
  else if(Math.abs(P.vx)<1)gait=0;
 
+ furthestX=Math.max(furthestX,P.x);
+ while(storyIndex<STORY.length&&furthestX>=STORY[storyIndex][0]){
+  const cue=STORY[storyIndex++];queueRadio(cue[1],cue[2]);
+ }
  // bullets
  bullets.forEach(b=>{b.x+=b.vx*dt;b.life-=dt});
  bullets=bullets.filter(b=>{
+   if(b.hostile){if(hit(b,P)){damage(9,Math.sign(b.vx));return false}return b.life>0}
    for(const e of enemies){
-     if(!e.dead&&hit(b,e)){e.hp-=26;burst(b.x,b.y,"#ffcf79",7);screenShake=3;if(e.hp<=0)e.dead=true;return false}
+     if(!e.dead&&hit(b,e)){e.hp-=26;e.hurt=.18;burst(b.x,b.y,"#ffcf79",7);screenShake=3;if(e.hp<=0)e.dead=true;return false}
    }
    return b.life>0;
  });
 
- // enemies
+ // Bandits share the complete actor atlas and distance-driven gait.
  for(const e of enemies){
-   if(e.dead)continue;
-   e.cd=Math.max(0,e.cd-dt);
-   const dx=P.x-e.x,dist=Math.abs(dx);
-   if(dist<480){e.dir=dx>=0?1:-1;e.vx=approach(e.vx,e.dir*(e.type===2?135:105),650*dt)}
-   else e.vx=approach(e.vx,0,850*dt);
-   const max=e.type===2?135:105;e.vx=clamp(e.vx,-max,max);e.x+=e.vx*dt;
-   if(dist<55 && Math.abs((P.y+30)-(e.y+30))<58 && e.cd<=0){e.cd=e.type===2?1.0:.85;damage(e.type===2?22:13,-e.dir)}
+   e.previousX=e.x;e.hurt=Math.max(0,e.hurt-dt);
+   if(e.dead){e.fade=Math.max(0,e.fade-dt);continue}
+   e.cd=Math.max(0,e.cd-dt);e.attack=Math.max(0,e.attack-dt);
+   const dx=P.x-e.x,dist=Math.abs(dx),sameLevel=Math.abs((P.y+P.h)-(e.y+e.h))<75;
+   const ranged=e.type===1,range=ranged?330:58;
+   e.dir=dx>=0?1:-1;
+   const pursuing=dist<480&&(!ranged||dist>220||!sameLevel);
+   const target=pursuing?e.dir*(e.type===2?135:105):0;
+   e.vx=approach(e.vx,target,(e.hurt>0?220:650)*dt);
+   e.x=clamp(e.x+e.vx*dt,0,WORLD-e.w);
+   if(Math.abs(e.x-e.previousX)>.001)e.gait=(e.gait+Math.abs(e.x-e.previousX)/132)%1;
+   if(dist<range&&sameLevel&&e.cd<=0){e.cd=ranged?1.5:1.0;e.attack=.42;e.attackDone=false}
+   // Telegraph before damage: movement can dodge both the baton and the bullet.
+   if(e.attack>0&&e.attack<=.22&&!e.attackDone){
+    e.attackDone=true;
+    if(ranged){bullets.push({x:e.x+e.w/2+e.dir*44,y:e.y+e.h-60,w:10,h:4,vx:e.dir*440,life:1.3,hostile:true});burst(e.x+e.w/2+e.dir*44,e.y+e.h-60,'#ffd58a',3)}
+    else if(Math.abs(P.x-e.x)<62&&sameLevel)damage(e.type===2?22:13,e.dir);
+   }
  }
 
  // pickups
@@ -215,7 +256,8 @@ function update(dt){
 
  if(P.x>5920){
    complete=true;
-   say("JACK","Ti vediamo, Alter. Sei arrivato alla torre.",999);
+   if(!finalRadio){finalRadio=true;queueRadio('JACK','Ti vediamo, Alter. Sei arrivato.');queueRadio('DEXTER','Resta in ascolto. Questa storia è appena iniziata.')}
+   say("SYSTEM","CAPITOLO I · LA FREQUENZA",999);
  }
 
  cam+=(P.x-W*.40-cam)*Math.min(1,dt*5);
@@ -305,10 +347,10 @@ function worldDraw(){
  }
 
  // bullets
- for(const b of bullets)box(b.x,b.y,b.w,b.h,"#ffdf8d");
+ for(const b of bullets)box(b.x,b.y,b.w,b.h,b.hostile?"#ff8e79":"#ffdf8d");
 
  // enemies
- for(const e of enemies) if(!e.dead) drawEnemy(e);
+ for(const e of enemies) if(!e.dead||e.fade>0) drawEnemy(e);
 
  drawPlayer();
 
@@ -318,57 +360,49 @@ function worldDraw(){
 }
 
 function drawEnemy(e){
- const body=e.type===2?"#4c4a4a":e.type===1?"#654139":"#34484d";
- box(e.x,e.y+18,e.w,e.h-18,body,"#111");
- box(e.x+6,e.y,e.w-12,22,"#b98563","#111");
- box(e.x+(e.dir>0?e.w-3:-17),e.y+28,20,6,"#989b9a","#111");
- box(e.x+5,e.y+e.h-16,10,16,"#1d2328");box(e.x+e.w-15,e.y+e.h-16,10,16,"#1d2328");
- box(e.x,e.y-9,e.w,4,"#3b1e20");
- box(e.x,e.y-9,e.w*(e.hp/e.maxHp),4,e.type===2?"#e07b55":"#d95355");
-}
-
-const master=new Image();
-let masterReady=false;
-master.onload=()=>{masterReady=master.naturalWidth===5184&&master.naturalHeight===128};
-master.onerror=()=>{document.getElementById('note').textContent='Grafica ridotta: puoi continuare a giocare.'};
-master.src='./alter_master_sheet.png';
-function spriteFrame(){
- if(P.batCd>0)return {sheet:master,ready:masterReady,frame:44+Math.min(5,Math.floor((.42-P.batCd)*16))};
- if(P.shootCd>0)return {sheet:master,ready:masterReady,frame:38+Math.min(5,Math.floor((.19-P.shootCd)*30))};
- if(!P.onGround)return {sheet:master,ready:masterReady,frame:P.vy<-150?22:P.vy<110?25:29};
- if(Math.abs(P.vx)>1&&Math.abs(P.x-previousX)>.001){
-   const running=Math.abs(P.vx)>220;
-   return {sheet:master,ready:masterReady,frame:running?12+Math.floor(gait*8)%8:6+Math.floor(gait*6)%6};
+ const moving=Math.abs(e.x-e.previousX)>.001,phase=Math.floor(e.gait*8)%8;
+ let frame=e.dead||e.hurt>0?31:e.attack>0?(e.type===1?8+phase:28+Math.min(2,Math.floor((.42-e.attack)*8))):moving?(e.type===1?8:16)+phase:24;
+ const x=e.previousX+(e.x-e.previousX)*renderAlpha;
+ X.save();if(e.dead)X.globalAlpha=e.fade/.35;
+ const bank=window.EcoCharacters;
+ if(!bank||!bank.draw(X,frame,x+e.w/2,e.y+e.h,e.dir,e.type,e.type===2?1.12:1)){
+  // No unrelated sprite-sheet fallback: missing artwork cannot reintroduce ghosts.
+  box(x,e.y+18,e.w,e.h-18,e.type===1?'#77553c':'#36575f');box(x+6,e.y,e.w-12,22,'#b98563');
  }
- return {sheet:master,ready:masterReady,frame:0};
+ X.restore();
+ if(!e.dead){box(x,e.y-25,e.w,4,'#3b1e20');box(x,e.y-25,e.w*e.hp/e.maxHp,4,'#d95355');
+ if(e.attack>.22)txt('!',x+e.w/2,e.y-30,17,'#f0bd73','center')}
+}
+function spriteFrame(){
+ const phase=Math.floor(gait*8)%8,moving=Math.abs(P.vx)>1&&Math.abs(P.x-previousX)>.001;
+ if(P.hurt>.52)return {frame:31};
+ if(!P.onGround)return {frame:P.vy<0?25:26,upper:weapon==='pistol'?8+phase:undefined};
+ if(P.batCd>0){const swing=28+Math.min(2,Math.floor((.42-P.batCd)*8));return moving?{frame:16+phase,upper:swing}:{frame:swing}}
+ if(landing>0&&!moving)return {frame:27};
+ if(moving)return {frame:(weapon==='pistol'?8:weapon==='baton'?16:0)+phase};
+ if(weapon==='pistol')return {frame:24,upper:8};
+ if(weapon==='baton')return {frame:24,upper:16};
+ return {frame:24};
 }
 function drawPlayer(){
  const x=previousX+(P.x-previousX)*renderAlpha,y=previousY+(P.y-previousY)*renderAlpha;
- const sprite=spriteFrame();
- if(sprite.ready){
-   X.save();X.translate(x+P.w/2,y+P.h);X.scale(P.dir,1);
-   if(P.hurt>0&&Math.floor(t*18)%2)X.globalAlpha=.45;
-   // Exact 96x128 source cell. All existing sheets have feet at row 122.
-   X.drawImage(sprite.sheet,sprite.frame*96,0,96,128,-36,-92.25,72,96);
-   X.restore();return;
+ const sprite=spriteFrame(),bank=window.EcoCharacters;
+ X.save();if(P.hurt>0&&Math.floor(t*18)%2)X.globalAlpha=.45;
+ if(bank&&bank.ready){
+  if(sprite.upper===undefined)bank.draw(X,sprite.frame,x+P.w/2,y+P.h,P.dir);
+  else{
+   // Keep the running/jumping legs beneath the independently animated armed torso.
+   const cx=Math.round(x+P.w/2),feet=Math.round(y+P.h),split=82;
+   X.save();X.translate(cx,feet);X.scale(P.dir,1);
+   X.drawImage(bank.frames[sprite.frame],0,split,128,128-split,-64,split-120,128,128-split);
+   X.drawImage(bank.frames[sprite.upper],0,0,128,split,-64,-120,128,split);X.restore();
+  }
+ }else{
+  // A small animated procedural fallback keeps controls usable during image load.
+  const step=P.onGround?Math.sin(gait*Math.PI*2)*5:0;
+  box(x+4,y+18,26,29,'#a83339');box(x+8,y,20,20,'#d6a072');
+  box(x+5,y+45+step,9,18,'#d8b487');box(x+21,y+45-step,9,18,'#d8b487');
  }
- X.save();X.translate(x+P.w/2,y);X.scale(P.dir,1);X.translate(-P.w/2,0);
- // backpack
- box(-8,20,14,31,"#55493b","#151515");box(-11,26,5,20,"#87704c");
- // Procedural fallback still animates if the image is unavailable.
- const step=P.onGround&&Math.abs(P.vx)>1?Math.sin(gait*Math.PI*2)*5:0;
- X.save();X.translate(0,step);
- box(7,44,9,18,"#d8b487");box(21,44,9,18,"#d8b487");
- box(5,60,13,5,"#ece9df");box(20,60,13,5,"#ece9df");
- X.restore();
- // hoodie
- const red=P.hurt>0&&Math.floor(t*18)%2?"#f2b7ad":"#a83339";
- box(5,18,25,30,red,"#151515");box(0,23,9,21,red);
- // head
- box(9,3,18,18,"#d6a072","#151515");box(8,-2,21,8,"#513326");box(24,1,9,10,"#513326");box(25,8,7,6,"#513326");
- // weapon pose
- if(P.batCd>.20){X.strokeStyle="#b47a45";X.lineWidth=6;X.beginPath();X.moveTo(28,27);X.lineTo(52,5);X.stroke()}
- else box(28,24,17,6,"#a7acab","#111");
  X.restore();
 }
 
@@ -377,15 +411,9 @@ function hud(){
  box(18,18,310,92,"rgba(5,12,18,.84)","#7c5f48");
  txt("ALTER",34,44,18,"#e4aa67");
  txt("SALUTE",34,67,12,"#cbbfa9");box(96,57,172,12,"#302228");box(96,57,172*P.hp/100,12,"#d84c51");
- txt("STAMINA",34,91,12,"#cbbfa9");box(96,81,172,10,"#1f3035");box(96,81,172*P.stamina/100,10,"#6db8ae");
+ txt("ENERGIA",34,91,12,"#cbbfa9");box(96,81,172,10,"#1f3035");box(96,81,172*P.stamina/100,10,"#6db8ae");
  txt(`${P.ammo}/${P.maxAmmo}`,292,67,16,"#f1d7a5","center");
  txt(`DOC ${P.docs}/3`,292,92,12,"#9bbfc0","center");
-
- // radio panel
- box(W-330,18,312,92,"rgba(5,12,18,.84)","#7c5f48");
- txt("RADIO 17.8",W-312,47,18,"#e4aa67");
- txt(`MODULI ${P.radioParts}/2`,W-312,73,13,"#9fc5c1");
- txt("E / pulsante radio",W-312,95,12,"#c9bda7");
 
  // objective
  box(W/2-170,118,340,36,"rgba(6,12,18,.72)","#6d5748");
@@ -429,7 +457,7 @@ function start(){
  document.getElementById('welcome').hidden=true;
  document.getElementById('pause').textContent='Pausa';
  document.getElementById('note').textContent='Capitolo I · La frequenza';
- say('JACK','Alter? Se ci senti, muoviti verso la torre.',4);
+
 }
 function togglePause(){
  if(!started)return;
@@ -453,7 +481,7 @@ addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);syncTouch()});
 C.addEventListener('pointerdown',e=>{e.preventDefault();if(!started||gameOver||complete)start()},{passive:false});
 document.getElementById('start').addEventListener('click',start);
 document.getElementById('pause').addEventListener('click',togglePause);
-const handled=['a','d','w','arrowleft','arrowright','arrowup',' ','shift','j','k','e','p','escape','enter','r'];
+const handled=['a','d','w','arrowleft','arrowright','arrowup',' ','j','k','e','p','escape','enter','r'];
 addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();if(!handled.includes(k))return;
  e.preventDefault();if(e.repeat)return;

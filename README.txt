@@ -1,40 +1,40 @@
-ECO SOLITARIO — CAPITOLO I CORRETTO — 6 SETTEMBRE 2026
+ECO SOLITARIO — CAPITOLO I — v1.1 — 6 SETTEMBRE 2026
 
-AVVIO UNICO: index.html, che carica game.js?v=chapter1-20260906.
-Le pagine alter-motion-v2/v3/v4.html rimandano ora al Capitolo I.
-capitolo-2.html resta una pagina separata, non è il punto di avvio.
+AVVIO
+Apri index.html attraverso un server web HTTPS (GitHub Pages).
+Mantieni insieme index.html, game.js, characters.js, sw.js, manifest.json,
+le icone e la cartella assets/ con alter-actions.png e radio-hosts.png.
+Non serve npm o una compilazione per giocare.
 
-Su iPhone: apri l’URL HTTPS del sito in Safari e tocca Inizia.
-Usa più dita per movimento + salto/arma/corsa. Pausa/Riprendi è in alto.
-La vista orizzontale offre più spazio; i comandi funzionano anche in verticale.
-Non aprire l’anteprima dello ZIP o del file HTML nell’app File per giocare.
+CONTROLLI
+Tieni premuto sinistra/destra per correre; rilascia per frenare.
+Non esiste più un comando separato per la corsa.
+Salto, pistola e bastone funzionano anche mentre corri, con più dita.
+Tastiera: A/D o frecce; Spazio/W/su salto; J pistola; K bastone;
+E radio; P/Esc pausa; R per ricominciare dopo il finale.
+La corsa è libera. L'energia viene usata dal bastone, poi si rigenera.
 
-Tastiera: Invio avvia; A/D o frecce muovono; W, freccia su o Spazio saltano;
-Shift corre; J spara; K usa la mazza; E radio; P/Esc pausa; R riavvia a fine partita.
+NOVITÀ
+32 pose di Alter: corsa, corsa con pistola, corsa con bastone, idle,
+salto, caduta, atterraggio, tre fasi del colpo e reazione al danno.
+Le figure sono estratte per connessione dei pixel, anche quando un'arma
+supera la griglia, ripulite dai residui trasparenti e allineate al corpo.
+Banditi animati con lo stesso atlante e tre palette distinte.
+Attacchi anticipati visivamente; banditi con pistola sparano proiettili.
+Ritratti di Jack e Dexter in alto e dialoghi automatici lungo il percorso.
+Le battute entrano in coda e non si ripetono tornando indietro.
 
-INSTALLAZIONE NEL REPOSITORY
-Carica i file estratti nella root del repository, sostituendo gli omonimi.
-Non caricare soltanto lo ZIP: GitHub Pages non ne estrae il contenuto.
-Mantieni gli asset PNG e gli altri file del repository.
-Per GitHub Pages, la cartella pubblicata deve contenere questo index.html.
-Non è necessario npm o un processo di compilazione.
+AGGIORNAMENTO
+Carica i file della stessa versione, inclusa la cartella assets/.
+La nuova cache è eco-v110-chapter1-20260906b. Riapri online dopo l'upload.
+NON applicare eco-motion-fix.patch o chapter-one-iphone.patch: sono storiche.
+Gli asset originali e il Capitolo II sono conservati.
 
-Le vecchie istruzioni v0.9.6/v0.9.8 e eco-motion-fix.patch sono superate.
-Non applicare vecchie patch dopo questa versione.
-Per un checkout Git, il pacchetto contiene anche chapter-one-iphone.patch:
-  git apply --check chapter-one-iphone.patch
-  git apply chapter-one-iphone.patch
-Usare la patch OPPURE sostituire i file, non entrambi.
-
-TEST LOCALI
-  node --check game.js
-  node --check sw.js
-  node --test motion.test.cjs
-I test esercitano il codice effettivo in un ambiente DOM/canvas simulato.
-Non equivalgono a una prova fisica su iPhone/Safari.
-
-OFFLINE / AGGIORNAMENTI
-Il nuovo service worker usa una cache dedicata e strategie network-first.
-Apri una volta online per installare la cache. Se la vecchia app era rimasta
-aperta, chiudila e riaprila online. Il caricamento offline è disponibile dopo
-l’installazione riuscita del service worker; richiede HTTPS (o localhost).
+VERIFICHE
+node --check game.js
+node --check characters.js
+node --check sw.js
+node --test motion.test.cjs
+17 test sul codice effettivo con DOM/canvas simulati; controllo separato
+con canvas reale delle 32 pose importate e dei bordi trasparenti.
+Nessuna prova dichiarata su iPhone fisico.

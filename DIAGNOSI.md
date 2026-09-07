@@ -1,3 +1,13 @@
+# Aggiornamento v1.1 — successivo alla diagnosi qui sotto
+
+Implementati corsa automatica, estrazione delle figure complete dal nuovo atlante,
+32 pose, armi in movimento, banditi animati e dialoghi automatici con ritratti.
+La diagnosi precedente e la patch chapter-one-iphone.patch documentano la v1.0;
+non costituiscono istruzioni di installazione per la versione attuale.
+Vedi README.txt e ASSETS.md. Test attuali: 17/17 superati.
+
+---
+
 # Diagnosi e correzione del Capitolo I
 
 Analizzato il branch main al commit `2efc209`, upload del 6 settembre 2026,

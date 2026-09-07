@@ -1,5 +1,4 @@
-ISTRUZIONI AGGIORNATE — CAPITOLO I
+ISTRUZIONI AGGIORNATE — CAPITOLO I v1.1
 
-Leggi README.txt. Le istruzioni precedenti v0.9.6/v0.9.8 sono superate.
-Avvio: index.html + game.js della stessa versione.
-Non applicare eco-motion-fix.patch.
+Leggi README.txt. Aggiorna anche characters.js e la cartella assets/.
+Non applicare le patch storiche eco-motion-fix.patch o chapter-one-iphone.patch.

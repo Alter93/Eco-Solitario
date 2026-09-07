@@ -17,9 +17,10 @@ function boot({images=true,width=852,height=393}={}){
  const buttons=Object.fromEntries([...html.matchAll(/data-action="([^"]+)"/g)].map(m=>{const n=node();n.dataset.action=m[1];return [m[1],n]}));
  const doc=Object.assign(node(),{hidden:false,getElementById:id=>nodes[id]??null,querySelectorAll:()=>Object.values(buttons)});
  const win=node();
+ win.EcoCharacters={ready:true,frames:Array.from({length:32},()=>({})),draw(ctx,frame,...args){draws.push([frame,...args]);return true}};
  class Image{set src(s){this.naturalWidth=s.includes('master')?5184:1152;this.naturalHeight=128;if(images)this.onload?.();else this.onerror?.()}}
  const context=vm.createContext({document:doc,window:win,location:{protocol:'http:'},navigator:{},Image,console,performance:{now:()=>now},requestAnimationFrame:fn=>queue.push(fn),innerWidth:width,innerHeight:height,addEventListener:win.addEventListener.bind(win)});
- const injection=`\nthis.__test={P,keys,touch,buttons:null,start,reset,update,draw,spriteFrame,loop,STEP,get state(){return {started,paused,gameOver,complete,cam,gait,jumpQueued,bullets,enemies,platforms}}};\n`;
+ const injection=`\nthis.__test={P,keys,touch,buttons:null,start,reset,update,draw,spriteFrame,loop,STEP,get state(){return {started,paused,gameOver,complete,cam,gait,jumpQueued,bullets,enemies,platforms,weapon,storyIndex,radioQueue,radioTime,radioSpeaker}}};\n`;
  vm.runInContext(source.replace(/\}\)\(\);\s*$/,injection+'})();'),context);
  const game=context.__test;
  function frames(seconds,hz=60){for(let i=0;i<Math.round(seconds*hz);i++){now+=1000/hz;const pending=queue;queue=[];for(const fn of pending)fn(now)}}
@@ -27,8 +28,8 @@ function boot({images=true,width=852,height=393}={}){
  return {game,nodes,buttons,doc,win,draws,key,frames};
 }
 test('entry point loads exactly the chapter engine and required DOM',()=>{
- assert.match(html,/<script src="\.\/game\.js\?v=chapter1-20260906"/);
- assert.equal((html.match(/<script/g)||[]).length,1);
+ assert.match(html,/<script src="\.\/game\.js\?v=chapter1-20260906b"/);
+ assert.equal((html.match(/<script/g)||[]).length,2);
  for(const v of [2,3,4])assert.match(fs.readFileSync(path.join(root,`alter-motion-v${v}.html`),'utf8'),/url=\.\/index.html/);
  const b=boot();b.frames(.1);assert.equal(b.game.state.started,false);
 });
@@ -36,7 +37,7 @@ test('all declared offline assets exist; actual sprite dimensions match cell lay
  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
  const assets=sw.match(/const ASSETS=(\[[\s\S]*?\]);/)[1];
  for(const asset of vm.runInNewContext(assets)){const file=asset==='./'?'index.html':asset.split('?')[0];assert.ok(fs.existsSync(path.join(root,file)),file)}
- const png=fs.readFileSync(path.join(root,'alter_master_sheet.png'));assert.equal(png.readUInt32BE(16),54*96);assert.equal(png.readUInt32BE(20),128);
+ const png=fs.readFileSync(path.join(root,'assets/alter-actions.png'));assert.equal(png.readUInt32BE(16),1536);assert.equal(png.readUInt32BE(20),1024);assert.equal(png[25],6);
 });
 test('Enter starts and keyboard movement advances both player and camera',()=>{
  const b=boot();b.key('keydown','Enter');b.frames(1);const x=b.game.P.x;
@@ -44,15 +45,15 @@ test('Enter starts and keyboard movement advances both player and camera',()=>{
  assert.ok(b.game.P.x>x+300);assert.ok(b.game.state.cam>0);assert.equal(b.game.P.vx,0);
 });
 test('frame-rate independent movement and stamina at 30/60/120 Hz',()=>{
- const states=[30,60,120].map(hz=>{const b=boot();b.game.start();b.frames(1,hz);b.key('keydown','d');b.key('keydown','Shift');b.frames(1,hz);return b.game.P});
+ const states=[30,60,120].map(hz=>{const b=boot();b.game.start();b.frames(1,hz);b.key('keydown','d');b.frames(1,hz);return b.game.P});
  for(const p of states.slice(1)){assert.ok(Math.abs(p.x-states[0].x)<.001);assert.ok(Math.abs(p.stamina-states[0].stamina)<.001)}
 });
 test('pointer release outside original button clears that finger only',()=>{
  const b=boot();b.game.start();b.frames(1);
- b.buttons.right.emit('pointerdown',{pointerId:1});b.buttons.run.emit('pointerdown',{pointerId:2});b.frames(.4);
+ b.buttons.right.emit('pointerdown',{pointerId:1});b.buttons.shoot.emit('pointerdown',{pointerId:2});b.frames(.4);
  b.buttons.right.emit('pointerup',{pointerId:1,clientX:-100,clientY:-100});
- assert.equal(b.game.touch.right,false);assert.equal(b.game.touch.run,true);b.frames(.3);assert.equal(b.game.P.vx,0);
- b.buttons.run.emit('pointercancel',{pointerId:2});assert.equal(b.game.touch.run,false);
+ assert.equal(b.game.touch.right,false);assert.equal(b.game.touch.shoot,true);b.frames(.3);assert.equal(b.game.P.vx,0);
+ b.buttons.shoot.emit('pointercancel',{pointerId:2});assert.equal(b.game.touch.shoot,false);
 });
 test('two fingers on one button, capture loss and simultaneous jump',()=>{
  const b=boot();b.game.start();b.frames(1);
@@ -77,13 +78,13 @@ test('pause repeat ignored and viewport rotation preserves world position',()=>{
  b.key('keydown','p');assert.equal(b.game.state.paused,false);const x=b.game.P.x;b.win.emit('resize');assert.equal(b.game.P.x,x);
 });
 test('single cells, idle stable, gait changes with travel and mirrored direction',()=>{
- const b=boot();b.game.start();b.frames(1);assert.equal(b.game.spriteFrame().frame,0);
- b.frames(.5);assert.equal(b.game.spriteFrame().frame,0);b.key('keydown','d');b.frames(.2);const phase=b.game.state.gait;b.frames(.2);assert.notEqual(b.game.state.gait,phase);
+ const b=boot();b.game.start();b.frames(1);assert.equal(b.game.spriteFrame().frame,24);
+ b.frames(.5);assert.equal(b.game.spriteFrame().frame,24);b.key('keydown','d');b.frames(.2);const phase=b.game.state.gait;b.frames(.2);assert.notEqual(b.game.state.gait,phase);
  b.key('keyup','d');b.key('keydown','a');b.frames(.4);assert.equal(b.game.P.dir,-1);
- assert.ok(b.draws.length>0);for(const args of b.draws){assert.equal(args[3],96);assert.equal(args[4],128);assert.equal(args[1]%96,0);assert.ok(args[1]>=0&&args[1]<5184)}
+ assert.ok(b.draws.length>0);for(const args of b.draws){assert.ok(args[0]>=0&&args[0]<32)}
 });
 test('missing sprite does not prevent starting, drawing or movement',()=>{
- const b=boot({images:false});b.game.start();b.frames(1);b.key('keydown','d');b.frames(.5);assert.ok(b.game.P.x>250);assert.equal(b.draws.length,0);assert.match(b.nodes.note.textContent,/Capitolo/);
+ const b=boot({images:false});b.win.EcoCharacters.ready=false;b.win.EcoCharacters.draw=()=>false;b.game.start();b.frames(1);b.key('keydown','d');b.frames(.5);assert.ok(b.game.P.x>250);assert.equal(b.draws.length,0);assert.match(b.nodes.note.textContent,/Capitolo/);
 });
 test('platform landing from above and world boundaries',()=>{
  const b=boot();b.game.start();Object.assign(b.game.P,{x:1300,y:390,vy:50});b.frames(.4);assert.equal(b.game.P.y,470-64);assert.equal(b.game.P.onGround,true);
@@ -95,4 +96,39 @@ test('weapons consume ammo and damage mobs; chapter can complete and restart',()
  e.x=b.game.P.x+36;b.key('keydown','k');b.frames(.03);assert.ok(e.dead);
  b.game.P.x=5930;b.frames(.1);assert.equal(b.game.state.complete,true);
  b.key('keydown','r');assert.equal(b.game.state.complete,false);assert.equal(b.game.P.x,210);assert.equal(b.game.P.ammo,12);
+});
+test('two directions automatically run at full speed even with exhausted energy',()=>{
+ assert.doesNotMatch(html,/data-action="run"/);
+ for(const energy of [0,100]){
+  const b=boot();b.game.start();b.frames(1);b.game.P.stamina=energy;
+  b.buttons.right.emit('pointerdown',{pointerId:1});b.frames(.5);
+  assert.equal(b.game.P.vx,285);
+  b.buttons.right.emit('pointerup',{pointerId:1});b.frames(.3);assert.equal(b.game.P.vx,0);
+ }
+});
+test('running pistol cycles legs; running baton combines legs with a strike',()=>{
+ const b=boot();b.game.start();b.frames(1);b.game.state.enemies.forEach(e=>e.dead=true);
+ b.key('keydown','d');b.key('keydown','j');
+ const shots=new Set();for(let i=0;i<24;i++){b.frames(1/60);shots.add(b.game.spriteFrame().frame)}
+ assert.ok(shots.size>=5);for(const f of shots)assert.ok(f>=8&&f<16);
+ b.key('keyup','j');b.key('keydown','k');b.frames(.05);
+ const pose=b.game.spriteFrame();assert.ok(pose.frame>=16&&pose.frame<24);assert.ok(pose.upper>=28&&pose.upper<=30);
+ assert.ok(b.game.P.stamina<100);assert.equal(b.game.P.vx,285);
+});
+test('radio milestones do not repeat on backtracking and continue through the ending',()=>{
+ const b=boot();b.game.start();b.frames(1);b.game.state.enemies.forEach(e=>e.dead=true);
+ b.game.P.x=1600;b.frames(.1);assert.equal(b.game.state.storyIndex,3);
+ const queued=b.game.state.radioQueue.length;b.game.P.x=800;b.frames(.1);b.game.P.x=1600;b.frames(.1);
+ assert.equal(b.game.state.storyIndex,3);assert.equal(b.game.state.radioQueue.length,queued);
+ b.game.P.x=5930;b.frames(.1);assert.equal(b.game.state.complete,true);b.frames(40);
+ assert.equal(b.nodes['radio-text'].textContent,'Resta in ascolto. Questa storia è appena iniziata.');
+ b.key('keydown','r');assert.equal(b.game.state.storyIndex,0);assert.equal(b.game.state.radioQueue.length,0);
+});
+test('ranged bandits telegraph then fire a hostile projectile; melee can be dodged',()=>{
+ const b=boot();b.game.start();b.frames(1);b.game.state.enemies.forEach(e=>e.dead=true);
+ const gun=b.game.state.enemies[1];Object.assign(gun,{dead:false,x:b.game.P.x+220,cd:0});
+ b.frames(.1);assert.ok(gun.attack>.22);assert.equal(b.game.state.bullets.filter(p=>p.hostile).length,0);
+ b.frames(.15);assert.ok(b.game.state.bullets.some(p=>p.hostile));
+ gun.dead=true;const melee=b.game.state.enemies[0];Object.assign(melee,{dead:false,x:b.game.P.x+45,cd:0});
+ b.frames(.05);const hp=b.game.P.hp;b.game.P.y=200;b.game.P.vy=0;b.frames(.25);assert.equal(b.game.P.hp,hp);
 });
