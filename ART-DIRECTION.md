@@ -12,3 +12,5 @@ Direzione confermata dall'utente il 7 settembre 2026. Prima di modificare i pers
 Nuovi asset: ritratti generati in griglia 2×2 (Jack/Dexter; neutri/parlanti), banditi in tre righe di sei pose (quattro passi, fermo, attacco). Lo sfondo magenta del file banditi è una chiave tecnica rimossa durante il caricamento. Verificare sempre il risultato nel gioco, non solo l'immagine sorgente.
 
 Revisione 07.09.3: tutte le immagini sono nella cartella principale per semplificare il caricamento da iPhone. alter-run-v3.png aggiunge otto pose di corsa; conserva gli originali per camminata, salto e armi. Ritmo legato alla distanza, fisica invariata.
+
+Revisione 07.09.4 richiesta: pulire Alter da fermo, aggiungere città pixel art e accovacciamento tenendo Freccia giù. Nuove pose coerenti con alter-run-v3.png, che resta invariato. La città deriva dalla tavola originale; non cambia terreno o piattaforme. Le nuove immagini sono candidate alla valutazione dell’utente.

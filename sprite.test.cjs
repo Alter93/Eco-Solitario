@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const {createCanvas,loadImage}=require('@napi-rs/canvas');
 const source=fs.readFileSync(__dirname+'/game.js','utf8');
 const context=vm.createContext({document:{createElement:()=>createCanvas(1,1)}});
-vm.runInContext(source.slice(source.indexOf('function prepareBandits'),source.indexOf('banditSheet.onload'))+source.slice(source.indexOf('function prepareFrames'),source.indexOf('master.onerror'))+source.slice(source.indexOf('function prepareRun'),source.indexOf('runSheet.onload')),context);
+vm.runInContext(source.slice(source.indexOf('function prepareBandits'),source.indexOf('banditSheet.onload'))+source.slice(source.indexOf('function prepareFrames'),source.indexOf('master.onerror'))+source.slice(source.indexOf('function prepareRun'),source.indexOf('runSheet.onload'))+source.slice(source.indexOf('function preparePose'),source.indexOf('idleSheet.onload')),context);
 test('18 actual enemy poses have transparent backgrounds and intact feet',async()=>{
  const sheet=await loadImage(__dirname+'/bandits-v2.png');sheet.naturalWidth=sheet.width;sheet.naturalHeight=sheet.height;
  const frames=context.prepareBandits(sheet);assert.equal(frames.length,18);
@@ -41,4 +41,16 @@ test('eight new run poses have unique silhouettes, clear backgrounds and stable 
  }
  assert.equal(hashes.size,8);
  if(process.env.ECO_QA_OUTPUT)fs.writeFileSync(process.env.ECO_QA_OUTPUT+'/run-check-v3.png',preview.toBuffer('image/png'));
+});
+
+test('idle and crouch real artwork have planted feet, opaque bodies and no magenta',async()=>{
+ const preview=createCanvas(256,128),ctx=preview.getContext('2d');ctx.fillStyle='#243039';ctx.fillRect(0,0,256,128);
+ for(const [n,file,height] of [[0,'alter-idle-v4.png',100],[1,'alter-crouch-v4.png',66]]){
+  const sheet=await loadImage(__dirname+'/'+file);sheet.naturalWidth=sheet.width;sheet.naturalHeight=sheet.height;
+  const pose=context.preparePose(sheet,height);ctx.drawImage(pose,n*128,0);
+  const pixels=pose.getContext('2d').getImageData(0,0,128,128).data;let count=0,bottom=0,magenta=0;
+  for(let i=0;i<pixels.length;i+=4)if(pixels[i+3]>=128){count++;bottom=Math.max(bottom,Math.floor(i/4/128));if(pixels[i]>85&&pixels[i+2]>70&&pixels[i]>pixels[i+1]+45&&pixels[i+2]>pixels[i+1]+40)magenta++;}
+  assert.ok(count>1000);assert.equal(bottom,122);assert.equal(magenta,0);
+ }
+ if(process.env.ECO_QA_OUTPUT)fs.writeFileSync(process.env.ECO_QA_OUTPUT+'/poses-check-v4.png',preview.toBuffer('image/png'));
 });

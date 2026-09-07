@@ -1,21 +1,23 @@
-# Verifica 07.09.3 — 7 settembre 2026
+# Verifica 07.09.4 — 7 settembre 2026
 
-Base remota verificata: main d40a6c9, integrata nella revisione locale. Su quel commit il codice 07.09.2 era presente, ma mancavano bandits-v2.png e radio-hosts-v2.png nei percorsi assets dichiarati dal gioco, e i riferimenti grafici nella cartella references. La nuova distribuzione contiene tutti i file nella root: non richiede il caricamento di sottocartelle.
+Base: main ec51b3a, caricamento della 07.09.3 integrato nel branch locale. La corsa approvata (alter-run-v3.png e preparazione delle sue otto pose) è conservata.
 
-## Risultati
+## Modifiche e risultati
 
-23 test superati: 19 di logica/input, 3 con raster reali e 1 sul service worker. Eseguiti con `node --test motion.test.cjs offline.test.cjs sprite.test.cjs` (il test raster richiede @napi-rs/canvas 0.1.100).
+- Alter fermo: immagine dedicata, rimossa la dipendenza dalla cella frammentata originale. Durante l'importazione viene conservata la componente connessa principale. La posa non cambia quando Alter resta fermo.
+- Accovacciamento: tenere Freccia giù o il pulsante touch ▼; al rilascio Alter si rialza. Altezza di collisione da 64 a 40, piedi alla stessa quota. Alter resta sul posto mentre è accovacciato, recupera stamina e può sparare/usare la mazza. Il salto lo rialza prima dello stacco; premere giù in volo non restringe la sagoma. Pausa, perdita di focus e annullamento del tocco liberano il comando.
+- Città: nuova immagine pixel art dalla tavola originale, dietro terreno, strutture e piattaforme esistenti. Scorrimento lento proporzionale alla camera, senza giunte ripetute. Lo sfondo precedente resta disponibile se l'immagine manca.
 
-La corsa usa otto immagini distinte estratte dalla nuova tavola, con sfondo magenta rimosso, scala comune e ancoraggio del busto. Le celle di 128×128 conservano tutta l'estensione delle gambe. Ritmo legato alla distanza percorsa; velocità 285 e fisica invariate. Le pose originali restano disponibili se la nuova immagine non si carica.
+27 test superati: 22 su logica/input, 4 sugli asset raster effettivi, 1 sul service worker. Comando: node --test motion.test.cjs offline.test.cjs sprite.test.cjs. I test raster richiedono @napi-rs/canvas 0.1.100; gli altri richiedono solo Node.
 
-Verificati corsa → sparo → corsa, corsa → mazza, corsa → salto → corsa, selezione delle otto fasi e mantenimento della velocità. Restano superati i controlli precedenti su stamina, multitouch, pausa, background, collisioni, pickup, salute, armi, morte, reset e attraversamento completo simulato senza teletrasporto. Il controllo della cache usa una rete simulata.
+Verificati piedi alla stessa quota, pressione/rilascio, arresto del movimento, salto da accovacciato, sparo e quota del proiettile, ritorno alla posa da fermo, touch cancel, blur e reset. Continuano a passare le verifiche su corsa, stamina, salute, armi, pickup, dialoghi, pausa e attraversamento simulato completo del capitolo.
 
-La sequenza estratta è stata renderizzata con canvas reale e controllata visivamente. Il file run-check-v3.png è un rendering tecnico, non uno screenshot browser. Otto immagini diverse non garantiscono da sole una perfetta biomeccanica: valutare il ciclo in movimento sul dispositivo.
+Rendering con canvas reale controllati visivamente: posa da fermo e accovacciata, città, HUD e dialogo. Le anteprime sono rendering tecnici del motore, non screenshot di una partita browser. La verifica della cache usa una rete simulata.
 
-## Blocchi ancora aperti
+## Verifiche ancora aperte
 
-- Partita manuale completa della nuova versione e prova su iPhone/Safari. L'accesso browser all'anteprima era bloccato da ERR_BLOCKED_BY_CLIENT; questa verifica non è dichiarata eseguita. I test simulati non la sostituiscono.
-- Pubblicazione: applicare i file estratti dello ZIP nella root del repository e verificare la versione 07.09.3. Il precedente errore 403 di scrittura GitHub impedisce di dichiarare una pubblicazione automatica.
-- Coerenza delle animazioni: corsa più articolata, ma salto, camminata e armi usano ancora la tavola precedente. Le azioni armate non hanno ancora un ciclo completo di gambe durante la corsa. La transizione funzionale passa i test; l'uniformità artistica resta da valutare nel playtest.
+Partita manuale completa su PC e iPhone/Safari, comfort della nuova composizione grafica e dei comandi touch, aggiornamento reale della cache dopo pubblicazione. L'anteprima browser era bloccata dall'ambiente; non viene dichiarata una prova interattiva completa.
 
-Giudizio: candidata alla prova, con un miglioramento concreto del ciclo di corsa e una correzione necessaria alla distribuzione degli asset. Non certificata come versione definitiva.
+La camminata, il salto e le azioni armate in piedi usano ancora il vecchio atlante. La postura accovacciata ha armi sovrapposte essenziali, non nuove sequenze disegnate per ogni attacco. Questi aspetti restano oggetto di rifinitura artistica, senza bloccare la prova della patch richiesta.
+
+La patch va caricata nella root del repository prima che il link pubblico mostri 07.09.4. Non è dichiarata una pubblicazione automatica.

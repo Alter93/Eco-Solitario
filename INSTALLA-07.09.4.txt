@@ -1,0 +1,6 @@
+ECO SOLITARIO — 07.09.4
+Estrai questo ZIP e carica tutti i file nella cartella principale di Alter93/Eco-Solitario, accanto a index.html, sostituendo gli omonimi. Non caricare soltanto lo ZIP e non creare una cartella contenitore. Conserva gli altri file già nel repository.
+La distribuzione è piatta, senza sottocartelle. Non serve npm o compilazione per giocare.
+Dopo il deployment GitHub Pages, riapri il gioco online: dopo Inizia deve comparire 07.09.4. La città dettagliata e la nuova posa da fermo devono essere visibili.
+Freccia giù tenuta premuta: accovacciamento. Rilascio: in piedi. Sul touch usa ▼. Spazio permette di saltare anche da accovacciato.
+Le istruzioni delle vecchie patch sono superate da questo file.

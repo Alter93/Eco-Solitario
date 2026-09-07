@@ -20,7 +20,7 @@ function boot({images=true,width=852,height=393,canvasBackend=null}={}){
  const win=node();
  class Image{set src(s){this.naturalWidth=s.includes('master')?5184:1152;this.naturalHeight=128;if(images)this.onload?.();else this.onerror?.()}}
  const context=vm.createContext({document:doc,window:win,location:{protocol:'http:'},navigator:{},Image:canvasBackend?.GameImage||(canvasBackend?class extends canvasBackend.Image{set src(s){super.src=fs.readFileSync(path.join(root,s))}}:Image),console,performance:{now:()=>now},requestAnimationFrame:fn=>queue.push(fn),innerWidth:width,innerHeight:height,addEventListener:win.addEventListener.bind(win)});
- const injection=`\nthis.__test={P,keys,touch,buttons:null,setRunAtlas(value){runAtlas=value},start,reset,update,draw,spriteFrame,loop,STEP,get state(){return {started,paused,gameOver,complete,cam,gait,jumpQueued,bullets,enemies,platforms,pickups,dialogT,dialogText,radioIdx}}};\n`;
+ const injection=`\nthis.__test={P,keys,touch,buttons:null,setRunAtlas(value){runAtlas=value},setPoseAtlases(idle,crouch){idleAtlas=idle;crouchAtlas=crouch},start,reset,update,draw,spriteFrame,loop,STEP,get state(){return {started,paused,gameOver,complete,cam,gait,jumpQueued,bullets,enemies,platforms,pickups,dialogT,dialogText,radioIdx}}};\n`;
  vm.runInContext(source.replace(/\}\)\(\);\s*$/,injection+'})();'),context);
  const game=context.__test;
  function frames(seconds,hz=60){for(let i=0;i<Math.round(seconds*hz);i++){now+=1000/hz;const pending=queue;queue=[];for(const fn of pending)fn(now)}}
@@ -28,7 +28,7 @@ function boot({images=true,width=852,height=393,canvasBackend=null}={}){
  return {game,nodes,buttons,doc,win,draws,key,frames};
 }
 test('entry point loads exactly the chapter engine and required DOM',()=>{
- assert.match(html,/<script src="\.\/game\.js\?v=chapter1-20260907c"/);
+ assert.match(html,/<script src="\.\/game\.js\?v=chapter1-20260907d"/);
  assert.equal((html.match(/<script/g)||[]).length,1);
  for(const v of [2,3,4])assert.match(fs.readFileSync(path.join(root,`alter-motion-v${v}.html`),'utf8'),/url=\.\/index.html/);
  const b=boot();b.frames(.1);assert.equal(b.game.state.started,false);
@@ -145,4 +145,26 @@ test('eight-pose run yields to weapons and jump, then returns without changing p
  b.key('keydown','k');b.frames(.025);assert.ok(b.game.spriteFrame().frame>=44);b.key('keyup','k');b.frames(.5);
  b.key('keydown',' ');b.frames(.1);assert.ok([22,25,29].includes(b.game.spriteFrame().frame));b.key('keyup',' ');b.frames(1);assert.equal(b.game.spriteFrame().sheet,atlas);
  b.game.setRunAtlas(null);assert.ok([12,13,14].includes(b.game.spriteFrame().frame));
+});
+
+test('Down crouches while held, keeps feet planted and stands on release',()=>{
+ const b=boot();b.game.start();b.frames(1);const floor=b.game.P.y+b.game.P.h,art={idle:1},low={crouch:1};b.game.setPoseAtlases(art,low);
+ assert.equal(b.game.spriteFrame().sheet,art);b.key('keydown','ArrowDown');b.frames(.1);
+ assert.equal(b.game.P.crouching,true);assert.equal(b.game.P.h,40);assert.equal(b.game.P.y+b.game.P.h,floor);assert.equal(b.game.spriteFrame().sheet,low);
+ b.key('keydown','d');b.frames(.5);assert.equal(b.game.P.vx,0);b.key('keyup','d');b.key('keyup','ArrowDown');b.frames(.1);
+ assert.equal(b.game.P.crouching,false);assert.equal(b.game.P.h,64);assert.equal(b.game.P.y+b.game.P.h,floor);assert.equal(b.game.spriteFrame().sheet,art);
+ b.frames(1);assert.equal(b.game.spriteFrame().sheet,art);
+});
+test('crouch can shoot, jump stands first and airborne Down cannot shrink the body',()=>{
+ const b=boot();b.game.start();b.frames(1);b.key('keydown','ArrowDown');b.frames(.1);b.key('keydown','j');b.frames(.025);
+ assert.equal(b.game.P.crouching,true);assert.equal(b.game.P.ammo,11);assert.equal(b.game.state.bullets[0].y,b.game.P.y+19);b.key('keyup','j');
+ b.key('keydown',' ');b.frames(.1);assert.equal(b.game.P.crouching,false);assert.equal(b.game.P.h,64);assert.ok(b.game.P.vy<0);
+ b.key('keyup',' ');b.frames(1);assert.equal(b.game.P.crouching,true);
+});
+test('touch crouch clears on cancellation, blur and restart',()=>{
+ const b=boot();b.game.start();b.frames(1);const floor=b.game.P.y+b.game.P.h;
+ b.buttons.crouch.emit('pointerdown',{pointerId:1});b.frames(.1);assert.equal(b.game.P.h,40);
+ b.buttons.crouch.emit('pointercancel',{pointerId:1});b.frames(.1);assert.equal(b.game.P.h,64);
+ b.key('keydown','ArrowDown');b.frames(.1);b.win.emit('blur');assert.equal(b.game.P.crouching,false);assert.equal(b.game.P.y+b.game.P.h,floor);
+ b.game.reset();assert.equal(b.game.P.h,64);assert.equal(b.game.P.crouching,false);
 });

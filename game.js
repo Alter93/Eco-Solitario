@@ -15,10 +15,10 @@ const pointers=new Map();
 let jumpQueued=false, jumpHeld=false, radioQueued=false, radioHeld=false, accumulator=0;
 const STEP=1/120;
 let previousX=210,previousY=430,previousCam=0,renderAlpha=1,gait=0;
-const touch={left:false,right:false,jump:false,shoot:false,bat:false,run:false,radio:false};
+const touch={left:false,right:false,jump:false,shoot:false,bat:false,run:false,radio:false,crouch:false};
 
 const P={
- x:210,y:430,w:34,h:64,vx:0,vy:0,dir:1,onGround:false,
+ x:210,y:430,w:34,h:64,crouching:false,vx:0,vy:0,dir:1,onGround:false,
  hp:100,stamina:100,ammo:12,maxAmmo:12,shootCd:0,batCd:0,hurt:0,
  radioParts:0,docs:0
 };
@@ -101,7 +101,7 @@ function item(x,type){return{x,y:FLOOR-40,w:34,h:34,type,taken:false,phase:Math.
 seed();
 
 function reset(){
- Object.assign(P,{x:210,y:430,vx:0,vy:0,dir:1,onGround:false,hp:100,stamina:100,ammo:12,shootCd:0,batCd:0,hurt:0,radioParts:0,docs:0});
+ Object.assign(P,{x:210,y:430,h:64,crouching:false,vx:0,vy:0,dir:1,onGround:false,hp:100,stamina:100,ammo:12,shootCd:0,batCd:0,hurt:0,radioParts:0,docs:0});
  clearInput();gait=0;nextRadioX=620;exhausted=false;radioCooldown=0;t=0;last=null;accumulator=0;previousX=P.x;previousY=P.y;previousCam=0;
  bullets=[];particles=[];radioIdx=0;cam=0;gameOver=false;complete=false;paused=false;screenShake=0;seed();say("JACK","Alter? Se ci senti, muoviti verso la torre.",4);
 }
@@ -110,13 +110,14 @@ function shoot(){
  if(P.shootCd>0||P.ammo<=0||gameOver||complete)return;
  P.shootCd=.19;P.ammo--;
  const bx=P.x+P.w/2+(P.dir>0?23:-23);
- bullets.push({x:bx,y:P.y+25,w:12,h:4,vx:P.dir*850,life:1.1});
- burst(bx,P.y+26,"#ffd58a",5); screenShake=2;
+ const muzzle=P.y+(P.crouching?19:25);
+ bullets.push({x:bx,y:muzzle,w:12,h:4,vx:P.dir*850,life:1.1});
+ burst(bx,muzzle+1,"#ffd58a",5); screenShake=2;
 }
 function bat(){
  if(P.batCd>0||gameOver||complete)return;
  P.batCd=.42;
- const hb={x:P.dir>0?P.x+P.w:P.x-52,y:P.y+8,w:52,h:52};
+ const hb={x:P.dir>0?P.x+P.w:P.x-52,y:P.y+8,w:52,h:P.crouching?32:52};
  for(const e of enemies){
    if(!e.dead&&hit(hb,e)){e.hp-=34;e.vx=P.dir*260;burst(e.x+e.w/2,e.y+25);screenShake=5;if(e.hp<=0)e.dead=true}
  }
@@ -135,10 +136,17 @@ function radio(){
 function approach(value,target,amount){
  return value<target?Math.min(value+amount,target):Math.max(value-amount,target);
 }
+function setCrouch(value){
+ if(P.crouching===value)return;
+ const oldH=P.h;P.crouching=value;P.h=value?40:64;
+ const shift=oldH-P.h;P.y+=shift;previousY+=shift;
+}
 function input(dt){
+ setCrouch(!!((keys.arrowdown||touch.crouch)&&P.onGround&&!jumpQueued));
  const L=keys.a||keys.arrowleft||touch.left;
  const R=keys.d||keys.arrowright||touch.right;
- const axis=Number(!!R)-Number(!!L);
+ const axis=P.crouching?0:Number(!!R)-Number(!!L);
+ if(P.crouching)P.vx=0;
  if(P.stamina<=0)exhausted=true;
  if(exhausted&&P.stamina>=35)exhausted=false;
  const run=!!axis&&!exhausted;
@@ -257,8 +265,15 @@ function worldDraw(){
  g.addColorStop(0,"#201931");g.addColorStop(.36,"#703646");g.addColorStop(.62,"#d56b4f");g.addColorStop(.83,"#f0a060");g.addColorStop(1,"#14232b");
  X.fillStyle=g;X.fillRect(0,0,W,H);
 
+ if(cityReady){
+  const width=FLOOR*citySheet.naturalWidth/citySheet.naturalHeight;
+  const camera=previousCam+(cam-previousCam)*renderAlpha;
+  const offset=Math.min(Math.max(0,width-W),Math.max(0,camera*.08));
+  X.drawImage(citySheet,-Math.round(offset),0,Math.ceil(width),FLOOR);
+ }else{
  X.globalAlpha=.68;X.fillStyle="#ffd892";X.beginPath();X.arc(810-cam*.08,260,52,0,Math.PI*2);X.fill();X.globalAlpha=1;
  skyline(0,465,.08,"#1e2430");skyline(1,520,.2,"#20232a");
+ }
 
  X.save();X.translate(-(previousCam+(cam-previousCam)*renderAlpha),0);
 
@@ -492,7 +507,46 @@ function prepareRun(sheet){
 }
 runSheet.onload=()=>{if(document.createElement){try{runAtlas=prepareRun(runSheet)}catch(error){console.warn('Run artwork unavailable; using original poses',error)}}};
 runSheet.onerror=()=>{};runSheet.src='./alter-run-v3.png';
+// Single coherent poses: keep only the connected character, never loose debris.
+let idleAtlas=null,crouchAtlas=null,cityReady=false;
+const idleSheet=new Image(),crouchSheet=new Image(),citySheet=new Image();
+function preparePose(sheet,targetHeight){
+ const width=sheet.naturalWidth,height=sheet.naturalHeight;
+ if(width<100||height<100)throw new Error('Pose image too small');
+ const source=document.createElement('canvas');source.width=width;source.height=height;
+ const ctx=source.getContext('2d',{willReadFrequently:true});ctx.drawImage(sheet,0,0);
+ const data=ctx.getImageData(0,0,width,height),pixels=data.data,seen=new Uint8Array(width*height);let body=[];
+ for(let i=0;i<pixels.length;i+=4){const r=pixels[i],g=pixels[i+1],b=pixels[i+2];if(r>85&&b>70&&r>g+45&&b>g+40)pixels[i+3]=0;}
+ for(let seed=0;seed<seen.length;seed++){
+  if(seen[seed]||pixels[seed*4+3]<128)continue;
+  const group=[seed];seen[seed]=1;
+  for(let k=0;k<group.length;k++){
+   const n=group[k],x=n%width,y=Math.floor(n/width);
+   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    const xx=x+dx,yy=y+dy,q=yy*width+xx;
+    if(xx>=0&&xx<width&&yy>=0&&yy<height&&!seen[q]&&pixels[q*4+3]>=128){seen[q]=1;group.push(q);}
+   }
+  }
+  if(group.length>body.length)body=group;
+ }
+ if(body.length<500)throw new Error('Connected pose missing');
+ let left=width,right=0,top=height,bottom=0;const clean=ctx.createImageData(width,height),anchors=[];
+ for(const n of body){const x=n%width,y=Math.floor(n/width);left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);clean.data.set(pixels.subarray(n*4,n*4+4),n*4);}
+ for(const n of body){const i=n*4,y=Math.floor(n/width);if(y>top+(bottom-top)*.25&&y<top+(bottom-top)*.55&&pixels[i]>70&&pixels[i]>pixels[i+1]*1.8&&pixels[i]>pixels[i+2]*1.6)anchors.push(n%width);}
+ anchors.sort((a,b)=>a-b);const anchor=anchors[Math.floor(anchors.length/2)]??(left+right)/2;
+ ctx.putImageData(clean,0,0);const scale=targetHeight/(bottom-top+1),w=Math.round((right-left+1)*scale);
+ const atlas=document.createElement('canvas');atlas.width=128;atlas.height=128;const out=atlas.getContext('2d');out.imageSmoothingEnabled=false;
+ const x=Math.round(64+(left-anchor)*scale);if(x<0||x+w>128)throw new Error('Pose exceeds cell');
+ out.drawImage(source,left,top,right-left+1,bottom-top+1,x,123-targetHeight,w,targetHeight);
+ return atlas;
+}
+idleSheet.onload=()=>{if(document.createElement){try{idleAtlas=preparePose(idleSheet,100)}catch(e){console.warn('Idle artwork unavailable',e)}}};
+idleSheet.onerror=()=>{};idleSheet.src='./alter-idle-v4.png';
+crouchSheet.onload=()=>{if(document.createElement){try{crouchAtlas=preparePose(crouchSheet,66)}catch(e){console.warn('Crouch artwork unavailable',e)}}};
+crouchSheet.onerror=()=>{};crouchSheet.src='./alter-crouch-v4.png';
+citySheet.onload=()=>{cityReady=citySheet.naturalWidth>=1024&&citySheet.naturalHeight>=256};citySheet.onerror=()=>{};citySheet.src='./city-v4.png';
 function spriteFrame(){
+ if(P.crouching)return {sheet:crouchAtlas,ready:!!crouchAtlas,width:128,frame:0};
  if(P.batCd>0)return {sheet:cleanMaster||master,ready:masterReady,frame:[44,46,47,48,48,44][Math.min(5,Math.floor((.42-P.batCd)/.42*6))]};
  if(P.shootCd>0)return {sheet:cleanMaster||master,ready:masterReady,frame:38+Math.min(5,Math.floor((.19-P.shootCd)/.19*6))};
  if(!P.onGround)return {sheet:cleanMaster||master,ready:masterReady,frame:P.vy<-150?22:P.vy<110?25:29};
@@ -501,6 +555,7 @@ function spriteFrame(){
    if(running&&runAtlas)return {sheet:runAtlas,ready:true,width:128,frame:Math.floor(gait*8)%8};
    return {sheet:cleanMaster||master,ready:masterReady,frame:running?[12,13,14][Math.floor(gait*3)%3]:6+Math.floor(gait*6)%6};
  }
+ if(idleAtlas)return {sheet:idleAtlas,ready:true,width:128,frame:0};
  return {sheet:cleanMaster||master,ready:masterReady,frame:0};
 }
 function drawPlayer(){
@@ -512,9 +567,11 @@ function drawPlayer(){
    // Exact 96x128 source cell. All existing sheets have feet at row 122.
    const cellW=sprite.width||96;
    X.drawImage(sprite.sheet,sprite.frame*cellW,0,cellW,128,-cellW*.375,-92.25,cellW*.75,96);
+   if(P.crouching&&P.shootCd>0){box(12,-25,20,5,"#a7acab","#111");box(13,-20,5,7,"#55493b");}
+   if(P.crouching&&P.batCd>0){X.strokeStyle="#ba8550";X.lineWidth=4;X.beginPath();X.moveTo(12,-20);X.lineTo(P.batCd>.2?32:48,P.batCd>.2?-48:-18);X.stroke();}
    X.restore();return;
  }
- X.save();X.translate(x+P.w/2,y);X.scale(P.dir,1);X.translate(-P.w/2,0);
+ X.save();X.translate(x+P.w/2,y);X.scale(P.dir,1);X.translate(-P.w/2,0);if(P.crouching)X.scale(1,40/64);
  // backpack
  box(-8,20,14,31,"#55493b","#151515");box(-11,26,5,20,"#87704c");
  // Procedural fallback still animates if the image is unavailable.
@@ -601,6 +658,7 @@ function syncTouch(){
  for(const button of document.querySelectorAll('[data-action]'))button.classList.toggle('held',!!touch[button.dataset.action]);
 }
 function clearInput(){
+ setCrouch(false);
  pointers.clear();for(const key in keys)delete keys[key];
  for(const key in touch)touch[key]=false;
  jumpQueued=false;jumpHeld=false;radioQueued=false;radioHeld=false;
@@ -611,7 +669,7 @@ function start(){
  started=true;paused=false;last=null;accumulator=0;
  document.getElementById('welcome').hidden=true;
  document.getElementById('pause').textContent='Pausa';
- document.getElementById('note').textContent='Capitolo I · 07.09.3 · La frequenza';
+ document.getElementById('note').textContent='Capitolo I · 07.09.4 · La frequenza';
  say('JACK','Alter? Se ci senti, muoviti verso la torre.',4);
 }
 function togglePause(){
@@ -619,7 +677,7 @@ function togglePause(){
  paused=!paused;clearInput();last=null;accumulator=0;
  previousX=P.x;previousY=P.y;previousCam=cam;
  document.getElementById('pause').textContent=paused?'Riprendi':'Pausa';
- document.getElementById('note').textContent=paused?'In pausa · tocca Riprendi':'Capitolo I · 07.09.3 · La frequenza';
+ document.getElementById('note').textContent=paused?'In pausa · tocca Riprendi':'Capitolo I · 07.09.4 · La frequenza';
 }
 for(const button of document.querySelectorAll('[data-action]')){
  button.addEventListener('pointerdown',e=>{
@@ -636,7 +694,7 @@ addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);syncTouch()});
 C.addEventListener('pointerdown',e=>{e.preventDefault();if(!started||gameOver||complete)start()},{passive:false});
 document.getElementById('start').addEventListener('click',start);
 document.getElementById('pause').addEventListener('click',togglePause);
-const handled=['a','d','w','arrowleft','arrowright','arrowup',' ','shift','j','k','e','p','escape','enter','r'];
+const handled=['a','d','w','arrowleft','arrowright','arrowup','arrowdown',' ','shift','j','k','e','p','escape','enter','r'];
 addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();if(!handled.includes(k))return;
  e.preventDefault();if(e.repeat)return;
