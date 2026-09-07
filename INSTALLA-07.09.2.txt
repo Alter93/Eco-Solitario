@@ -1,0 +1,4 @@
+VERSIONE 07.09.2 — commit locale 2054bda
+Estrai lo ZIP e copia il contenuto nella root Alter93/Eco-Solitario, mantenendo le cartelle assets e references. Sostituisci i file omonimi e conserva gli altri file del repository. Non caricare solo lo ZIP. Non applicare patch storiche dopo questa versione.
+Il sito continua a usare index.html senza compilazione. Riaprilo online dopo il deployment.
+PLAYTEST.md distingue i test superati dai blocchi ancora aperti. La cartella qa contiene rendering tecnici, non screenshot browser.

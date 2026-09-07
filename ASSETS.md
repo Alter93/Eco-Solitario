@@ -1,24 +1,14 @@
-# Character assets — Chapter I v1.1
+# Asset attivi — Capitolo I 07.09.2
 
-The original `alter_master_sheet.png` is retained for history and reference.
-The active atlas is `assets/alter-actions.png`, generated and cleaned with the
-built-in image tool using Alter's original design as reference. The PNG was
-re-encoded losslessly for decoder compatibility; RGBA pixels were verified equal.
+L'entry point `index.html` carica soltanto `game.js`.
 
-`characters.js` extracts the 32 connected figures at alpha >= 128. It never
-assumes that a weapon ends at a grid boundary. Small disconnected debris is
-excluded, lower-torso alignment and a shared scale preserve the character's
-size, and feet use a common canvas baseline. Three bandit palettes reuse the
-same cached poses. Source artwork is never modified during loading.
+| File | Uso effettivo |
+| --- | --- |
+| alter_master_sheet.png | Alter; pulizia e ancoraggio runtime, corsa celle 12–14 |
+| assets/bandits-v2.png | 18 pose di tre nemici distinti; rimozione magenta e componenti connesse |
+| assets/radio-hosts-v2.png | Jack e Dexter, espressioni neutre e parlanti |
+| references/style-board.jpeg | Tavola originale di direzione artistica, non caricata dal gioco |
+| references/radio-studio.jpeg | Riferimento conservato, non caricato dal gioco |
 
-The rows contain eight running phases, eight running pistol phases, eight
-running baton phases, then idle / rise / fall / land / windup / strike /
-followthrough / hurt. During melee while moving, legs keep the running cycle
-while the torso follows the swing; the baton can be occluded in followthrough.
-
-`assets/radio-hosts.png` contains Jack (left) and Dexter (right), interpreted
-from the established pixel-art descriptions: brown swept hair and teal for
-Jack, fuller dark hair and mauve for Dexter, both with cyan headsets. These are
-stylized character illustrations, not reproductions of unavailable photos.
-
-No external asset URLs or runtime libraries are required by the game.
+`characters.js` è un esperimento storico non importato. Le precedenti indicazioni su `assets/alter-actions.png` e `assets/radio-hosts.png` non descrivevano il runtime presente e sono superate.
+Le nuove immagini non richiedono librerie nel browser. Vite è facoltativo per sviluppo. Per i test raster installare separatamente `@napi-rs/canvas@0.1.100`, quindi eseguire `node --test sprite.test.cjs`.

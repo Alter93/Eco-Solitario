@@ -1,6 +1,6 @@
 ECO SOLITARIO — CAPITOLO I CORRETTO — 7 SETTEMBRE 2026
 
-AVVIO UNICO: index.html, che carica game.js?v=chapter1-20260907.
+AVVIO UNICO: index.html, che carica game.js?v=chapter1-20260907b.
 Le pagine alter-motion-v2/v3/v4.html rimandano ora al Capitolo I.
 capitolo-2.html resta una pagina separata, non è il punto di avvio.
 
@@ -37,21 +37,7 @@ Apri una volta online per installare la cache. Se la vecchia app era rimasta
 aperta, chiudila e riaprila online. Il caricamento offline è disponibile dopo
 l’installazione riuscita del service worker; richiede HTTPS (o localhost).
 
-PATCH 7 SETTEMBRE — CANDIDATA ALLA PROVA
-Due pulsanti direzionali, corsa automatica; ad esaurimento stamina Alter cammina
-fino al recupero del 35%, evitando alternanze rapide corsa/cammino.
-Pulizia delle componenti laterali dello sprite durante il caricamento e piedi
-allineati. Gli originali non vengono sovrascritti. Le pose originariamente
-troncate non possono essere ricostruite dalla pulizia automatica.
-Banditi con animazione derivata da Alter e colori diversi.
-Jack e Dexter hanno ritratti procedurali provvisori, con bocca animata;
-non sono riproduzioni delle immagini di riferimento delle conversazioni.
-Dialoghi automatici a soglie di avanzamento, senza interrompere quelli dei pickup.
-15 test simulati includono un attraversamento completo con comandi, senza teletrasporto.
-La verifica su iPhone fisico resta da eseguire.
-
-Verifica dell'atlante con canvas reale: escluse dalla corsa le celle 15–19,
-che contengono figure troncate; usate le tre pose complete 12–14.
-Escluse dalla mazza le pose 45 e 49 incoerenti o frammentate.
-Per una corsa più ricca serviranno nuovi frame completi, non soltanto pulizia.
-Il browser remoto non raggiunge localhost; nessun collaudo browser viene dichiarato.
+REVISIONE 07.09.2
+Banditi con sagome indipendenti; ritratti Jack/Dexter dalla tavola recuperata.
+Pulizia di Alter e radio una battuta per pressione. Fisica invariata.
+Consulta ART-DIRECTION.md per i riferimenti permanenti e PLAYTEST.md per risultati e limiti.

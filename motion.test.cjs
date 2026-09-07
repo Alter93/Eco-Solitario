@@ -6,20 +6,21 @@ const path=require('node:path');
 const root=__dirname;
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const source=fs.readFileSync(path.join(root,'game.js'),'utf8');
-function boot({images=true,width=852,height=393}={}){
+function boot({images=true,width=852,height=393,canvasBackend=null}={}){
  const draws=[];let queue=[],now=0;
  function node(){const handlers={};return {style:{},dataset:{},hidden:false,textContent:'',classList:{toggle(){},remove(){}},
  addEventListener(type,fn){(handlers[type]??=[]).push(fn)},
  emit(type,event={}){for(const fn of handlers[type]||[])fn({preventDefault(){},...event})},
  getBoundingClientRect(){return {left:0,top:0,width,height}},setPointerCapture(){},
- getContext(){return new Proxy({drawImage(...args){draws.push(args)},createLinearGradient(){return {addColorStop(){}}}}, {get:(o,k)=>k in o?o[k]:(()=>{})})}}}
+ getContext(){if(canvasBackend)return canvasBackend.createCanvas(1280,720).getContext('2d');return new Proxy({drawImage(...args){draws.push(args)},createLinearGradient(){return {addColorStop(){}}}}, {get:(o,k)=>k in o?o[k]:(()=>{})})}}}
  const nodes=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],node()]));
  const buttons=Object.fromEntries([...html.matchAll(/data-action="([^"]+)"/g)].map(m=>{const n=node();n.dataset.action=m[1];return [m[1],n]}));
  const doc=Object.assign(node(),{hidden:false,getElementById:id=>nodes[id]??null,querySelectorAll:()=>Object.values(buttons)});
+ if(canvasBackend)doc.createElement=()=>canvasBackend.createCanvas(1,1);
  const win=node();
  class Image{set src(s){this.naturalWidth=s.includes('master')?5184:1152;this.naturalHeight=128;if(images)this.onload?.();else this.onerror?.()}}
- const context=vm.createContext({document:doc,window:win,location:{protocol:'http:'},navigator:{},Image,console,performance:{now:()=>now},requestAnimationFrame:fn=>queue.push(fn),innerWidth:width,innerHeight:height,addEventListener:win.addEventListener.bind(win)});
- const injection=`\nthis.__test={P,keys,touch,buttons:null,start,reset,update,draw,spriteFrame,loop,STEP,get state(){return {started,paused,gameOver,complete,cam,gait,jumpQueued,bullets,enemies,platforms}}};\n`;
+ const context=vm.createContext({document:doc,window:win,location:{protocol:'http:'},navigator:{},Image:canvasBackend?.GameImage||(canvasBackend?class extends canvasBackend.Image{set src(s){super.src=fs.readFileSync(path.join(root,s))}}:Image),console,performance:{now:()=>now},requestAnimationFrame:fn=>queue.push(fn),innerWidth:width,innerHeight:height,addEventListener:win.addEventListener.bind(win)});
+ const injection=`\nthis.__test={P,keys,touch,buttons:null,start,reset,update,draw,spriteFrame,loop,STEP,get state(){return {started,paused,gameOver,complete,cam,gait,jumpQueued,bullets,enemies,platforms,pickups,dialogT,dialogText,radioIdx}}};\n`;
  vm.runInContext(source.replace(/\}\)\(\);\s*$/,injection+'})();'),context);
  const game=context.__test;
  function frames(seconds,hz=60){for(let i=0;i<Math.round(seconds*hz);i++){now+=1000/hz;const pending=queue;queue=[];for(const fn of pending)fn(now)}}
@@ -27,7 +28,7 @@ function boot({images=true,width=852,height=393}={}){
  return {game,nodes,buttons,doc,win,draws,key,frames};
 }
 test('entry point loads exactly the chapter engine and required DOM',()=>{
- assert.match(html,/<script src="\.\/game\.js\?v=chapter1-20260907"/);
+ assert.match(html,/<script src="\.\/game\.js\?v=chapter1-20260907b"/);
  assert.equal((html.match(/<script/g)||[]).length,1);
  for(const v of [2,3,4])assert.match(fs.readFileSync(path.join(root,`alter-motion-v${v}.html`),'utf8'),/url=\.\/index.html/);
  const b=boot();b.frames(.1);assert.equal(b.game.state.started,false);
@@ -113,3 +114,24 @@ test('full chapter traversal with movement and combat reaches tower without tele
  }
  assert.equal(b.game.state.gameOver,false);assert.equal(b.game.state.complete,true);assert.ok(b.game.P.hp>0);
 });
+
+test('holding radio keeps one line; releasing and pressing advances once',()=>{
+ const b=boot();b.game.start();b.key('keydown','e');b.frames(2);
+ assert.equal(b.game.state.radioIdx,1);const line=b.game.state.dialogText;b.frames(1);assert.equal(b.game.state.dialogText,line);
+ b.key('keyup','e');b.key('keydown','e');b.frames(.1);assert.equal(b.game.state.radioIdx,2);
+});
+test('all pickup types apply once and reset restores the chapter',()=>{
+ const b=boot();b.game.start();for(const e of b.game.state.enemies)e.dead=true;
+ b.game.P.hp=10;b.game.P.ammo=0;
+ for(const p of b.game.state.pickups){b.game.P.x=p.x;b.game.P.y=p.y;b.game.P.vy=0;b.game.update(b.game.STEP);assert.equal(p.taken,true);}
+ assert.equal(b.game.P.docs,3);assert.equal(b.game.P.radioParts,2);assert.equal(b.game.P.hp,100);assert.equal(b.game.P.ammo,12);
+ b.game.reset();assert.equal(b.game.P.docs,0);assert.equal(b.game.P.radioParts,0);assert.ok(b.game.state.pickups.every(p=>!p.taken));
+});
+test('fatal contact prevents same-step healing and touch restarts',()=>{
+ const b=boot();b.game.start();b.frames(1);const e=b.game.state.enemies[0],p=b.game.state.pickups[0];
+ b.game.P.hp=1;b.game.P.x=e.x;b.game.P.y=e.y;b.game.P.hurt=0;p.x=e.x;p.y=e.y;
+ b.game.update(b.game.STEP);assert.equal(b.game.state.gameOver,true);assert.equal(b.game.P.hp,0);assert.equal(p.taken,false);
+ b.nodes.game.emit('pointerdown');assert.equal(b.game.state.gameOver,false);assert.equal(b.game.P.hp,100);
+});
+
+module.exports={boot};

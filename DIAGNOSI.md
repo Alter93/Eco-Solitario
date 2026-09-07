@@ -1,3 +1,10 @@
+# Stato corrente 07.09.2
+
+Il resoconto corrente è PLAYTEST.md; i riferimenti sono in ART-DIRECTION.md.
+La diagnosi seguente è conservata come storia e non descrive gli asset attivi.
+
+---
+
 # Aggiornamento 7 settembre 2026
 
 Base: `4b5b519`, pubblicata da GitHub Pages il 6 settembre.
