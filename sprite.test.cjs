@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const {createCanvas,loadImage}=require('@napi-rs/canvas');
 const source=fs.readFileSync(__dirname+'/game.js','utf8');
 const context=vm.createContext({document:{createElement:()=>createCanvas(1,1)}});
-vm.runInContext(source.slice(source.indexOf('function prepareBandits'),source.indexOf('banditSheet.onload'))+source.slice(source.indexOf('function prepareFrames'),source.indexOf('master.onerror'))+source.slice(source.indexOf('function prepareRun'),source.indexOf('runSheet.onload'))+source.slice(source.indexOf('function preparePose'),source.indexOf('idleSheet.onload')),context);
+vm.runInContext(source.slice(source.indexOf('function prepareBandits'),source.indexOf('banditSheet.onload'))+source.slice(source.indexOf('function prepareFrames'),source.indexOf('master.onerror'))+source.slice(source.indexOf('function prepareRun'),source.indexOf('runSheet.onload'))+source.slice(source.indexOf('function preparePose'),source.indexOf('idleSheet.onload')).replace(/meleeSheet\.onload=[\s\S]*?meleeSheet\.src='\.\/alter-melee-v1\.png';/,'' )+source.slice(source.indexOf('function prepareMelee'),source.indexOf('meleeSheet.onload')),context);
 test('18 actual enemy poses have transparent backgrounds and intact feet',async()=>{
  const sheet=await loadImage(__dirname+'/bandits-v2.png');sheet.naturalWidth=sheet.width;sheet.naturalHeight=sheet.height;
  const frames=context.prepareBandits(sheet);assert.equal(frames.length,18);
@@ -53,4 +53,14 @@ test('idle and crouch real artwork have planted feet, opaque bodies and no magen
   assert.ok(count>1000);assert.equal(bottom,122);assert.equal(magenta,0);
  }
  if(process.env.ECO_QA_OUTPUT)fs.writeFileSync(process.env.ECO_QA_OUTPUT+'/poses-check-v4.png',preview.toBuffer('image/png'));
+});
+
+test('melee sheet contains eight readable boxer and kickboxer poses',async()=>{
+ const sheet=await loadImage(__dirname+'/alter-melee-v1.png');sheet.naturalWidth=sheet.width;sheet.naturalHeight=sheet.height;
+ const atlas=context.prepareMelee(sheet);assert.equal(atlas.width,1024);assert.equal(atlas.height,128);
+ for(let n=0;n<8;n++){
+  const pixels=atlas.getContext('2d').getImageData(n*128,0,128,128).data;let count=0,magenta=0;
+  for(let i=0;i<pixels.length;i+=4)if(pixels[i+3]>=128){count++;if(pixels[i]>85&&pixels[i+2]>70&&pixels[i]>pixels[i+1]+45&&pixels[i+2]>pixels[i+1]+40)magenta++;}
+  assert.ok(count>1000,'melee silhouette '+n);assert.equal(magenta,0);
+ }
 });

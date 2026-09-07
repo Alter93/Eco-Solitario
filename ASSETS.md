@@ -1,4 +1,4 @@
-# Asset attivi — Capitolo I 07.09.4
+# Asset attivi — Capitolo I 07.09.5
 
 L'entry point `index.html` carica soltanto `game.js`.
 
@@ -7,6 +7,7 @@ L'entry point `index.html` carica soltanto `game.js`.
 | alter_master_sheet.png | Camminata, salto e armi; pose originali di riserva |
 | alter-idle-v4.png | Nuova posa da fermo, una sagoma connessa |
 | alter-crouch-v4.png | Accovacciamento, stessa linea dei piedi |
+| alter-melee-v1.png | Otto pose corpo a corpo: guardia, pugni, ginocchio e calci |
 | city-v4.png | Sfondo cittadino pixel art con scorrimento lento |
 | alter-run-v3.png | Otto pose di corsa, normalizzate in celle 128×128 con ancoraggio al busto |
 | bandits-v2.png | 18 pose di tre nemici distinti; rimozione magenta e componenti connesse |

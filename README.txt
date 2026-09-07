@@ -10,7 +10,7 @@ La vista orizzontale offre più spazio; i comandi funzionano anche in verticale.
 Non aprire l’anteprima dello ZIP o del file HTML nell’app File per giocare.
 
 Tastiera: Invio avvia; A/D o frecce muovono; W, freccia su o Spazio saltano;
-La corsa è automatica tenendo una direzione; J spara; K usa la mazza; E radio; P/Esc pausa; R riavvia a fine partita.
+La corsa è automatica tenendo una direzione; J spara; K usa pugni e calci; E radio; P/Esc pausa; R riavvia a fine partita.
 
 INSTALLAZIONE NEL REPOSITORY
 Carica i file estratti nella root del repository, sostituendo gli omonimi.
@@ -37,7 +37,7 @@ Apri una volta online per installare la cache. Se la vecchia app era rimasta
 aperta, chiudila e riaprila online. Il caricamento offline è disponibile dopo
 l’installazione riuscita del service worker; richiede HTTPS (o localhost).
 
-REVISIONE 07.09.4
+REVISIONE 07.09.5
 Banditi con sagome indipendenti; ritratti Jack/Dexter dalla tavola recuperata.
 Pulizia di Alter e radio una battuta per pressione. Fisica invariata.
 Consulta ART-DIRECTION.md per i riferimenti permanenti e PLAYTEST.md per risultati e limiti.
@@ -45,4 +45,10 @@ Consulta ART-DIRECTION.md per i riferimenti permanenti e PLAYTEST.md per risulta
 Corsa di Alter: otto pose nuove in alter-run-v3.png, con recupero delle tre pose originali se il file non è disponibile.
 Tutte le immagini attive sono ora nella root insieme a index.html.
 
-REVISIONE 07.09.4: posa da fermo integra; città pixel art; tieni Freccia giù (o ▼ sul touch) per accovacciarti. Al rilascio Alter si rialza. Il salto rialza Alter prima dello stacco. Mentre è accovacciato resta sul posto e può usare le armi.
+REVISIONE 07.09.5: posa da fermo integra; città pixel art; tieni Freccia giù (o ▼ sul touch) per accovacciarti. Al rilascio Alter si rialza. Il salto rialza Alter prima dello stacco. Mentre è accovacciato resta sul posto e può usare le armi.
+
+La città panoramica mantiene il rapporto originale e scorre lentamente con la camera.
+I colpi riusciti caricano l'aura di Alter: a carica piena il colpo seguente attiva
+OVERDRIVE, distorce la scena e mette KO il nemico in un colpo.
+La mazza è stata sostituita dal tasto K / Pugno: il ciclo comprende pugni, ginocchio e calci.
+Il danno arriva sul fotogramma d'impatto, così l'animazione e la hitbox restano sincronizzate.
