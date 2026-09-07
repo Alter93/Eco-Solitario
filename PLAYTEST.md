@@ -1,27 +1,21 @@
-# Verifica 07.09.2 — 7 settembre 2026
+# Verifica 07.09.3 — 7 settembre 2026
 
-Candidata alla prova, preparata sulla base main d9e1083. Non dichiarata pubblicata.
+Base remota verificata: main d40a6c9, integrata nella revisione locale. Su quel commit il codice 07.09.2 era presente, ma mancavano bandits-v2.png e radio-hosts-v2.png nei percorsi assets dichiarati dal gioco, e i riferimenti grafici nella cartella references. La nuova distribuzione contiene tutti i file nella root: non richiede il caricamento di sottocartelle.
 
 ## Risultati
 
-21 test automatici superati: 18 di logica/input, 2 sugli asset raster reali, 1 sul service worker. I test includono movimento a 30/60/120 Hz, stamina, multitouch, salto singolo, pausa/background, collisioni, armi, munizioni, salute, tutti i pickup, morte, riavvio, radio e attraversamento simulato fino alla torre senza teletrasporto. Il test offline verifica cache e versioni con rete simulata, non una vera installazione Safari.
+23 test superati: 19 di logica/input, 3 con raster reali e 1 sul service worker. Eseguiti con `node --test motion.test.cjs offline.test.cjs sprite.test.cjs` (il test raster richiede @napi-rs/canvas 0.1.100).
 
-Rendering del codice effettivo con canvas reale controllato visivamente: 18 sagome nemiche, celle usate da Alter e scena con HUD, dialogo e ritratti. Magenta assente nelle pose estratte; piedi allineati. Questi rendering non sono screenshot di una partita browser.
+La corsa usa otto immagini distinte estratte dalla nuova tavola, con sfondo magenta rimosso, scala comune e ancoraggio del busto. Le celle di 128×128 conservano tutta l'estensione delle gambe. Ritmo legato alla distanza percorsa; velocità 285 e fisica invariate. Le pose originali restano disponibili se la nuova immagine non si carica.
 
-Correzioni: pulizia dei frammenti fuori sagoma di Alter, ancoraggio al busto, banditi indipendenti, ritratti derivati dalla tavola, separazione barre/contatori, radio una battuta per pressione, morte terminale prima di pickup/completamento nello stesso aggiornamento. Velocità e fisica conservate.
+Verificati corsa → sparo → corsa, corsa → mazza, corsa → salto → corsa, selezione delle otto fasi e mantenimento della velocità. Restano superati i controlli precedenti su stamina, multitouch, pausa, background, collisioni, pickup, salute, armi, morte, reset e attraversamento completo simulato senza teletrasporto. Il controllo della cache usa una rete simulata.
+
+La sequenza estratta è stata renderizzata con canvas reale e controllata visivamente. Il file run-check-v3.png è un rendering tecnico, non uno screenshot browser. Otto immagini diverse non garantiscono da sole una perfetta biomeccanica: valutare il ciclo in movimento sul dispositivo.
 
 ## Blocchi ancora aperti
 
-- Prova interattiva della nuova versione nel browser e su iPhone/Safari: l'anteprima è avviata ma il browser remoto restituisce ERR_BLOCKED_BY_CLIENT. Non è un difetto del gioco dimostrato. Da verificare tocco prolungato, rotazione, audio se aggiunto in futuro, cache offline e comfort di lettura su dispositivo.
-- Pubblicazione della patch: il connettore GitHub aveva rifiutato la scrittura con 403 Resource not accessible by integration. Lo ZIP deve essere applicato al repository prima che il link pubblico mostri questi cambiamenti.
-- Rifinitura artistica di Alter: le celle originali 15–19 sono troncate. La corsa usa tre pose complete; le azioni armate mantengono un'animazione essenziale. Servono nuovi frame coerenti per una qualità finale, non ulteriori filtri.
+- Partita manuale completa della nuova versione e prova su iPhone/Safari. L'accesso browser all'anteprima era bloccato da ERR_BLOCKED_BY_CLIENT; questa verifica non è dichiarata eseguita. I test simulati non la sostituiscono.
+- Pubblicazione: applicare i file estratti dello ZIP nella root del repository e verificare la versione 07.09.3. Il precedente errore 403 di scrittura GitHub impedisce di dichiarare una pubblicazione automatica.
+- Coerenza delle animazioni: corsa più articolata, ma salto, camminata e armi usano ancora la tavola precedente. Le azioni armate non hanno ancora un ciclo completo di gambe durante la corsa. La transizione funzionale passa i test; l'uniformità artistica resta da valutare nel playtest.
 
-Giudizio: base funzionale promettente, identità dei nemici e dei radiofonici più chiara. Buona candidata per una prova privata; non ancora collaudata per una condivisione come versione definitiva.
-
-## Ripetere i controlli
-
-`node --test motion.test.cjs offline.test.cjs`
-
-Con @napi-rs/canvas 0.1.100 disponibile: `node --test sprite.test.cjs`.
-
-`node --check game.js` e `node --check sw.js`.
+Giudizio: candidata alla prova, con un miglioramento concreto del ciclo di corsa e una correzione necessaria alla distribuzione degli asset. Non certificata come versione definitiva.

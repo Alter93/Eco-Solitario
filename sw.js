@@ -1,7 +1,7 @@
 // One coherent chapter, including offline launches from historical URLs.
-const CACHE='eco-v102-chapter1-20260907b';
-const ASSETS=['./','./index.html','./game.js?v=chapter1-20260907b','./manifest.json',
- './assets/bandits-v2.png','./assets/radio-hosts-v2.png','./alter_master_sheet.png','./icon-192.png','./icon-512.png',
+const CACHE='eco-v103-chapter1-20260907c';
+const ASSETS=['./','./index.html','./game.js?v=chapter1-20260907c','./manifest.json',
+ './alter-run-v3.png','./bandits-v2.png','./radio-hosts-v2.png','./alter_master_sheet.png','./icon-192.png','./icon-512.png',
  './alter-motion-v2.html','./alter-motion-v3.html','./alter-motion-v4.html'];
 self.addEventListener('install',event=>event.waitUntil(
  caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())

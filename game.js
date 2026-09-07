@@ -386,9 +386,9 @@ function prepareBandits(sheet){
  return frames;
 }
 banditSheet.onload=()=>{if(document.createElement){try{banditFrames=prepareBandits(banditSheet)}catch(e){console.warn('Enemy artwork unavailable',e)}}};
-banditSheet.onerror=()=>{};banditSheet.src='./assets/bandits-v2.png';
+banditSheet.onerror=()=>{};banditSheet.src='./bandits-v2.png';
 hostSheet.onload=()=>{hostsReady=hostSheet.naturalWidth>0&&hostSheet.naturalWidth===hostSheet.naturalHeight};
-hostSheet.onerror=()=>{};hostSheet.src='./assets/radio-hosts-v2.png';
+hostSheet.onerror=()=>{};hostSheet.src='./radio-hosts-v2.png';
 
 const master=new Image();
 let masterReady=false;
@@ -454,12 +454,51 @@ function prepareFrames(sheet){
 }
 master.onerror=()=>{document.getElementById('note').textContent='Grafica ridotta: puoi continuare a giocare.'};
 master.src='./alter_master_sheet.png';
+let runAtlas=null;
+const runSheet=new Image();
+function prepareRun(sheet){
+ const width=sheet.naturalWidth,height=sheet.naturalHeight;
+ if(width<400||height<200)throw new Error('Run sheet dimensions invalid');
+ const source=document.createElement('canvas');source.width=width;source.height=height;
+ const ctx=source.getContext('2d',{willReadFrequently:true});ctx.drawImage(sheet,0,0);
+ const data=ctx.getImageData(0,0,width,height),pixels=data.data,bounds=[];
+ for(let i=0;i<pixels.length;i+=4){const r=pixels[i],g=pixels[i+1],b=pixels[i+2];if(r>85&&b>70&&r>g+45&&b>g+40)pixels[i+3]=0;}
+ for(let frame=0;frame<8;frame++){
+  const x0=Math.round(frame%4*width/4),x1=Math.round((frame%4+1)*width/4),y0=Math.round(Math.floor(frame/4)*height/2),y1=Math.round((Math.floor(frame/4)+1)*height/2);
+  let left=x1,right=x0,top=y1,bottom=y0,count=0;
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++)if(pixels[(y*width+x)*4+3]>=128){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);count++;}
+  if(count<500||left<=x0||right>=x1-1||top<=y0||bottom>=y1-1)throw new Error('Run pose missing or clipped: '+frame);
+  const xs=[],ys=[];
+  for(let y=Math.round(top+(bottom-top)*.25);y<top+(bottom-top)*.55;y++)for(let x=left;x<=right;x++){
+   const i=(y*width+x)*4;if(pixels[i+3]>=128&&pixels[i]>70&&pixels[i]>pixels[i+1]*1.8&&pixels[i]>pixels[i+2]*1.6){xs.push(x);ys.push(y);}
+  }
+  if(xs.length<20)throw new Error('Run torso anchor missing: '+frame);
+  xs.sort((a,b)=>a-b);ys.sort((a,b)=>a-b);bounds.push({left,right,top,bottom,x:xs[Math.floor(xs.length/2)],y:ys[Math.floor(ys.length/2)]});
+ }
+ ctx.putImageData(data,0,0);
+ const median=values=>values.sort((a,b)=>a-b)[Math.floor(values.length/2)];
+ const scale=100/median(bounds.map(b=>b.bottom-b.top+1));
+ const floorOffset=median([0,1,2,4,5,6].map(n=>bounds[n].bottom-bounds[n].y));
+ const atlas=document.createElement('canvas');atlas.width=1024;atlas.height=128;
+ const out=atlas.getContext('2d');out.imageSmoothingEnabled=false;
+ for(let n=0;n<8;n++){
+  const b=bounds[n],w=b.right-b.left+1,h=b.bottom-b.top+1;
+  const dx=Math.round(64+(b.left-b.x)*scale),dy=Math.round(122-floorOffset*scale+(b.top-b.y)*scale+[0,1,0,-2,0,1,0,-2][n]);
+  const dw=Math.round(w*scale),dh=Math.round(h*scale);
+  if(dx<0||dx+dw>128||dy<0||dy+dh>128)throw new Error('Run pose exceeds normalized cell: '+n);
+  out.drawImage(source,b.left,b.top,w,h,n*128+dx,dy,dw,dh);
+ }
+ return atlas;
+}
+runSheet.onload=()=>{if(document.createElement){try{runAtlas=prepareRun(runSheet)}catch(error){console.warn('Run artwork unavailable; using original poses',error)}}};
+runSheet.onerror=()=>{};runSheet.src='./alter-run-v3.png';
 function spriteFrame(){
  if(P.batCd>0)return {sheet:cleanMaster||master,ready:masterReady,frame:[44,46,47,48,48,44][Math.min(5,Math.floor((.42-P.batCd)/.42*6))]};
  if(P.shootCd>0)return {sheet:cleanMaster||master,ready:masterReady,frame:38+Math.min(5,Math.floor((.19-P.shootCd)/.19*6))};
  if(!P.onGround)return {sheet:cleanMaster||master,ready:masterReady,frame:P.vy<-150?22:P.vy<110?25:29};
  if(Math.abs(P.vx)>1&&Math.abs(P.x-previousX)>.001){
    const running=Math.abs(P.vx)>220;
+   if(running&&runAtlas)return {sheet:runAtlas,ready:true,width:128,frame:Math.floor(gait*8)%8};
    return {sheet:cleanMaster||master,ready:masterReady,frame:running?[12,13,14][Math.floor(gait*3)%3]:6+Math.floor(gait*6)%6};
  }
  return {sheet:cleanMaster||master,ready:masterReady,frame:0};
@@ -471,7 +510,8 @@ function drawPlayer(){
    X.save();X.translate(x+P.w/2,y+P.h);X.scale(P.dir,1);
    if(P.hurt>0&&Math.floor(t*18)%2)X.globalAlpha=.45;
    // Exact 96x128 source cell. All existing sheets have feet at row 122.
-   X.drawImage(sprite.sheet,sprite.frame*96,0,96,128,-36,-92.25,72,96);
+   const cellW=sprite.width||96;
+   X.drawImage(sprite.sheet,sprite.frame*cellW,0,cellW,128,-cellW*.375,-92.25,cellW*.75,96);
    X.restore();return;
  }
  X.save();X.translate(x+P.w/2,y);X.scale(P.dir,1);X.translate(-P.w/2,0);
@@ -571,7 +611,7 @@ function start(){
  started=true;paused=false;last=null;accumulator=0;
  document.getElementById('welcome').hidden=true;
  document.getElementById('pause').textContent='Pausa';
- document.getElementById('note').textContent='Capitolo I · 07.09.2 · La frequenza';
+ document.getElementById('note').textContent='Capitolo I · 07.09.3 · La frequenza';
  say('JACK','Alter? Se ci senti, muoviti verso la torre.',4);
 }
 function togglePause(){
@@ -579,7 +619,7 @@ function togglePause(){
  paused=!paused;clearInput();last=null;accumulator=0;
  previousX=P.x;previousY=P.y;previousCam=cam;
  document.getElementById('pause').textContent=paused?'Riprendi':'Pausa';
- document.getElementById('note').textContent=paused?'In pausa · tocca Riprendi':'Capitolo I · 07.09.2 · La frequenza';
+ document.getElementById('note').textContent=paused?'In pausa · tocca Riprendi':'Capitolo I · 07.09.3 · La frequenza';
 }
 for(const button of document.querySelectorAll('[data-action]')){
  button.addEventListener('pointerdown',e=>{

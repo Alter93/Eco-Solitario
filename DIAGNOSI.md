@@ -1,4 +1,4 @@
-# Stato corrente 07.09.2
+# Stato corrente 07.09.3
 
 Il resoconto corrente è PLAYTEST.md; i riferimenti sono in ART-DIRECTION.md.
 La diagnosi seguente è conservata come storia e non descrive gli asset attivi.

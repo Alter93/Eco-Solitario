@@ -1,6 +1,6 @@
 # Riferimenti permanenti — Eco Solitario
 
-Direzione confermata dall'utente il 7 settembre 2026. Prima di modificare i personaggi, consultare `references/style-board.jpeg`: è la tavola di riferimento recuperata, non un'immagine generata per questa patch. `references/radio-studio.jpeg` conserva il riferimento dello studio radiofonico.
+Direzione confermata dall'utente il 7 settembre 2026. Prima di modificare i personaggi, consultare `style-board.jpeg`: è la tavola di riferimento recuperata, non un'immagine generata per questa patch. `radio-studio.jpeg` conserva il riferimento dello studio radiofonico.
 
 - Alter: felpa rossa, pantaloncini beige, capelli raccolti e zaino. Pulire sagoma e ancoraggio senza cambiare identità.
 - Jack: capelli castani spettinati, barba, cuffie; ritratto a sinistra.
@@ -10,3 +10,5 @@ Direzione confermata dall'utente il 7 settembre 2026. Prima di modificare i pers
 - Conservare velocità, fisica e fluidità già approvate. Non confondere il miglioramento delle animazioni con un aumento della velocità.
 
 Nuovi asset: ritratti generati in griglia 2×2 (Jack/Dexter; neutri/parlanti), banditi in tre righe di sei pose (quattro passi, fermo, attacco). Lo sfondo magenta del file banditi è una chiave tecnica rimossa durante il caricamento. Verificare sempre il risultato nel gioco, non solo l'immagine sorgente.
+
+Revisione 07.09.3: tutte le immagini sono nella cartella principale per semplificare il caricamento da iPhone. alter-run-v3.png aggiunge otto pose di corsa; conserva gli originali per camminata, salto e armi. Ritmo legato alla distanza, fisica invariata.

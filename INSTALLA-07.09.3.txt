@@ -1,0 +1,8 @@
+ECO SOLITARIO — 07.09.3
+1. Estrai questo ZIP nell’app File.
+2. Carica TUTTI i file estratti nella cartella principale di Alter93/Eco-Solitario, accanto a index.html. Sostituisci gli omonimi; conserva gli altri file del repository.
+3. Non caricare soltanto lo ZIP. Questa patch non richiede sottocartelle.
+4. Attendi che GitHub Pages completi la pubblicazione, chiudi la vecchia scheda e riapri il gioco online.
+5. Dopo Inizia, verifica la scritta 07.09.3 e i ritratti dettagliati di Jack e Dexter.
+Il gioco continua ad avviarsi da index.html, senza npm o compilazione.
+Sono superate le istruzioni e le patch precedenti. PLAYTEST.md riporta i controlli realmente eseguiti e quelli ancora aperti.

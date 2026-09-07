@@ -1,6 +1,6 @@
 ECO SOLITARIO — CAPITOLO I CORRETTO — 7 SETTEMBRE 2026
 
-AVVIO UNICO: index.html, che carica game.js?v=chapter1-20260907b.
+AVVIO UNICO: index.html, che carica game.js?v=chapter1-20260907c.
 Le pagine alter-motion-v2/v3/v4.html rimandano ora al Capitolo I.
 capitolo-2.html resta una pagina separata, non è il punto di avvio.
 
@@ -37,7 +37,10 @@ Apri una volta online per installare la cache. Se la vecchia app era rimasta
 aperta, chiudila e riaprila online. Il caricamento offline è disponibile dopo
 l’installazione riuscita del service worker; richiede HTTPS (o localhost).
 
-REVISIONE 07.09.2
+REVISIONE 07.09.3
 Banditi con sagome indipendenti; ritratti Jack/Dexter dalla tavola recuperata.
 Pulizia di Alter e radio una battuta per pressione. Fisica invariata.
 Consulta ART-DIRECTION.md per i riferimenti permanenti e PLAYTEST.md per risultati e limiti.
+
+Corsa di Alter: otto pose nuove in alter-run-v3.png, con recupero delle tre pose originali se il file non è disponibile.
+Tutte le immagini attive sono ora nella root insieme a index.html.
