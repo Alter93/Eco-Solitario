@@ -48,7 +48,10 @@ Tutte le immagini attive sono ora nella root insieme a index.html.
 REVISIONE 07.09.5: posa da fermo integra; città pixel art; tieni Freccia giù (o ▼ sul touch) per accovacciarti. Al rilascio Alter si rialza. Il salto rialza Alter prima dello stacco. Mentre è accovacciato resta sul posto e può usare le armi.
 
 La città panoramica mantiene il rapporto originale e scorre lentamente con la camera.
-I colpi riusciti caricano l'aura di Alter: a carica piena il colpo seguente attiva
-OVERDRIVE, distorce la scena e mette KO il nemico in un colpo.
 La mazza è stata sostituita dal tasto K / Pugno: il ciclo comprende pugni, ginocchio e calci.
 Il danno arriva sul fotogramma d'impatto, così l'animazione e la hitbox restano sincronizzate.
+
+REVISIONE 08.09.1 — combattimento semplice
+Rimossi aura, OVERDRIVE e KO potenziato. Pistola: 26 danni; pugni/calci: 34 danni.
+Un tocco breve completa il colpo anche dopo il rilascio; tenendo premuto si ripete.
+Il corpo a corpo accovacciato mantiene la posa bassa.

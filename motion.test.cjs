@@ -20,7 +20,7 @@ function boot({images=true,width=852,height=393,canvasBackend=null}={}){
  const win=node();
  class Image{set src(s){this.naturalWidth=s.includes('master')?5184:1152;this.naturalHeight=128;if(images)this.onload?.();else this.onerror?.()}}
  const context=vm.createContext({document:doc,window:win,location:{protocol:'http:'},navigator:{},Image:canvasBackend?.GameImage||(canvasBackend?class extends canvasBackend.Image{set src(s){super.src=fs.readFileSync(path.join(root,s))}}:Image),console,performance:{now:()=>now},requestAnimationFrame:fn=>queue.push(fn),innerWidth:width,innerHeight:height,addEventListener:win.addEventListener.bind(win)});
- const injection=`\nthis.__test={P,keys,touch,buttons:null,setRunAtlas(value){runAtlas=value},setPoseAtlases(idle,crouch){idleAtlas=idle;crouchAtlas=crouch},start,reset,update,draw,spriteFrame,loop,STEP,get state(){return {started,paused,gameOver,complete,cam,gait,jumpQueued,bullets,enemies,platforms,pickups,dialogT,dialogText,radioIdx,auraCharge,auraPulse}}};\n`;
+ const injection=`\nthis.__test={P,keys,touch,buttons:null,setRunAtlas(value){runAtlas=value},setPoseAtlases(idle,crouch){idleAtlas=idle;crouchAtlas=crouch},start,reset,update,draw,spriteFrame,loop,STEP,get state(){return {started,paused,gameOver,complete,cam,gait,jumpQueued,bullets,enemies,platforms,pickups,dialogT,dialogText,radioIdx}}};\n`;
  vm.runInContext(source.replace(/\}\)\(\);\s*$/,injection+'})();'),context);
  const game=context.__test;
  function frames(seconds,hz=60){for(let i=0;i<Math.round(seconds*hz);i++){now+=1000/hz;const pending=queue;queue=[];for(const fn of pending)fn(now)}}
@@ -28,7 +28,7 @@ function boot({images=true,width=852,height=393,canvasBackend=null}={}){
  return {game,nodes,buttons,doc,win,draws,key,frames};
 }
 test('entry point loads exactly the chapter engine and required DOM',()=>{
- assert.match(html,/<script src="\.\/game\.js\?v=chapter1-20260907h"/);
+ assert.match(html,/<script src="\.\/game\.js\?v=chapter1-20260908a"/);
  assert.equal((html.match(/<script/g)||[]).length,1);
  for(const v of [2,3,4])assert.match(fs.readFileSync(path.join(root,`alter-motion-v${v}.html`),'utf8'),/url=\.\/index.html/);
  const b=boot();b.frames(.1);assert.equal(b.game.state.started,false);
@@ -134,19 +134,34 @@ test('fatal contact prevents same-step healing and touch restarts',()=>{
  b.nodes.game.emit('pointerdown');assert.equal(b.game.state.gameOver,false);assert.equal(b.game.P.hp,100);
 });
 
-test('successful hits build the aura and a full charge makes the next hit a finisher',()=>{
+test('successive pistol hits keep normal damage without a finisher',()=>{
  const b=boot();b.game.start();b.frames(1);const e=b.game.state.enemies[0];
- e.x=b.game.P.x+70;e.y=b.game.P.y;e.hp=e.maxHp=200;
- for(let i=0;i<3;i++){b.key('keydown','j');b.frames(.025);b.key('keyup','j');b.frames(.25);e.x=b.game.P.x+70;e.y=b.game.P.y;}
- assert.equal(b.game.state.auraCharge,.75);assert.equal(e.dead,false);
- b.key('keydown','j');b.frames(.025);b.key('keyup','j');b.frames(.25);assert.equal(b.game.state.auraCharge,1);assert.equal(e.dead,false);
- e.x=b.game.P.x+70;e.y=b.game.P.y;b.key('keydown','j');b.frames(.025);b.key('keyup','j');b.frames(.05);
- assert.equal(e.dead,true);assert.equal(b.game.state.auraCharge,0);assert.ok(b.game.state.auraPulse>0);
+ e.hp=e.maxHp=1000;
+ for(let i=0;i<6;i++){
+  e.x=b.game.P.x+70;e.y=b.game.P.y;
+  b.key('keydown','j');b.frames(.025);b.key('keyup','j');b.frames(.25);
+  assert.equal(e.hp,1000-26*(i+1));assert.equal(e.dead,false);
+ }
 });
 
-test('aura charge resets with a new game and does not grow from misses',()=>{
- const b=boot();b.game.start();b.frames(1);b.key('keydown','j');b.frames(.025);b.key('keyup','j');b.frames(.1);
- assert.equal(b.game.state.auraCharge,0);b.game.reset();assert.equal(b.game.state.auraCharge,0);
+test('short melee taps complete once after release for punches and kicks',()=>{
+ const b=boot();b.game.start();b.frames(1);const e=b.game.state.enemies[0];e.hp=e.maxHp=1000;
+ for(let i=0;i<6;i++){
+  e.x=b.game.P.x+36;e.y=b.game.P.y;
+  b.buttons.melee.emit('pointerdown',{pointerId:1});b.frames(.025);
+  b.buttons.melee.emit('pointerup',{pointerId:1});assert.equal(e.hp,1000-34*i);
+  b.frames(.25);assert.equal(e.hp,1000-34*(i+1));
+  b.frames(.3);assert.equal(e.hp,1000-34*(i+1));
+ }
+});
+
+test('crouched melee keeps the low pose and still lands after release',()=>{
+ const b=boot();b.game.start();b.frames(1);const low={crouch:1};b.game.setPoseAtlases({},low);
+ b.key('keydown','ArrowDown');b.frames(.1);
+ const e=b.game.state.enemies[0];e.x=b.game.P.x+36;e.y=b.game.P.y;e.hp=e.maxHp=120;e.cd=10;
+ b.key('keydown','k');b.frames(.025);b.key('keyup','k');
+ assert.equal(b.game.spriteFrame().sheet,low);assert.equal(b.game.P.h,40);
+ b.frames(.25);assert.equal(e.hp,86);assert.equal(b.game.spriteFrame().sheet,low);
 });
 
 test('melee damage lands on the punch or kick impact frame, not on button press',()=>{

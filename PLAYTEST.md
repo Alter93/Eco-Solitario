@@ -1,3 +1,16 @@
+# Verifica 08.09.1 — combattimento semplice
+
+Rimossi carica aura, barra, effetti e finisher OVERDRIVE. Danno costante: 26 pistola, 34 corpo a corpo.
+Il danno corpo a corpo viene aggiornato dalla simulazione al momento d’impatto, anche dopo il rilascio del pulsante. Tenendo premuto, gli attacchi continuano a ripetersi. La posa accovacciata ha priorità sull’atlante corpo a corpo in piedi.
+
+Verifica eseguita: node --test motion.test.cjs offline.test.cjs — 27 test superati.
+Superati anche node --check game.js, node --check sw.js e git diff --check.
+Nuove coperture: sei colpi consecutivi senza finisher; tocchi brevi ripetuti per pugni/calci, un solo impatto per attacco; attacco accovacciato con posa bassa.
+Non eseguiti playtest fisico su iPhone/Safari né verifica artistica raster in questa revisione. I test simulati non certificano il risultato sul dispositivo.
+
+---
+## Resoconto storico della revisione precedente (aura ora rimossa)
+
 # Verifica 07.09.5 — 7 settembre 2026
 
 La revisione successiva aggiunge una carica d'impatto: i colpi riusciti costruiscono l'aura, con effetti di distorsione crescenti; a carica completa il colpo seguente mette KO il nemico e azzera la carica. La nuova interfaccia mostra la barra AURA e OVERDRIVE.
